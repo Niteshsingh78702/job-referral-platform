@@ -11,7 +11,9 @@ async function bootstrap() {
     const configService = app.get(config_1.ConfigService);
     const apiPrefix = configService.get('API_PREFIX', 'api/v1');
     app.setGlobalPrefix(apiPrefix);
-    app.useStaticAssets((0, path_1.join)(__dirname, '..', '..', 'frontend'), {
+    const frontendPath = (0, path_1.join)(__dirname, '..', '..', 'frontend');
+    console.log('Serving static files from:', frontendPath);
+    app.useStaticAssets(frontendPath, {
         prefix: '/',
         index: 'index.html',
     });

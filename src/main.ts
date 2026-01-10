@@ -15,8 +15,12 @@ async function bootstrap() {
   app.setGlobalPrefix(apiPrefix);
 
   // Serve static frontend files from /frontend folder
-  // __dirname is dist/src, so we go up twice to reach project root
-  app.useStaticAssets(join(__dirname, '..', '..', 'frontend'), {
+  // On Render, the project is at /opt/render/project/src
+  // __dirname when running from dist/src/main.js goes up to project root
+  const frontendPath = join(__dirname, '..', '..', 'frontend');
+  console.log('Serving static files from:', frontendPath);
+
+  app.useStaticAssets(frontendPath, {
     prefix: '/',
     index: 'index.html',
   });

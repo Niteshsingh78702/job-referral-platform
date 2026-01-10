@@ -9,13 +9,15 @@ const app_module_1 = require("./app.module");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
-    const apiPrefix = configService.get('API_PREFIX', 'api/v1');
-    app.setGlobalPrefix(apiPrefix);
     const frontendPath = (0, path_1.join)(__dirname, '..', '..', 'frontend');
     console.log('Serving static files from:', frontendPath);
     app.useStaticAssets(frontendPath, {
         prefix: '/',
         index: 'index.html',
+    });
+    const apiPrefix = configService.get('API_PREFIX', 'api/v1');
+    app.setGlobalPrefix(apiPrefix, {
+        exclude: ['/', '/index.html', '/*.html', '/*.js', '/*.css', '/assets/*'],
     });
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle('Job Referral Platform API')

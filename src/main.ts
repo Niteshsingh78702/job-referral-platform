@@ -10,19 +10,21 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
-  // Global prefix for API routes
-  const apiPrefix = configService.get('API_PREFIX', 'api/v1');
-  app.setGlobalPrefix(apiPrefix);
-
-  // Serve static frontend files from /frontend folder
-  // On Render, the project is at /opt/render/project/src
-  // __dirname when running from dist/src/main.js goes up to project root
+  // Serve static frontend files from /frontend folder FIRST
+  // __dirname when running from dist/src/main.js is /path/to/dist/src
+  // So we go up twice to reach project root, then into frontend
   const frontendPath = join(__dirname, '..', '..', 'frontend');
   console.log('Serving static files from:', frontendPath);
 
   app.useStaticAssets(frontendPath, {
     prefix: '/',
     index: 'index.html',
+  });
+
+  // Global prefix for API routes ONLY (not static files)
+  const apiPrefix = configService.get('API_PREFIX', 'api/v1');
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: ['/', '/index.html', '/*.html', '/*.js', '/*.css', '/assets/*'],
   });
 
   // Swagger API Documentation

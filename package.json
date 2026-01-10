@@ -25,6 +25,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@nestjs/cli": "^11.0.0",
     "@aws-sdk/client-s3": "^3.962.0",
     "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.0.1",
@@ -58,7 +59,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@types/bcrypt": "^6.0.0",

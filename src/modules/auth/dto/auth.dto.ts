@@ -1,0 +1,98 @@
+import {
+    IsEmail,
+    IsString,
+    IsOptional,
+    MinLength,
+    IsPhoneNumber,
+    IsEnum,
+} from 'class-validator';
+import { UserRole } from '../../../common/constants';
+
+export class RegisterDto {
+    @IsEmail()
+    email: string;
+
+    @IsOptional()
+    @IsPhoneNumber()
+    phone?: string;
+
+    @IsString()
+    @MinLength(8)
+    password: string;
+
+    @IsString()
+    firstName: string;
+
+    @IsString()
+    lastName: string;
+
+    @IsEnum(UserRole)
+    @IsOptional()
+    role?: UserRole = UserRole.CANDIDATE;
+
+    // For Employee/HR registration
+    @IsOptional()
+    @IsString()
+    companyName?: string;
+
+    @IsOptional()
+    @IsString()
+    designation?: string;
+
+    @IsOptional()
+    @IsString()
+    department?: string;
+}
+
+export class LoginDto {
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    password: string;
+}
+
+export class SendOtpDto {
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    type: 'email_verify' | 'phone_verify' | 'login' | 'password_reset';
+}
+
+export class VerifyOtpDto {
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    otp: string;
+
+    @IsString()
+    type: 'email_verify' | 'phone_verify' | 'login' | 'password_reset';
+}
+
+export class RefreshTokenDto {
+    @IsString()
+    refreshToken: string;
+}
+
+export class ResetPasswordDto {
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    otp: string;
+
+    @IsString()
+    @MinLength(8)
+    newPassword: string;
+}
+
+export class ChangePasswordDto {
+    @IsString()
+    currentPassword: string;
+
+    @IsString()
+    @MinLength(8)
+    newPassword: string;
+}

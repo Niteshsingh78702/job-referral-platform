@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobRefer - Find Your Dream Job Through Referrals</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">💼</span>
+                <span class="logo-text">JobRefer</span>
+            </a>
+            <div class="nav-links">
+                <a href="#jobs" class="nav-link">Browse Jobs</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+            </div>
+            <div class="nav-auth" id="navAuth">
+                <button class="btn btn-outline" onclick="showModal('login')">Login</button>
+                <button class="btn btn-primary" onclick="showModal('register')">Get Started</button>
+            </div>
+            <div class="nav-user" id="navUser" style="display: none;">
+                <a href="#dashboard" class="nav-link">My Dashboard</a>
+                <div class="profile-dropdown">
+                    <button class="profile-btn" onclick="toggleProfileMenu()">
+                        <span class="profile-avatar" id="userAvatar">U</span>
+                        <span id="userName">User</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="profile-menu" id="profileMenu">
+                        <a href="#dashboard" onclick="showDashboard()" class="menu-item">📊 Dashboard</a>
+                        <a href="#profile" onclick="showProfile()" class="menu-item">👤 My Profile</a>
+                        <a href="#applications" onclick="showApplications()" class="menu-item">📋 Applications</a>
+                        <a href="#settings" class="menu-item">⚙️ Settings</a>
+                        <hr class="menu-divider">
+                        <a href="#" onclick="logout()" class="menu-item menu-item-danger">🚪 Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <div class="hero-badge">🚀 #1 Job Referral Platform in India</div>
+            <h1 class="hero-title">
+                Get <span class="gradient-text">Referred</span> to Your
+                <br>Dream Company
+            </h1>
+            <p class="hero-subtitle">
+                Pass our pre-screening tests, get verified referrals from employees,
+                and land interviews at top companies. Pay only after you succeed!
+            </p>
+            <div class="hero-cta" id="heroCta">
+                <button class="btn btn-primary btn-lg" id="heroMainBtn" onclick="showModal('register')">
+                    Start Your Journey
+                    <span class="btn-arrow">→</span>
+                </button>
+                <button class="btn btn-ghost btn-lg" id="heroSecondaryBtn" onclick="scrollToSection('#how-it-works')">
+                    Learn More
+                </button>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-value">10,000+</span>
+                    <span class="stat-label">Active Jobs</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">5,000+</span>
+                    <span class="stat-label">Successful Referrals</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">500+</span>
+                    <span class="stat-label">Partner Companies</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="floating-card card-1">
+                <div class="card-icon">🎯</div>
+                <div class="card-text">Test Passed!</div>
+            </div>
+            <div class="floating-card card-2">
+                <div class="card-icon">✅</div>
+                <div class="card-text">Referral Confirmed</div>
+            </div>
+            <div class="floating-card card-3">
+                <div class="card-icon">💰</div>
+                <div class="card-text">₹499 Only</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- User Dashboard (shown only when logged in) -->
+    <section class="section dashboard-section" id="dashboard" style="display: none;">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="dashboard-welcome">
+                    <h2>Welcome back, <span id="dashboardUserName">User</span>! 👋</h2>
+                    <p>Here's what's happening with your job search</p>
+                </div>
+                <button class="btn btn-primary" onclick="scrollToSection('#jobs')">
+                    Browse Jobs
+                    <span class="btn-arrow">→</span>
+                </button>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="dashboard-stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="statApplications">0</span>
+                        <span class="stat-title">Applications</span>
+                    </div>
+                </div>
+                <div class="dashboard-stat-card">
+                    <div class="stat-icon">🧠</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="statTests">0</span>
+                        <span class="stat-title">Tests Taken</span>
+                    </div>
+                </div>
+                <div class="dashboard-stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="statPassed">0</span>
+                        <span class="stat-title">Tests Passed</span>
+                    </div>
+                </div>
+                <div class="dashboard-stat-card">
+                    <div class="stat-icon">🤝</div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="statReferrals">0</span>
+                        <span class="stat-title">Referrals</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="profile-section">
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <div class="profile-avatar-large" id="profileAvatarLarge">U</div>
+                        <div class="profile-info">
+                            <h3 id="profileFullName">User</h3>
+                            <p id="profileEmail">user@example.com</p>
+                            <span class="profile-badge" id="profileRole">Candidate</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="showModal('editProfile')">Edit Profile</button>
+                    </div>
+                    <div class="profile-progress">
+                        <div class="progress-header">
+                            <span>Profile Completion</span>
+                            <span id="profileCompletion">30%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 30%"></div>
+                        </div>
+                        <p class="progress-tip">💡 Complete your profile to increase your chances of getting referrals!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Recent Applications -->
+                <div class="recent-applications">
+                    <div class="section-header-small">
+                        <h3>Recent Applications</h3>
+                        <a href="#applications" onclick="showApplications(); return false;" class="link">View All →</a>
+                    </div>
+                    <div class="applications-list" id="applicationsList">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p>No applications yet</p>
+                            <button class="btn btn-primary btn-sm" onclick="scrollToSection('#jobs')">Browse
+                                Jobs</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">How It Works</span>
+                <h2 class="section-title">Your Path to Getting Hired</h2>
+                <p class="section-subtitle">Simple 4-step process to get referred to your dream company</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">📝</div>
+                    <h3 class="step-title">Apply for Jobs</h3>
+                    <p class="step-desc">Browse through thousands of jobs and apply to positions that match your skills
+                    </p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">🧠</div>
+                    <h3 class="step-title">Take the Test</h3>
+                    <p class="step-desc">Clear our pre-screening assessment to prove your skills and stand out</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">🤝</div>
+                    <h3 class="step-title">Get Referred</h3>
+                    <p class="step-desc">Get matched with employees who can refer you directly to the hiring team</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">04</div>
+                    <div class="step-icon">🎉</div>
+                    <h3 class="step-title">Land the Interview</h3>
+                    <p class="step-desc">Pay only after your referral is confirmed and start your interview process</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Jobs Section -->
+    <section class="section section-dark" id="jobs">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Open Positions</span>
+                <h2 class="section-title">Latest Job Opportunities</h2>
+                <p class="section-subtitle">Hand-picked jobs from top companies looking for talent like you</p>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="search-bar">
+                <div class="search-row">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="jobSearch" placeholder="Search jobs by title, company, or skills..."
+                            class="search-input" onkeypress="if(event.key==='Enter') searchJobs()">
+                    </div>
+                    <button class="btn btn-primary" onclick="searchJobs()">Search</button>
+                    <button class="btn btn-outline saved-jobs-btn" onclick="toggleSavedJobsView()" id="savedJobsBtn">
+                        ❤️ Saved
+                    </button>
+                </div>
+                <div class="filters-row">
+                    <select id="locationFilter" class="filter-select">
+                        <option value="">All Locations</option>
+                        <option value="bangalore">Bangalore</option>
+                        <option value="mumbai">Mumbai</option>
+                        <option value="delhi">Delhi NCR</option>
+                        <option value="hyderabad">Hyderabad</option>
+                        <option value="pune">Pune</option>
+                        <option value="chennai">Chennai</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                    <select id="experienceFilter" class="filter-select">
+                        <option value="">Experience</option>
+                        <option value="0-1">0-1 years</option>
+                        <option value="1-3">1-3 years</option>
+                        <option value="3-5">3-5 years</option>
+                        <option value="5-8">5-8 years</option>
+                        <option value="8+">8+ years</option>
+                    </select>
+                    <select id="jobTypeFilter" class="filter-select">
+                        <option value="">Job Type</option>
+                        <option value="fulltime">Full-time</option>
+                        <option value="parttime">Part-time</option>
+                        <option value="contract">Contract</option>
+                        <option value="internship">Internship</option>
+                    </select>
+                    <select id="workModeFilter" class="filter-select">
+                        <option value="">Work Mode</option>
+                        <option value="office">Office</option>
+                        <option value="hybrid">Hybrid</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                    <select id="postedDateFilter" class="filter-select">
+                        <option value="">Posted Date</option>
+                        <option value="24h">Last 24 hours</option>
+                        <option value="week">Last Week</option>
+                        <option value="month">Last Month</option>
+                    </select>
+                    <select id="sortBy" class="filter-select">
+                        <option value="relevance">Sort: Relevance</option>
+                        <option value="date">Sort: Newest</option>
+                        <option value="salary">Sort: Salary ↓</option>
+                    </select>
+                    <button class="btn btn-ghost btn-sm" onclick="clearAllFilters()">Clear Filters</button>
+                </div>
+            </div>
+
+            <!-- Job Cards -->
+            <div class="jobs-grid" id="jobsGrid">
+                <!-- Jobs will be loaded here dynamically -->
+                <div class="loading-spinner" id="jobsLoading">
+                    <div class="spinner"></div>
+                    <p>Loading jobs...</p>
+                </div>
+            </div>
+
+            <!-- Sample Jobs (shown when API not available) -->
+            <div class="jobs-grid" id="sampleJobs" style="display: none;">
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="company-logo">G</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">Senior Software Engineer</h3>
+                            <p class="company-name">Google</p>
+                        </div>
+                        <span class="job-badge">Hot 🔥</span>
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> Bangalore</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> 5-8 years</span>
+                        <span class="job-detail"><span class="detail-icon">💰</span> ₹40-60 LPA</span>
+                    </div>
+                    <div class="job-skills">
+                        <span class="skill-tag">React</span>
+                        <span class="skill-tag">Node.js</span>
+                        <span class="skill-tag">TypeScript</span>
+                        <span class="skill-tag">+2</span>
+                    </div>
+                    <div class="job-footer">
+                        <span class="referral-fee">Referral Fee: ₹499</span>
+                        <button class="btn btn-primary btn-sm" onclick="applyForJob('1')">Apply Now</button>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="company-logo" style="background: linear-gradient(135deg, #00A8E8, #0077B6);">M</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">Product Manager</h3>
+                            <p class="company-name">Microsoft</p>
+                        </div>
+                        <span class="job-badge badge-new">New</span>
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> Hyderabad</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> 3-6 years</span>
+                        <span class="job-detail"><span class="detail-icon">💰</span> ₹35-50 LPA</span>
+                    </div>
+                    <div class="job-skills">
+                        <span class="skill-tag">Product Strategy</span>
+                        <span class="skill-tag">Agile</span>
+                        <span class="skill-tag">SQL</span>
+                    </div>
+                    <div class="job-footer">
+                        <span class="referral-fee">Referral Fee: ₹499</span>
+                        <button class="btn btn-primary btn-sm" onclick="applyForJob('2')">Apply Now</button>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="company-logo" style="background: linear-gradient(135deg, #FF6B6B, #EE5A24);">A</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">Data Scientist</h3>
+                            <p class="company-name">Amazon</p>
+                        </div>
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> Remote</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> 2-4 years</span>
+                        <span class="job-detail"><span class="detail-icon">💰</span> ₹25-40 LPA</span>
+                    </div>
+                    <div class="job-skills">
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">Machine Learning</span>
+                        <span class="skill-tag">AWS</span>
+                    </div>
+                    <div class="job-footer">
+                        <span class="referral-fee">Referral Fee: ₹499</span>
+                        <button class="btn btn-primary btn-sm" onclick="applyForJob('3')">Apply Now</button>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="company-logo" style="background: linear-gradient(135deg, #6C5CE7, #A29BFE);">F</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">Frontend Developer</h3>
+                            <p class="company-name">Flipkart</p>
+                        </div>
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> Bangalore</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> 2-5 years</span>
+                        <span class="job-detail"><span class="detail-icon">💰</span> ₹20-35 LPA</span>
+                    </div>
+                    <div class="job-skills">
+                        <span class="skill-tag">React</span>
+                        <span class="skill-tag">JavaScript</span>
+                        <span class="skill-tag">CSS</span>
+                    </div>
+                    <div class="job-footer">
+                        <span class="referral-fee">Referral Fee: ₹499</span>
+                        <button class="btn btn-primary btn-sm" onclick="applyForJob('4')">Apply Now</button>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="company-logo" style="background: linear-gradient(135deg, #00B894, #00CEC9);">S</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">DevOps Engineer</h3>
+                            <p class="company-name">Swiggy</p>
+                        </div>
+                        <span class="job-badge">Hot 🔥</span>
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> Bangalore</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> 3-6 years</span>
+                        <span class="job-detail"><span class="detail-icon">💰</span> ₹25-45 LPA</span>
+                    </div>
+                    <div class="job-skills">
+                        <span class="skill-tag">Kubernetes</span>
+                        <span class="skill-tag">Docker</span>
+                        <span class="skill-tag">AWS</span>
+                    </div>
+                    <div class="job-footer">
+                        <span class="referral-fee">Referral Fee: ₹499</span>
+                        <button class="btn btn-primary btn-sm" onclick="applyForJob('5')">Apply Now</button>
+                    </div>
+                </div>
+
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="company-logo" style="background: linear-gradient(135deg, #FD79A8, #E84393);">Z</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">Backend Engineer</h3>
+                            <p class="company-name">Zomato</p>
+                        </div>
+                        <span class="job-badge badge-new">New</span>
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> Delhi NCR</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> 2-4 years</span>
+                        <span class="job-detail"><span class="detail-icon">💰</span> ₹18-30 LPA</span>
+                    </div>
+                    <div class="job-skills">
+                        <span class="skill-tag">Go</span>
+                        <span class="skill-tag">PostgreSQL</span>
+                        <span class="skill-tag">Redis</span>
+                    </div>
+                    <div class="job-footer">
+                        <span class="referral-fee">Referral Fee: ₹499</span>
+                        <button class="btn btn-primary btn-sm" onclick="applyForJob('6')">Apply Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <button class="btn btn-outline btn-lg">View All Jobs →</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Transparent Pricing</span>
+                <h2 class="section-title">Pay Only When You Succeed</h2>
+                <p class="section-subtitle">No upfront fees. No hidden charges. Pay only after getting a confirmed
+                    referral.</p>
+            </div>
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3 class="pricing-title">Per Referral</h3>
+                    <div class="pricing-amount">
+                        <span class="currency">₹</span>
+                        <span class="price">499</span>
+                        <span class="period">/referral</span>
+                    </div>
+                </div>
+                <div class="pricing-features">
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Free job applications</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Free pre-screening tests</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Verified employee referrals</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Direct contact with referrer</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Interview preparation tips</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>100% refund if not contacted within 7 days</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-lg btn-block" id="pricingCta" onclick="showModal('register')">Get
+                    Started Free</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="/" class="logo">
+                        <span class="logo-icon">💼</span>
+                        <span class="logo-text">JobRefer</span>
+                    </a>
+                    <p class="footer-desc">India's #1 job referral platform. Get referred to your dream company and land
+                        interviews faster.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>For Candidates</h4>
+                    <a href="#">Browse Jobs</a>
+                    <a href="#">How It Works</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Success Stories</a>
+                </div>
+                <div class="footer-links">
+                    <h4>For Companies</h4>
+                    <a href="#">Post Jobs</a>
+                    <a href="#">HR Dashboard</a>
+                    <a href="#">Employee Referral Program</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <a href="#">Help Center</a>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 JobRefer. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+    <div class="modal" id="authModal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+
+        <!-- Login Form -->
+        <div class="modal-content" id="loginForm">
+            <h2 class="modal-title">Welcome Back!</h2>
+            <p class="modal-subtitle">Login to your account to continue</p>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Login</button>
+            </form>
+
+            <div class="modal-footer">
+                <p>Don't have an account? <a href="#" onclick="showModal('register')">Sign up</a></p>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div class="modal-content" id="registerForm" style="display: none;">
+            <h2 class="modal-title">Create Account</h2>
+            <p class="modal-subtitle">Join thousands of candidates finding their dream jobs</p>
+
+            <form onsubmit="handleRegister(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="regFirstName" class="form-input" placeholder="John" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="regLastName" class="form-input" placeholder="Doe" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="regEmail" class="form-input" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="regPassword" class="form-input" placeholder="Min 8 characters" required
+                        minlength="8">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">I am a</label>
+                    <select id="regRole" class="form-input">
+                        <option value="CANDIDATE">Job Seeker</option>
+                        <option value="EMPLOYEE">Employee (Want to refer)</option>
+                        <option value="HR">HR/Recruiter</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
+            </form>
+
+            <div class="modal-footer">
+                <p>Already have an account? <a href="#" onclick="showModal('login')">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Edit Modal -->
+    <div class="modal-overlay" id="profileModalOverlay" onclick="closeProfileModal()"></div>
+    <div class="modal modal-lg" id="profileModal">
+        <button class="modal-close" onclick="closeProfileModal()">×</button>
+
+        <div class="modal-content" id="profileEditForm">
+            <h2 class="modal-title">Edit Profile</h2>
+            <p class="modal-subtitle">Update your information to improve your chances</p>
+
+            <form onsubmit="handleProfileUpdate(event)">
+                <div class="profile-edit-header">
+                    <div class="profile-avatar-edit">
+                        <div class="avatar-preview" id="avatarPreview">U</div>
+                        <input type="file" id="photoInput" accept="image/*" style="display: none;"
+                            onchange="handlePhotoUpload(event)">
+                        <button type="button" class="btn btn-sm btn-outline"
+                            onclick="document.getElementById('photoInput').click()">
+                            📷 Change Photo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="editFirstName" class="form-input" placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="editLastName" class="form-input" placeholder="Doe">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" id="editPhone" class="form-input" placeholder="+91 98765 43210">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">LinkedIn Profile</label>
+                    <input type="url" id="editLinkedIn" class="form-input"
+                        placeholder="https://linkedin.com/in/yourprofile">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Skills (comma separated)</label>
+                    <input type="text" id="editSkills" class="form-input"
+                        placeholder="JavaScript, React, Node.js, Python">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Experience (Years)</label>
+                    <select id="editExperience" class="form-input">
+                        <option value="0-1">0-1 years (Fresher)</option>
+                        <option value="1-3">1-3 years</option>
+                        <option value="3-5">3-5 years</option>
+                        <option value="5-8">5-8 years</option>
+                        <option value="8+">8+ years</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Preferred Location</label>
+                    <select id="editLocation" class="form-input">
+                        <option value="">Select location</option>
+                        <option value="bangalore">Bangalore</option>
+                        <option value="mumbai">Mumbai</option>
+                        <option value="delhi">Delhi NCR</option>
+                        <option value="hyderabad">Hyderabad</option>
+                        <option value="pune">Pune</option>
+                        <option value="chennai">Chennai</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Resume (PDF)</label>
+                    <div class="file-upload">
+                        <input type="file" id="editResume" accept=".pdf" class="file-input"
+                            onchange="handleResumeUpload(event)">
+                        <div class="file-upload-content">
+                            <span class="file-icon">📄</span>
+                            <span class="file-text">Click to upload resume (PDF only)</span>
+                            <button type="button" class="btn-remove-resume"
+                                onclick="removeResume(); event.stopPropagation();" style="display: none;">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeProfileModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Applications Page Section -->
+    <section class="section page-section" id="applicationsPage" style="display: none;">
+        <div class="container">
+            <div class="page-header">
+                <button class="btn btn-ghost" onclick="goBack()">← Back</button>
+                <h2>My Applications</h2>
+            </div>
+
+            <div class="applications-filters">
+                <button class="filter-btn active" onclick="filterApplications('all')">All</button>
+                <button class="filter-btn" onclick="filterApplications('pending')">Pending</button>
+                <button class="filter-btn" onclick="filterApplications('test')">Test Required</button>
+                <button class="filter-btn" onclick="filterApplications('referred')">Referred</button>
+                <button class="filter-btn" onclick="filterApplications('rejected')">Rejected</button>
+            </div>
+
+            <div class="applications-table" id="applicationsTable">
+                <div class="table-header">
+                    <span>Company</span>
+                    <span>Position</span>
+                    <span>Applied On</span>
+                    <span>Status</span>
+                    <span>Action</span>
+                </div>
+                <div class="table-body" id="applicationsTableBody">
+                    <!-- Applications will be loaded dynamically by JavaScript -->
+                </div>
+            </div>
+
+            <div class="empty-applications" id="emptyApplications" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <h3>No Applications Yet</h3>
+                <p>Start applying to jobs to see your applications here</p>
+                <button class="btn btn-primary" onclick="goBack(); scrollToSection('#jobs')">Browse Jobs</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Settings Page Section -->
+    <section class="section page-section" id="settingsPage" style="display: none;">
+        <div class="container">
+            <div class="page-header">
+                <button class="btn btn-ghost" onclick="goBack()">← Back</button>
+                <h2>Settings</h2>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>🔐 Account Security</h3>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <h4>Change Password</h4>
+                            <p>Update your password regularly for security</p>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="showChangePasswordModal()">Change</button>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <h4>Two-Factor Authentication</h4>
+                            <p>Add an extra layer of security</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle2FA">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>🔔 Notifications</h3>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <h4>Email Notifications</h4>
+                            <p>Receive job alerts and updates</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleEmail" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <h4>SMS Notifications</h4>
+                            <p>Get important updates via SMS</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleSMS">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <h4>Weekly Digest</h4>
+                            <p>Summary of new job opportunities</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleDigest" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-card settings-card-danger">
+                    <h3>⚠️ Danger Zone</h3>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <h4>Delete Account</h4>
+                            <p>Permanently delete your account and all data</p>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteAccount()">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Test Taking Page -->
+    <section class="section page-section" id="testPage" style="display: none;">
+        <div class="container">
+            <div class="test-header">
+                <div class="test-info">
+                    <h2 id="testTitle">Pre-Screening Assessment</h2>
+                    <p id="testCompany">Google - Senior Software Engineer</p>
+                </div>
+                <div class="test-timer">
+                    <span class="timer-icon">⏱️</span>
+                    <span class="timer-value" id="timerDisplay">30:00</span>
+                </div>
+            </div>
+
+            <div class="test-progress">
+                <div class="progress-info">
+                    <span>Question <span id="currentQuestion">1</span> of <span id="totalQuestions">10</span></span>
+                    <span id="progressPercent">10%</span>
+                </div>
+                <div class="progress-bar-test">
+                    <div class="progress-fill-test" id="testProgressFill" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <div class="test-content">
+                <div class="question-card" id="questionCard">
+                    <div class="question-number">Question 1</div>
+                    <div class="question-text" id="questionText">
+                        What is the time complexity of binary search?
+                    </div>
+                    <div class="options-list" id="optionsList">
+                        <label class="option-item">
+                            <input type="radio" name="answer" value="a">
+                            <span class="option-marker">A</span>
+                            <span class="option-text">O(n)</span>
+                        </label>
+                        <label class="option-item">
+                            <input type="radio" name="answer" value="b">
+                            <span class="option-marker">B</span>
+                            <span class="option-text">O(log n)</span>
+                        </label>
+                        <label class="option-item">
+                            <input type="radio" name="answer" value="c">
+                            <span class="option-marker">C</span>
+                            <span class="option-text">O(n²)</span>
+                        </label>
+                        <label class="option-item">
+                            <input type="radio" name="answer" value="d">
+                            <span class="option-marker">D</span>
+                            <span class="option-text">O(1)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="test-navigation">
+                    <button class="btn btn-outline" id="prevBtn" onclick="prevQuestion()" disabled>
+                        ← Previous
+                    </button>
+                    <div class="question-dots" id="questionDots">
+                        <!-- Question navigation dots -->
+                    </div>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
+            <div class="test-footer">
+                <button class="btn btn-ghost" onclick="confirmExitTest()">Exit Test</button>
+                <button class="btn btn-primary btn-lg" id="submitTestBtn" onclick="submitTest()" style="display: none;">
+                    Submit Test
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Test Result Modal -->
+    <div class="modal-overlay" id="testResultOverlay"></div>
+    <div class="modal" id="testResultModal">
+        <div class="modal-content text-center">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <h2 class="modal-title" id="resultTitle">Congratulations!</h2>
+            <p class="modal-subtitle" id="resultMessage">You passed the pre-screening test!</p>
+
+            <div class="result-stats">
+                <div class="result-stat">
+                    <span class="result-value" id="resultScore">8/10</span>
+                    <span class="result-label">Correct Answers</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-value" id="resultTime">18:45</span>
+                    <span class="result-label">Time Taken</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-value" id="resultPercentage">80%</span>
+                    <span class="result-label">Score</span>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button class="btn btn-primary btn-lg" onclick="closeTestResult()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

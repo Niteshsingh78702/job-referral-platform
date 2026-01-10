@@ -1,0 +1,10 @@
+# Build configuration for Render.com
+
+# Build command for backend
+buildCommand: npm install && npm run build && npx prisma generate
+
+# Start command
+startCommand: npm run start:prod
+
+# Health check endpoint
+healthCheckPath: /api/v1/health

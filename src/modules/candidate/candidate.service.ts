@@ -1,0 +1,321 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import {
+    UpdateCandidateProfileDto,
+    AddSkillDto,
+    AddExperienceDto,
+    AddEducationDto,
+} from './dto';
+import { ApplicationStatus } from '../../common/constants';
+
+@Injectable()
+export class CandidateService {
+    constructor(private prisma: PrismaService) { }
+
+    // Get candidate profile
+    async getProfile(userId: string) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+            include: {
+                skills: true,
+                experiences: {
+                    orderBy: { startDate: 'desc' },
+                },
+                educations: {
+                    orderBy: { startYear: 'desc' },
+                },
+                user: {
+                    select: {
+                        email: true,
+                        phone: true,
+                        emailVerified: true,
+                        phoneVerified: true,
+                    },
+                },
+            },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return candidate;
+    }
+
+    // Update profile
+    async updateProfile(userId: string, dto: UpdateCandidateProfileDto) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.candidate.update({
+            where: { userId },
+            data: dto,
+            include: {
+                skills: true,
+                experiences: true,
+                educations: true,
+            },
+        });
+    }
+
+    // Upload resume
+    async updateResume(userId: string, resumeUrl: string) {
+        return this.prisma.candidate.update({
+            where: { userId },
+            data: { resumeUrl },
+        });
+    }
+
+    // Add skill
+    async addSkill(userId: string, dto: AddSkillDto) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.candidateSkill.create({
+            data: {
+                candidateId: candidate.id,
+                name: dto.name,
+                level: dto.level || 1,
+                yearsOfExp: dto.yearsOfExp,
+            },
+        });
+    }
+
+    // Remove skill
+    async removeSkill(userId: string, skillId: string) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.candidateSkill.delete({
+            where: {
+                id: skillId,
+                candidateId: candidate.id,
+            },
+        });
+    }
+
+    // Add experience
+    async addExperience(userId: string, dto: AddExperienceDto) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.experience.create({
+            data: {
+                candidateId: candidate.id,
+                company: dto.company,
+                role: dto.role,
+                description: dto.description,
+                location: dto.location,
+                startDate: new Date(dto.startDate),
+                endDate: dto.endDate ? new Date(dto.endDate) : null,
+                isCurrent: dto.isCurrent || false,
+            },
+        });
+    }
+
+    // Remove experience
+    async removeExperience(userId: string, experienceId: string) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.experience.delete({
+            where: {
+                id: experienceId,
+                candidateId: candidate.id,
+            },
+        });
+    }
+
+    // Add education
+    async addEducation(userId: string, dto: AddEducationDto) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.education.create({
+            data: {
+                candidateId: candidate.id,
+                institution: dto.institution,
+                degree: dto.degree,
+                field: dto.field,
+                grade: dto.grade,
+                startYear: dto.startYear,
+                endYear: dto.endYear,
+            },
+        });
+    }
+
+    // Remove education
+    async removeEducation(userId: string, educationId: string) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.education.delete({
+            where: {
+                id: educationId,
+                candidateId: candidate.id,
+            },
+        });
+    }
+
+    // Get applications
+    async getApplications(userId: string, status?: ApplicationStatus) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        return this.prisma.jobApplication.findMany({
+            where: {
+                candidateId: candidate.id,
+                ...(status && { status }),
+            },
+            include: {
+                job: {
+                    select: {
+                        id: true,
+                        title: true,
+                        companyName: true,
+                        location: true,
+                        salaryMin: true,
+                        salaryMax: true,
+                        status: true,
+                    },
+                },
+                referral: {
+                    select: {
+                        status: true,
+                        type: true,
+                    },
+                },
+                payments: {
+                    select: {
+                        status: true,
+                        amount: true,
+                        paidAt: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
+    // Get test history
+    async getTestHistory(userId: string) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        const applications = await this.prisma.jobApplication.findMany({
+            where: { candidateId: candidate.id },
+            select: { id: true },
+        });
+
+        const applicationIds = applications.map((a) => a.id);
+
+        return this.prisma.testSession.findMany({
+            where: {
+                applicationId: { in: applicationIds },
+            },
+            include: {
+                test: {
+                    select: {
+                        title: true,
+                        duration: true,
+                        passingScore: true,
+                    },
+                },
+                application: {
+                    include: {
+                        job: {
+                            select: {
+                                title: true,
+                                companyName: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
+    // Get payment history
+    async getPaymentHistory(userId: string) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        const applications = await this.prisma.jobApplication.findMany({
+            where: { candidateId: candidate.id },
+            select: { id: true },
+        });
+
+        const applicationIds = applications.map((a) => a.id);
+
+        return this.prisma.payment.findMany({
+            where: {
+                applicationId: { in: applicationIds },
+            },
+            include: {
+                application: {
+                    include: {
+                        job: {
+                            select: {
+                                title: true,
+                                companyName: true,
+                            },
+                        },
+                    },
+                },
+                refund: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+}

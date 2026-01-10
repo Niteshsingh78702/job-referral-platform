@@ -16,9 +16,7 @@ async function bootstrap() {
         index: 'index.html',
     });
     const apiPrefix = configService.get('API_PREFIX', 'api/v1');
-    app.setGlobalPrefix(apiPrefix, {
-        exclude: ['/', '/index.html', '/*.html', '/*.js', '/*.css', '/assets/*'],
-    });
+    app.setGlobalPrefix(apiPrefix);
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle('Job Referral Platform API')
         .setDescription('API documentation for the Job Referral & Pre-Screening Platform')

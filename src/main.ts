@@ -21,11 +21,9 @@ async function bootstrap() {
     index: 'index.html',
   });
 
-  // Global prefix for API routes ONLY (not static files)
+  // Global prefix for API routes
   const apiPrefix = configService.get('API_PREFIX', 'api/v1');
-  app.setGlobalPrefix(apiPrefix, {
-    exclude: ['/', '/index.html', '/*.html', '/*.js', '/*.css', '/assets/*'],
-  });
+  app.setGlobalPrefix(apiPrefix);
 
   // Swagger API Documentation
   const swaggerConfig = new DocumentBuilder()

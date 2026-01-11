@@ -25,9 +25,10 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
-    "@nestjs/cli": "^11.0.0",
     "@aws-sdk/client-s3": "^3.962.0",
+    "@neondatabase/serverless": "^1.0.2",
     "@nestjs/cache-manager": "^3.1.0",
+    "@nestjs/cli": "^11.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -36,6 +37,7 @@
     "@nestjs/platform-express": "^11.1.11",
     "@nestjs/swagger": "^11.2.3",
     "@nestjs/throttler": "^6.5.0",
+    "@prisma/adapter-neon": "^7.2.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "bcrypt": "^6.0.0",
@@ -43,6 +45,7 @@
     "cache-manager-redis-yet": "^5.1.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
+    "dotenv": "^17.2.3",
     "ioredis": "^5.8.2",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
@@ -55,7 +58,7 @@
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
-    "dotenv": "^17.2.3"
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

@@ -1,5 +1,11 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import * as ws from 'ws';
+
+// Enable WebSocket for Neon serverless
+neonConfig.webSocketConstructor = ws;
 
 @Injectable()
 export class PrismaService
@@ -9,14 +15,25 @@ export class PrismaService
     private readonly logger = new Logger(PrismaService.name);
 
     constructor() {
+        const connectionString = process.env.DATABASE_URL;
+
+        if (!connectionString) {
+            throw new Error('DATABASE_URL environment variable is not set');
+        }
+
+        // Create Neon connection pool
+        const pool = new Pool({ connectionString });
+        const adapter = new PrismaNeon(pool);
+
         super({
+            adapter,
             log:
                 process.env.NODE_ENV === 'development'
                     ? ['query', 'info', 'warn', 'error']
                     : ['error'],
         });
 
-        this.logger.log('PrismaService initialized');
+        this.logger.log('PrismaService initialized with Neon adapter');
     }
 
     async onModuleInit() {

@@ -1,7 +1,7 @@
 # Build configuration for Render.com
 
 # Build command for backend
-buildCommand: npm install && npm run build && npx prisma generate
+buildCommand: npm install && npx prisma generate && npm run build
 
 # Start command
 startCommand: npm run start:prod

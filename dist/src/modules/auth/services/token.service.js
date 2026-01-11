@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var TokenService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TokenService = void 0;
 const common_1 = require("@nestjs/common");
@@ -19,18 +20,48 @@ const jwt_1 = require("@nestjs/jwt");
 const ioredis_1 = __importDefault(require("ioredis"));
 const uuid_1 = require("uuid");
 const constants_1 = require("../../../common/constants");
-let TokenService = class TokenService {
+let TokenService = TokenService_1 = class TokenService {
     jwtService;
     configService;
-    redis;
+    redis = null;
+    logger = new common_1.Logger(TokenService_1.name);
+    tokenStore = new Map();
     constructor(jwtService, configService) {
         this.jwtService = jwtService;
         this.configService = configService;
-        this.redis = new ioredis_1.default({
-            host: this.configService.get('REDIS_HOST', 'localhost'),
-            port: this.configService.get('REDIS_PORT', 6379),
-            password: this.configService.get('REDIS_PASSWORD'),
-        });
+        this.initRedis();
+    }
+    initRedis() {
+        const redisUrl = this.configService.get('REDIS_URL');
+        const redisHost = this.configService.get('REDIS_HOST');
+        if (redisUrl || redisHost) {
+            try {
+                if (redisUrl) {
+                    this.redis = new ioredis_1.default(redisUrl);
+                }
+                else {
+                    this.redis = new ioredis_1.default({
+                        host: redisHost || 'localhost',
+                        port: this.configService.get('REDIS_PORT', 6379),
+                        password: this.configService.get('REDIS_PASSWORD'),
+                    });
+                }
+                this.redis.on('connect', () => {
+                    this.logger.log('Redis connected successfully');
+                });
+                this.redis.on('error', (err) => {
+                    this.logger.warn(`Redis connection error: ${err.message}. Using in-memory fallback.`);
+                    this.redis = null;
+                });
+            }
+            catch (error) {
+                this.logger.warn(`Failed to initialize Redis: ${error.message}. Using in-memory fallback.`);
+                this.redis = null;
+            }
+        }
+        else {
+            this.logger.log('Redis not configured. Using in-memory token storage.');
+        }
     }
     async generateTokenPair(payload) {
         const [accessToken, refreshToken] = await Promise.all([
@@ -56,16 +87,59 @@ let TokenService = class TokenService {
     async storeRefreshToken(userId, refreshToken) {
         const key = constants_1.REDIS_KEYS.USER_SESSION(userId);
         const expiry = this.getRefreshTokenExpirySeconds();
-        await this.redis.set(key, refreshToken, 'EX', expiry);
+        if (this.redis) {
+            try {
+                await this.redis.set(key, refreshToken, 'EX', expiry);
+            }
+            catch (error) {
+                this.logger.warn(`Redis store failed: ${error.message}. Using in-memory.`);
+                this.storeInMemory(key, refreshToken, expiry);
+            }
+        }
+        else {
+            this.storeInMemory(key, refreshToken, expiry);
+        }
+    }
+    storeInMemory(key, token, expirySeconds) {
+        const expiry = Date.now() + (expirySeconds * 1000);
+        this.tokenStore.set(key, { token, expiry });
     }
     async validateRefreshToken(userId, refreshToken) {
         const key = constants_1.REDIS_KEYS.USER_SESSION(userId);
-        const storedToken = await this.redis.get(key);
-        return storedToken === refreshToken;
+        if (this.redis) {
+            try {
+                const storedToken = await this.redis.get(key);
+                return storedToken === refreshToken;
+            }
+            catch {
+                return this.validateInMemory(key, refreshToken);
+            }
+        }
+        return this.validateInMemory(key, refreshToken);
+    }
+    validateInMemory(key, refreshToken) {
+        const stored = this.tokenStore.get(key);
+        if (!stored)
+            return false;
+        if (Date.now() > stored.expiry) {
+            this.tokenStore.delete(key);
+            return false;
+        }
+        return stored.token === refreshToken;
     }
     async revokeRefreshToken(userId) {
         const key = constants_1.REDIS_KEYS.USER_SESSION(userId);
-        await this.redis.del(key);
+        if (this.redis) {
+            try {
+                await this.redis.del(key);
+            }
+            catch {
+                this.tokenStore.delete(key);
+            }
+        }
+        else {
+            this.tokenStore.delete(key);
+        }
     }
     async verifyAccessToken(token) {
         try {
@@ -120,7 +194,7 @@ let TokenService = class TokenService {
     }
 };
 exports.TokenService = TokenService;
-exports.TokenService = TokenService = __decorate([
+exports.TokenService = TokenService = TokenService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         config_1.ConfigService])

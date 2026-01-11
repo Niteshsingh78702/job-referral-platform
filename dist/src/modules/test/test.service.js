@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var TestService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestService = void 0;
 const common_1 = require("@nestjs/common");
@@ -18,18 +19,87 @@ const config_1 = require("@nestjs/config");
 const ioredis_1 = __importDefault(require("ioredis"));
 const prisma_service_1 = require("../../prisma/prisma.service");
 const constants_1 = require("../../common/constants");
-let TestService = class TestService {
+let TestService = TestService_1 = class TestService {
     prisma;
     configService;
-    redis;
+    redis = null;
+    logger = new common_1.Logger(TestService_1.name);
+    sessionStore = new Map();
     constructor(prisma, configService) {
         this.prisma = prisma;
         this.configService = configService;
-        this.redis = new ioredis_1.default({
-            host: this.configService.get('REDIS_HOST', 'localhost'),
-            port: this.configService.get('REDIS_PORT', 6379),
-            password: this.configService.get('REDIS_PASSWORD'),
-        });
+        this.initRedis();
+    }
+    initRedis() {
+        const redisUrl = this.configService.get('REDIS_URL');
+        const redisHost = this.configService.get('REDIS_HOST');
+        if (redisUrl || redisHost) {
+            try {
+                if (redisUrl) {
+                    this.redis = new ioredis_1.default(redisUrl);
+                }
+                else {
+                    this.redis = new ioredis_1.default({
+                        host: redisHost || 'localhost',
+                        port: this.configService.get('REDIS_PORT', 6379),
+                        password: this.configService.get('REDIS_PASSWORD'),
+                    });
+                }
+                this.redis.on('error', (err) => {
+                    this.logger.warn(`Redis error: ${err.message}. Using in-memory storage.`);
+                    this.redis = null;
+                });
+            }
+            catch {
+                this.logger.warn('Redis not available. Test sessions will use in-memory storage.');
+            }
+        }
+        else {
+            this.logger.log('Redis not configured. Test sessions will use in-memory storage.');
+        }
+    }
+    async redisSet(key, value, pxMs) {
+        if (this.redis) {
+            try {
+                if (pxMs) {
+                    await this.redis.set(key, value, 'PX', pxMs);
+                }
+                else {
+                    await this.redis.set(key, value);
+                }
+                return;
+            }
+            catch {
+            }
+        }
+        this.sessionStore.set(key, { data: value, expiry: pxMs ? Date.now() + pxMs : Date.now() + 3600000 });
+    }
+    async redisGet(key) {
+        if (this.redis) {
+            try {
+                return await this.redis.get(key);
+            }
+            catch {
+            }
+        }
+        const stored = this.sessionStore.get(key);
+        if (!stored)
+            return null;
+        if (Date.now() > stored.expiry) {
+            this.sessionStore.delete(key);
+            return null;
+        }
+        return stored.data;
+    }
+    async redisDel(key) {
+        if (this.redis) {
+            try {
+                await this.redis.del(key);
+            }
+            catch {
+            }
+        }
+        this.sessionStore.delete(key);
     }
     async createTest(dto) {
         return this.prisma.test.create({
@@ -136,7 +206,7 @@ let TestService = class TestService {
             tabSwitchCount: 0,
             maxTabSwitches: test.maxTabSwitches,
         };
-        await this.redis.set(constants_1.REDIS_KEYS.TEST_SESSION(session.id), JSON.stringify(sessionData), 'PX', endsAt - now + 60000);
+        await this.redisSet(constants_1.REDIS_KEYS.TEST_SESSION(session.id), JSON.stringify(sessionData), endsAt - now + 60000);
         await this.prisma.auditLog.create({
             data: {
                 userId,
@@ -149,7 +219,7 @@ let TestService = class TestService {
         return this.getTestSession(session.id, userId);
     }
     async getTestSession(sessionId, userId) {
-        const redisData = await this.redis.get(constants_1.REDIS_KEYS.TEST_SESSION(sessionId));
+        const redisData = await this.redisGet(constants_1.REDIS_KEYS.TEST_SESSION(sessionId));
         if (!redisData) {
             throw new common_1.BadRequestException('Test session expired or not found');
         }
@@ -200,7 +270,7 @@ let TestService = class TestService {
         };
     }
     async submitAnswer(sessionId, userId, dto) {
-        const redisData = await this.redis.get(constants_1.REDIS_KEYS.TEST_SESSION(sessionId));
+        const redisData = await this.redisGet(constants_1.REDIS_KEYS.TEST_SESSION(sessionId));
         if (!redisData) {
             throw new common_1.BadRequestException('Test session expired or not found');
         }
@@ -267,7 +337,7 @@ let TestService = class TestService {
         return this.processTestSubmission(session, false);
     }
     async logTestEvent(sessionId, userId, dto) {
-        const redisData = await this.redis.get(constants_1.REDIS_KEYS.TEST_SESSION(sessionId));
+        const redisData = await this.redisGet(constants_1.REDIS_KEYS.TEST_SESSION(sessionId));
         if (!redisData) {
             return { success: false };
         }
@@ -284,7 +354,7 @@ let TestService = class TestService {
         });
         if (dto.eventType === 'TAB_SWITCH') {
             sessionData.tabSwitchCount++;
-            await this.redis.set(constants_1.REDIS_KEYS.TEST_SESSION(sessionId), JSON.stringify(sessionData), 'KEEPTTL');
+            await this.redisSet(constants_1.REDIS_KEYS.TEST_SESSION(sessionId), JSON.stringify(sessionData));
             await this.prisma.auditLog.create({
                 data: {
                     userId,
@@ -361,7 +431,7 @@ let TestService = class TestService {
                 },
             });
         }
-        await this.redis.del(constants_1.REDIS_KEYS.TEST_SESSION(session.id));
+        await this.redisDel(constants_1.REDIS_KEYS.TEST_SESSION(session.id));
         await this.prisma.auditLog.create({
             data: {
                 userId: session.application.candidate.userId,
@@ -390,7 +460,7 @@ let TestService = class TestService {
     }
 };
 exports.TestService = TestService;
-exports.TestService = TestService = __decorate([
+exports.TestService = TestService = TestService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         config_1.ConfigService])

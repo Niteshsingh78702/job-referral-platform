@@ -5,7 +5,13 @@ export declare class TestService {
     private prisma;
     private configService;
     private redis;
+    private readonly logger;
+    private sessionStore;
     constructor(prisma: PrismaService, configService: ConfigService);
+    private initRedis;
+    private redisSet;
+    private redisGet;
+    private redisDel;
     createTest(dto: CreateTestDto): Promise<{
         id: string;
         createdAt: Date;

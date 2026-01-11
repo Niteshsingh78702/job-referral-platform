@@ -2,10 +2,10 @@ import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/commo
 import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { Pool, neonConfig } from '@neondatabase/serverless';
-import * as ws from 'ws';
+import WebSocket from 'ws';
 
 // Enable WebSocket for Neon serverless
-neonConfig.webSocketConstructor = ws;
+neonConfig.webSocketConstructor = WebSocket;
 
 @Injectable()
 export class PrismaService
@@ -23,7 +23,8 @@ export class PrismaService
 
         // Create Neon connection pool
         const pool = new Pool({ connectionString });
-        const adapter = new PrismaNeon(pool);
+        // Cast to any to fix type compatibility between @neondatabase/serverless and @prisma/adapter-neon
+        const adapter = new PrismaNeon(pool as any);
 
         super({
             adapter,

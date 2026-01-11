@@ -3,6 +3,7 @@ import {
     NotFoundException,
     BadRequestException,
     ForbiddenException,
+    Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
@@ -30,17 +31,89 @@ interface TestSessionData {
 
 @Injectable()
 export class TestService {
-    private redis: Redis;
+    private redis: Redis | null = null;
+    private readonly logger = new Logger(TestService.name);
+    // In-memory fallback for test sessions
+    private sessionStore: Map<string, { data: string; expiry: number }> = new Map();
 
     constructor(
         private prisma: PrismaService,
         private configService: ConfigService,
     ) {
-        this.redis = new Redis({
-            host: this.configService.get('REDIS_HOST', 'localhost'),
-            port: this.configService.get('REDIS_PORT', 6379),
-            password: this.configService.get('REDIS_PASSWORD'),
-        });
+        this.initRedis();
+    }
+
+    private initRedis(): void {
+        const redisUrl = this.configService.get('REDIS_URL');
+        const redisHost = this.configService.get('REDIS_HOST');
+
+        if (redisUrl || redisHost) {
+            try {
+                if (redisUrl) {
+                    this.redis = new Redis(redisUrl);
+                } else {
+                    this.redis = new Redis({
+                        host: redisHost || 'localhost',
+                        port: this.configService.get('REDIS_PORT', 6379),
+                        password: this.configService.get('REDIS_PASSWORD'),
+                    });
+                }
+
+                this.redis.on('error', (err) => {
+                    this.logger.warn(`Redis error: ${err.message}. Using in-memory storage.`);
+                    this.redis = null;
+                });
+            } catch {
+                this.logger.warn('Redis not available. Test sessions will use in-memory storage.');
+            }
+        } else {
+            this.logger.log('Redis not configured. Test sessions will use in-memory storage.');
+        }
+    }
+
+    // Helper methods for Redis operations with fallback
+    private async redisSet(key: string, value: string, pxMs?: number): Promise<void> {
+        if (this.redis) {
+            try {
+                if (pxMs) {
+                    await this.redis.set(key, value, 'PX', pxMs);
+                } else {
+                    await this.redis.set(key, value);
+                }
+                return;
+            } catch {
+                // Fall through to in-memory
+            }
+        }
+        this.sessionStore.set(key, { data: value, expiry: pxMs ? Date.now() + pxMs : Date.now() + 3600000 });
+    }
+
+    private async redisGet(key: string): Promise<string | null> {
+        if (this.redis) {
+            try {
+                return await this.redis.get(key);
+            } catch {
+                // Fall through
+            }
+        }
+        const stored = this.sessionStore.get(key);
+        if (!stored) return null;
+        if (Date.now() > stored.expiry) {
+            this.sessionStore.delete(key);
+            return null;
+        }
+        return stored.data;
+    }
+
+    private async redisDel(key: string): Promise<void> {
+        if (this.redis) {
+            try {
+                await this.redis.del(key);
+            } catch {
+                // Fall through
+            }
+        }
+        this.sessionStore.delete(key);
     }
 
     // ===========================================
@@ -182,10 +255,9 @@ export class TestService {
             maxTabSwitches: test.maxTabSwitches,
         };
 
-        await this.redis.set(
+        await this.redisSet(
             REDIS_KEYS.TEST_SESSION(session.id),
             JSON.stringify(sessionData),
-            'PX',
             endsAt - now + 60000, // Add 1 minute buffer
         );
 
@@ -204,8 +276,8 @@ export class TestService {
     }
 
     async getTestSession(sessionId: string, userId: string) {
-        // Get from Redis first
-        const redisData = await this.redis.get(REDIS_KEYS.TEST_SESSION(sessionId));
+        // Get from Redis/memory first
+        const redisData = await this.redisGet(REDIS_KEYS.TEST_SESSION(sessionId));
 
         if (!redisData) {
             // Session might have expired
@@ -272,8 +344,8 @@ export class TestService {
     }
 
     async submitAnswer(sessionId: string, userId: string, dto: SubmitAnswerDto) {
-        // Validate session from Redis
-        const redisData = await this.redis.get(REDIS_KEYS.TEST_SESSION(sessionId));
+        // Validate session from storage
+        const redisData = await this.redisGet(REDIS_KEYS.TEST_SESSION(sessionId));
 
         if (!redisData) {
             throw new BadRequestException('Test session expired or not found');
@@ -360,8 +432,8 @@ export class TestService {
     }
 
     async logTestEvent(sessionId: string, userId: string, dto: TestEventDto) {
-        // Get session from Redis
-        const redisData = await this.redis.get(REDIS_KEYS.TEST_SESSION(sessionId));
+        // Get session from storage
+        const redisData = await this.redisGet(REDIS_KEYS.TEST_SESSION(sessionId));
 
         if (!redisData) {
             return { success: false };
@@ -386,11 +458,10 @@ export class TestService {
         if (dto.eventType === 'TAB_SWITCH') {
             sessionData.tabSwitchCount++;
 
-            // Update Redis
-            await this.redis.set(
+            // Update session storage
+            await this.redisSet(
                 REDIS_KEYS.TEST_SESSION(sessionId),
                 JSON.stringify(sessionData),
-                'KEEPTTL',
             );
 
             // Log audit
@@ -491,8 +562,8 @@ export class TestService {
             });
         }
 
-        // Clear Redis
-        await this.redis.del(REDIS_KEYS.TEST_SESSION(session.id));
+        // Clear session storage
+        await this.redisDel(REDIS_KEYS.TEST_SESSION(session.id));
 
         // Log audit
         await this.prisma.auditLog.create({

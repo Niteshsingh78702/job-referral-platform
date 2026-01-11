@@ -24,7 +24,10 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
     logger = new common_1.Logger(PrismaService_1.name);
     constructor() {
         const connectionString = process.env.DATABASE_URL;
+        console.log('DATABASE_URL present:', !!connectionString);
+        console.log('DATABASE_URL length:', connectionString?.length || 0);
         if (!connectionString) {
+            console.error('DATABASE_URL is not set! Available env vars:', Object.keys(process.env).filter(k => k.includes('DATA') || k.includes('DB')));
             throw new Error('DATABASE_URL environment variable is not set');
         }
         const pool = new serverless_1.Pool({ connectionString });
@@ -36,6 +39,7 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
                 : ['error'],
         });
         this.logger.log('PrismaService initialized with Neon adapter');
+        this.logger.log('Connection string host:', connectionString.match(/@([^/]+)/)?.[1] || 'unknown');
     }
     async onModuleInit() {
         try {

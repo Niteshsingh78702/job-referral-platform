@@ -20,11 +20,6 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
             log: process.env.NODE_ENV === 'development'
                 ? ['query', 'info', 'warn', 'error']
                 : ['error'],
-            datasources: {
-                db: {
-                    url: process.env.DATABASE_URL,
-                },
-            },
         });
         this.logger.log('PrismaService initialized');
     }

@@ -11,9 +11,14 @@ export class PrismaService
     private static instance: PrismaClient | null = null;
 
     constructor() {
-        // Create connection pool
+        // Create connection pool with increased timeout for Render's free tier
         const connectionString = process.env.DATABASE_URL;
-        const pool = new Pool({ connectionString });
+        const pool = new Pool({
+            connectionString,
+            connectionTimeoutMillis: 30000, // 30 seconds connection timeout
+            idleTimeoutMillis: 30000,
+            max: 10,
+        });
 
         // Create adapter
         const adapter = new PrismaPg(pool);
@@ -24,6 +29,10 @@ export class PrismaService
                 process.env.NODE_ENV === 'development'
                     ? ['query', 'info', 'warn', 'error']
                     : ['error'],
+            transactionOptions: {
+                maxWait: 30000, // 30 seconds max wait for transaction
+                timeout: 30000, // 30 seconds transaction timeout
+            },
         });
     }
 

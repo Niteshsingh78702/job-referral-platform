@@ -5,15 +5,15 @@ export declare class JobService {
     private prisma;
     constructor(prisma: PrismaService);
     createJob(hrId: string, dto: CreateJobDto): Promise<{
-        hr: {
-            companyName: string;
-            companyWebsite: string | null;
-        } | null;
         test: {
             id: string;
             title: string;
-            duration: number;
             totalQuestions: number;
+            duration: number;
+        } | null;
+        hr: {
+            companyName: string;
+            companyWebsite: string | null;
         } | null;
         skills: {
             id: string;
@@ -23,18 +23,18 @@ export declare class JobService {
         }[];
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.JobStatus;
         updatedAt: Date;
+        expiresAt: Date | null;
         companyName: string;
-        title: string;
+        location: string;
         description: string;
-        testId: string | null;
         slug: string;
+        title: string;
         requirements: string | null;
         responsibilities: string | null;
         companyLogo: string | null;
-        location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
@@ -45,9 +45,9 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
+        testId: string | null;
         hrId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
     }>;
     getActiveJobs(query: JobQueryDto): Promise<{
         data: ({
@@ -62,18 +62,18 @@ export declare class JobService {
             }[];
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
+            status: import("@prisma/client").$Enums.JobStatus;
             updatedAt: Date;
+            expiresAt: Date | null;
             companyName: string;
-            title: string;
+            location: string;
             description: string;
-            testId: string | null;
             slug: string;
+            title: string;
             requirements: string | null;
             responsibilities: string | null;
             companyLogo: string | null;
-            location: string;
             isRemote: boolean;
             salaryMin: number | null;
             salaryMax: number | null;
@@ -84,9 +84,9 @@ export declare class JobService {
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
+            testId: string | null;
             hrId: string | null;
             postedAt: Date | null;
-            expiresAt: Date | null;
         })[];
         meta: {
             page: number;
@@ -96,15 +96,15 @@ export declare class JobService {
         };
     }>;
     getJobById(idOrSlug: string): Promise<{
-        hr: {
-            companyName: string;
-            companyWebsite: string | null;
-        } | null;
         test: {
             id: string;
             title: string;
-            duration: number;
             totalQuestions: number;
+            duration: number;
+        } | null;
+        hr: {
+            companyName: string;
+            companyWebsite: string | null;
         } | null;
         skills: {
             id: string;
@@ -114,18 +114,18 @@ export declare class JobService {
         }[];
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.JobStatus;
         updatedAt: Date;
+        expiresAt: Date | null;
         companyName: string;
-        title: string;
+        location: string;
         description: string;
-        testId: string | null;
         slug: string;
+        title: string;
         requirements: string | null;
         responsibilities: string | null;
         companyLogo: string | null;
-        location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
@@ -136,9 +136,9 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
+        testId: string | null;
         hrId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
     }>;
     updateJob(jobId: string, hrId: string, dto: UpdateJobDto): Promise<{
         skills: {
@@ -149,18 +149,18 @@ export declare class JobService {
         }[];
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.JobStatus;
         updatedAt: Date;
+        expiresAt: Date | null;
         companyName: string;
-        title: string;
+        location: string;
         description: string;
-        testId: string | null;
         slug: string;
+        title: string;
         requirements: string | null;
         responsibilities: string | null;
         companyLogo: string | null;
-        location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
@@ -171,17 +171,17 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
+        testId: string | null;
         hrId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
     }>;
     applyForJob(jobId: string, userId: string, dto: ApplyJobDto): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.ApplicationStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.ApplicationStatus;
         updatedAt: Date;
-        jobId: string;
         candidateId: string;
+        jobId: string;
         coverLetter: string | null;
         testScore: number | null;
         testPassedAt: Date | null;
@@ -199,18 +199,18 @@ export declare class JobService {
         };
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.JobStatus;
         updatedAt: Date;
+        expiresAt: Date | null;
         companyName: string;
-        title: string;
+        location: string;
         description: string;
-        testId: string | null;
         slug: string;
+        title: string;
         requirements: string | null;
         responsibilities: string | null;
         companyLogo: string | null;
-        location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
@@ -221,9 +221,9 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
+        testId: string | null;
         hrId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
     })[]>;
     private generateSlug;
 }

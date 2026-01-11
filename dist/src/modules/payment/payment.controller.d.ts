@@ -30,15 +30,15 @@ export declare class PaymentController {
     getPaymentHistory(userId: string): Promise<({
         refund: {
             id: string;
-            status: import("@prisma/client").$Enums.RefundStatus;
             createdAt: Date;
+            status: import("@prisma/client").$Enums.RefundStatus;
             updatedAt: Date;
             amount: number;
             paymentId: string;
             reason: string;
-            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
+            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {
@@ -48,11 +48,11 @@ export declare class PaymentController {
             };
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             updatedAt: Date;
-            jobId: string;
             candidateId: string;
+            jobId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
@@ -60,8 +60,8 @@ export declare class PaymentController {
         };
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.PaymentStatus;
         updatedAt: Date;
         applicationId: string;
         razorpayOrderId: string | null;
@@ -77,23 +77,23 @@ export declare class PaymentController {
     getPayment(userId: string, paymentId: string): Promise<{
         refund: {
             id: string;
-            status: import("@prisma/client").$Enums.RefundStatus;
             createdAt: Date;
+            status: import("@prisma/client").$Enums.RefundStatus;
             updatedAt: Date;
             amount: number;
             paymentId: string;
             reason: string;
-            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
+            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {
             candidate: {
                 id: string;
                 createdAt: Date;
-                updatedAt: Date;
                 userId: string;
+                updatedAt: Date;
                 firstName: string;
                 lastName: string;
                 headline: string | null;
@@ -112,18 +112,18 @@ export declare class PaymentController {
             };
             job: {
                 id: string;
-                status: import("@prisma/client").$Enums.JobStatus;
                 createdAt: Date;
+                status: import("@prisma/client").$Enums.JobStatus;
                 updatedAt: Date;
+                expiresAt: Date | null;
                 companyName: string;
-                title: string;
+                location: string;
                 description: string;
-                testId: string | null;
                 slug: string;
+                title: string;
                 requirements: string | null;
                 responsibilities: string | null;
                 companyLogo: string | null;
-                location: string;
                 isRemote: boolean;
                 salaryMin: number | null;
                 salaryMax: number | null;
@@ -134,17 +134,17 @@ export declare class PaymentController {
                 maxApplications: number;
                 applicationCount: number;
                 referralFee: number;
+                testId: string | null;
                 hrId: string | null;
                 postedAt: Date | null;
-                expiresAt: Date | null;
             };
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             updatedAt: Date;
-            jobId: string;
             candidateId: string;
+            jobId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
@@ -152,8 +152,8 @@ export declare class PaymentController {
         };
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.PaymentStatus;
         updatedAt: Date;
         applicationId: string;
         razorpayOrderId: string | null;
@@ -168,15 +168,15 @@ export declare class PaymentController {
     }>;
     requestRefund(userId: string, dto: RequestRefundDto): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.RefundStatus;
         createdAt: Date;
+        status: import("@prisma/client").$Enums.RefundStatus;
         updatedAt: Date;
         amount: number;
         paymentId: string;
         reason: string;
-        adminNotes: string | null;
         processedBy: string | null;
         processedAt: Date | null;
+        adminNotes: string | null;
         razorpayRefundId: string | null;
     }>;
 }

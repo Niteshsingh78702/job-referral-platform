@@ -469,7 +469,15 @@ async function approveJob(jobId) {
 }
 
 async function expireJob(jobId) {
-    if (!confirm('Expire this job? It will no longer be visible to candidates.')) return;
+    const confirmed = await showConfirmModal({
+        icon: '⏰',
+        title: 'Expire Job',
+        message: 'This job will no longer be visible to candidates. Continue?',
+        confirmText: 'Yes, Expire',
+        confirmClass: 'btn-warning'
+    });
+
+    if (!confirmed) return;
 
     // Check token
     if (!adminState.token) {
@@ -509,7 +517,15 @@ async function expireJob(jobId) {
 }
 
 async function deleteJob(jobId) {
-    if (!confirm('Delete this job? This cannot be undone.')) return;
+    const confirmed = await showConfirmModal({
+        icon: '🗑️',
+        title: 'Delete Job',
+        message: 'This action cannot be undone. Are you sure?',
+        confirmText: 'Yes, Delete',
+        confirmClass: 'btn-danger'
+    });
+
+    if (!confirmed) return;
 
     // Check token
     if (!adminState.token) {
@@ -632,7 +648,15 @@ function renderUsersTable() {
 }
 
 async function blockUser(userId) {
-    if (!confirm('Block this user?')) return;
+    const confirmed = await showConfirmModal({
+        icon: '🚫',
+        title: 'Block User',
+        message: 'This user will no longer be able to access their account.',
+        confirmText: 'Yes, Block',
+        confirmClass: 'btn-danger'
+    });
+
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/block`, {
@@ -655,7 +679,15 @@ async function blockUser(userId) {
 }
 
 async function unblockUser(userId) {
-    if (!confirm('Unblock this user?')) return;
+    const confirmed = await showConfirmModal({
+        icon: '✅',
+        title: 'Unblock User',
+        message: 'This user will regain access to their account.',
+        confirmText: 'Yes, Unblock',
+        confirmClass: 'btn-success'
+    });
+
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/unblock`, {
@@ -678,7 +710,15 @@ async function unblockUser(userId) {
 }
 
 async function deleteUser(userId) {
-    if (!confirm('Delete this user? This cannot be undone.')) return;
+    const confirmed = await showConfirmModal({
+        icon: '🗑️',
+        title: 'Delete User',
+        message: 'This action cannot be undone. All user data will be permanently removed.',
+        confirmText: 'Yes, Delete',
+        confirmClass: 'btn-danger'
+    });
+
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
@@ -1259,6 +1299,49 @@ function showToast(message, type = 'info') {
     setTimeout(() => {
         toast.classList.remove('show');
     }, 3000);
+}
+
+// Custom confirmation modal - returns a Promise
+function showConfirmModal(options = {}) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const icon = document.getElementById('confirmIcon');
+        const title = document.getElementById('confirmTitle');
+        const message = document.getElementById('confirmMessage');
+        const yesBtn = document.getElementById('confirmYes');
+        const noBtn = document.getElementById('confirmNo');
+
+        // Set content
+        icon.textContent = options.icon || '⚠️';
+        title.textContent = options.title || 'Confirm Action';
+        message.textContent = options.message || 'Are you sure you want to proceed?';
+        yesBtn.textContent = options.confirmText || 'Yes, Confirm';
+        yesBtn.className = `btn ${options.confirmClass || 'btn-danger'}`;
+
+        // Show modal
+        modal.classList.add('active');
+
+        // Handle clicks
+        const handleYes = () => {
+            modal.classList.remove('active');
+            cleanup();
+            resolve(true);
+        };
+
+        const handleNo = () => {
+            modal.classList.remove('active');
+            cleanup();
+            resolve(false);
+        };
+
+        const cleanup = () => {
+            yesBtn.removeEventListener('click', handleYes);
+            noBtn.removeEventListener('click', handleNo);
+        };
+
+        yesBtn.addEventListener('click', handleYes);
+        noBtn.addEventListener('click', handleNo);
+    });
 }
 
 function formatDate(dateString) {

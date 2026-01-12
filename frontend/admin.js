@@ -562,12 +562,23 @@ async function loadUsers(page = 1, role = '', status = '') {
             headers: { 'Authorization': `Bearer ${adminState.token}` },
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
-        if (data.success) {
-            adminState.users = data.data.data;
+        if (data.success && data.data) {
+            adminState.users = data.data.data || data.data;
             renderUsersTable();
-            renderPagination('usersPagination', data.data.meta, (p) => loadUsers(p, role, status));
+            if (data.data.meta) {
+                renderPagination('usersPagination', data.data.meta, (p) => loadUsers(p, role, status));
+            }
+        } else {
+            console.error('Failed to load users:', data);
         }
     } catch (error) {
         console.error('Error loading users:', error);
@@ -578,7 +589,7 @@ async function loadUsers(page = 1, role = '', status = '') {
 function renderUsersTable() {
     const container = document.getElementById('usersTableContainer');
 
-    if (adminState.users.length === 0) {
+    if (!adminState.users || adminState.users.length === 0) {
         container.innerHTML = '<p class="loading">No users found</p>';
         return;
     }
@@ -702,12 +713,23 @@ async function loadCandidates(page = 1, search = '') {
             headers: { 'Authorization': `Bearer ${adminState.token}` },
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
-        if (data.success) {
-            adminState.candidates = data.data.data;
+        if (data.success && data.data) {
+            adminState.candidates = data.data.data || data.data;
             renderCandidatesTable();
-            renderPagination('candidatesPagination', data.data.meta, (p) => loadCandidates(p, search));
+            if (data.data.meta) {
+                renderPagination('candidatesPagination', data.data.meta, (p) => loadCandidates(p, search));
+            }
+        } else {
+            console.error('Failed to load candidates:', data);
         }
     } catch (error) {
         console.error('Error loading candidates:', error);
@@ -718,7 +740,7 @@ async function loadCandidates(page = 1, search = '') {
 function renderCandidatesTable() {
     const container = document.getElementById('candidatesTableContainer');
 
-    if (adminState.candidates.length === 0) {
+    if (!adminState.candidates || adminState.candidates.length === 0) {
         container.innerHTML = '<p class="loading">No candidates found</p>';
         return;
     }
@@ -764,10 +786,17 @@ async function loadPendingHRs() {
             headers: { 'Authorization': `Bearer ${adminState.token}` },
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
-            renderHRTable(data.data);
+            renderHRTable(data.data || []);
         }
     } catch (error) {
         console.error('Error loading HRs:', error);
@@ -778,7 +807,7 @@ async function loadPendingHRs() {
 function renderHRTable(hrs) {
     const container = document.getElementById('hrTableContainer');
 
-    if (hrs.length === 0) {
+    if (!hrs || hrs.length === 0) {
         container.innerHTML = '<p class="loading">No pending HR approvals</p>';
         return;
     }
@@ -878,12 +907,21 @@ async function loadPayments(page = 1, status = '') {
             headers: { 'Authorization': `Bearer ${adminState.token}` },
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
-        if (data.success) {
-            adminState.payments = data.data.data;
+        if (data.success && data.data) {
+            adminState.payments = data.data.data || data.data;
             renderPaymentsTable();
-            renderPagination('paymentsPagination', data.data.meta, (p) => loadPayments(p, status));
+            if (data.data.meta) {
+                renderPagination('paymentsPagination', data.data.meta, (p) => loadPayments(p, status));
+            }
         }
     } catch (error) {
         console.error('Error loading payments:', error);
@@ -894,7 +932,7 @@ async function loadPayments(page = 1, status = '') {
 function renderPaymentsTable() {
     const container = document.getElementById('paymentsTableContainer');
 
-    if (adminState.payments.length === 0) {
+    if (!adminState.payments || adminState.payments.length === 0) {
         container.innerHTML = '<p class="loading">No payments found</p>';
         return;
     }
@@ -942,10 +980,17 @@ async function loadRefunds() {
             headers: { 'Authorization': `Bearer ${adminState.token}` },
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
-            renderRefundsTable(data.data);
+            renderRefundsTable(data.data || []);
         }
     } catch (error) {
         console.error('Error loading refunds:', error);
@@ -956,7 +1001,7 @@ async function loadRefunds() {
 function renderRefundsTable(refunds) {
     const container = document.getElementById('refundsTableContainer');
 
-    if (refunds.length === 0) {
+    if (!refunds || refunds.length === 0) {
         container.innerHTML = '<p class="loading">No pending refunds</p>';
         return;
     }
@@ -1065,12 +1110,21 @@ async function loadAuditLogs(page = 1, action = '') {
             headers: { 'Authorization': `Bearer ${adminState.token}` },
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
-        if (data.success) {
-            adminState.auditLogs = data.data.data;
+        if (data.success && data.data) {
+            adminState.auditLogs = data.data.data || data.data;
             renderAuditLogsTable();
-            renderPagination('auditPagination', data.data.meta, (p) => loadAuditLogs(p, action));
+            if (data.data.meta) {
+                renderPagination('auditPagination', data.data.meta, (p) => loadAuditLogs(p, action));
+            }
         }
     } catch (error) {
         console.error('Error loading audit logs:', error);
@@ -1081,7 +1135,7 @@ async function loadAuditLogs(page = 1, action = '') {
 function renderAuditLogsTable() {
     const container = document.getElementById('auditTableContainer');
 
-    if (adminState.auditLogs.length === 0) {
+    if (!adminState.auditLogs || adminState.auditLogs.length === 0) {
         container.innerHTML = '<p class="loading">No audit logs found</p>';
         return;
     }

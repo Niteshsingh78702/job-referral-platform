@@ -676,9 +676,21 @@ a:hover {
     border-top: 1px solid var(--border);
 }
 
+.job-footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .referral-fee {
     font-size: 14px;
     color: var(--text-muted);
+}
+
+.posted-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    opacity: 0.8;
 }
 
 /* Loading Spinner */

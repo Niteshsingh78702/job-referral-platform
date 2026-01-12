@@ -593,11 +593,43 @@ function renderJobs(jobs) {
                 ${(job.skills || []).length > 3 ? `<span class="skill-tag">+${job.skills.length - 3}</span>` : ''}
             </div>
             <div class="job-footer">
-                <span class="referral-fee">Referral Fee: ₹${job.referralFee || 499}</span>
+                <div class="job-footer-left">
+                    <span class="referral-fee">Referral Fee: ₹${job.referralFee || 499}</span>
+                    <span class="posted-time">📅 ${getTimeAgo(job.postedAt || job.createdAt)}</span>
+                </div>
                 ${getApplyButtonHtml(job.id, true)}
             </div>
         </div>
     `).join('');
+}
+
+// Helper function to format relative time like Naukri.com
+function getTimeAgo(dateString) {
+    if (!dateString) return 'Recently';
+
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) {
+        return 'Just now';
+    } else if (diffHours < 24) {
+        return 'Today';
+    } else if (diffDays === 1) {
+        return 'Yesterday';
+    } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+        const weeks = Math.floor(diffDays / 7);
+        return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+    } else if (diffDays < 365) {
+        const months = Math.floor(diffDays / 30);
+        return months === 1 ? '1 month ago' : `${months} months ago`;
+    } else {
+        return date.toLocaleDateString();
+    }
 }
 
 // =============================================

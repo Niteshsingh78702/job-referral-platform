@@ -55,12 +55,35 @@ async function verifyTokenAndLoad() {
                 return;
             }
         }
-        // Token invalid or expired
+        // Token invalid or expired - try to re-login silently or show login
+        console.log('Token expired or invalid, showing login page');
         logout();
     } catch (error) {
         console.error('Token verification failed:', error);
         logout();
     }
+}
+
+// Helper to check token before API calls
+async function apiCall(url, options = {}) {
+    const defaultHeaders = {
+        'Authorization': `Bearer ${adminState.token}`,
+        'Content-Type': 'application/json'
+    };
+
+    const response = await fetch(url, {
+        ...options,
+        headers: { ...defaultHeaders, ...options.headers }
+    });
+
+    // Check for token expiration
+    if (response.status === 401) {
+        showToast('Session expired. Please login again.', 'error');
+        logout();
+        throw new Error('Unauthorized');
+    }
+
+    return response;
 }
 
 // ==========================================
@@ -349,6 +372,13 @@ async function editJob(jobId) {
 document.getElementById('jobForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Check if token exists
+    if (!adminState.token) {
+        showToast('Session expired. Please login again.', 'error');
+        logout();
+        return;
+    }
+
     const jobData = {
         title: document.getElementById('jobTitle').value,
         companyName: document.getElementById('jobCompany').value,
@@ -379,10 +409,17 @@ document.getElementById('jobForm').addEventListener('submit', async (e) => {
             body: JSON.stringify(jobData),
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
-            showToast(data.message, 'success');
+            showToast(data.message || 'Job saved successfully!', 'success');
             closeJobModal();
             loadJobs();
         } else {
@@ -390,7 +427,7 @@ document.getElementById('jobForm').addEventListener('submit', async (e) => {
         }
     } catch (error) {
         console.error('Error saving job:', error);
-        showToast('Failed to save job', 'error');
+        showToast('Failed to save job. Please try again.', 'error');
     }
 });
 
@@ -1113,8 +1150,35 @@ function showToast(message, type = 'info') {
 
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
+    return getTimeAgo(dateString);
+}
+
+function getTimeAgo(dateString) {
+    if (!dateString) return 'N/A';
+
+    const now = new Date();
     const date = new Date(dateString);
-    return date.toLocaleDateString();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) {
+        return 'Just now';
+    } else if (diffHours < 24) {
+        return 'Today';
+    } else if (diffDays === 1) {
+        return 'Yesterday';
+    } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+        const weeks = Math.floor(diffDays / 7);
+        return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+    } else if (diffDays < 365) {
+        const months = Math.floor(diffDays / 30);
+        return months === 1 ? '1 month ago' : `${months} months ago`;
+    } else {
+        return date.toLocaleDateString();
+    }
 }
 
 function formatDateTime(dateString) {

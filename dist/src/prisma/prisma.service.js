@@ -8,38 +8,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var PrismaService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
-const adapter_neon_1 = require("@prisma/adapter-neon");
-const serverless_1 = require("@neondatabase/serverless");
-const ws_1 = __importDefault(require("ws"));
-serverless_1.neonConfig.webSocketConstructor = ws_1.default;
 let PrismaService = PrismaService_1 = class PrismaService extends client_1.PrismaClient {
     logger = new common_1.Logger(PrismaService_1.name);
     constructor() {
-        const connectionString = process.env.DATABASE_URL;
-        console.log('DATABASE_URL present:', !!connectionString);
-        console.log('DATABASE_URL length:', connectionString?.length || 0);
-        if (!connectionString) {
-            console.error('DATABASE_URL is not set! Available env vars:', Object.keys(process.env).filter(k => k.includes('DATA') || k.includes('DB')));
-            throw new Error('DATABASE_URL environment variable is not set');
-        }
-        const pool = new serverless_1.Pool({ connectionString });
-        const adapter = new adapter_neon_1.PrismaNeon(pool);
         super({
-            adapter,
             log: process.env.NODE_ENV === 'development'
                 ? ['query', 'info', 'warn', 'error']
                 : ['error'],
         });
-        this.logger.log('PrismaService initialized with Neon adapter');
-        this.logger.log('Connection string host:', connectionString.match(/@([^/]+)/)?.[1] || 'unknown');
+        this.logger.log('PrismaService initialized');
+        this.logger.log('DATABASE_URL present:', !!process.env.DATABASE_URL);
     }
     async onModuleInit() {
         try {

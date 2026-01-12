@@ -1222,20 +1222,31 @@ function renderPagination(containerId, meta, loadFunction) {
 
     const { page, totalPages } = meta;
 
-    let html = '';
+    // Clear existing content
+    container.innerHTML = '';
 
-    // Previous button
-    html += `<button ${page === 1 ? 'disabled' : ''} onclick="() => ${loadFunction(page - 1)}">Previous</button>`;
+    // Create Previous button
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = 'Previous';
+    prevBtn.disabled = page === 1;
+    prevBtn.addEventListener('click', () => loadFunction(page - 1));
+    container.appendChild(prevBtn);
 
-    // Page numbers
+    // Create page number buttons
     for (let i = 1; i <= Math.min(totalPages, 5); i++) {
-        html += `<button class="${i === page ? 'active' : ''}" onclick="() => ${loadFunction(i)}">${i}</button>`;
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        pageBtn.className = i === page ? 'active' : '';
+        pageBtn.addEventListener('click', () => loadFunction(i));
+        container.appendChild(pageBtn);
     }
 
-    // Next button
-    html += `<button ${page === totalPages ? 'disabled' : ''} onclick="() => ${loadFunction(page + 1)}">Next</button>`;
-
-    container.innerHTML = html;
+    // Create Next button
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Next';
+    nextBtn.disabled = page === totalPages || totalPages === 0;
+    nextBtn.addEventListener('click', () => loadFunction(page + 1));
+    container.appendChild(nextBtn);
 }
 
 function showToast(message, type = 'info') {

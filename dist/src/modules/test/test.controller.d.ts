@@ -7,11 +7,11 @@ export declare class TestController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         title: string;
-        totalQuestions: number;
+        description: string | null;
         duration: number;
         passingScore: number;
+        totalQuestions: number;
         shuffleQuestions: boolean;
         maxTabSwitches: number;
         difficulty: string;
@@ -20,35 +20,35 @@ export declare class TestController {
     addQuestion(testId: string, dto: AddQuestionDto): Promise<{
         id: string;
         createdAt: Date;
-        points: number;
         testId: string;
         question: string;
-        options: import("@prisma/client/runtime/client").JsonValue;
+        options: import("@prisma/client/runtime/library").JsonValue;
         correctAnswer: number;
         explanation: string | null;
+        points: number;
         orderIndex: number;
     }>;
     getTest(testId: string): Promise<{
         questions: {
             id: string;
             createdAt: Date;
-            points: number;
             testId: string;
             question: string;
-            options: import("@prisma/client/runtime/client").JsonValue;
+            options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
             explanation: string | null;
+            points: number;
             orderIndex: number;
         }[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         title: string;
-        totalQuestions: number;
+        description: string | null;
         duration: number;
         passingScore: number;
+        totalQuestions: number;
         shuffleQuestions: boolean;
         maxTabSwitches: number;
         difficulty: string;
@@ -62,9 +62,9 @@ export declare class TestController {
         remainingTime: number;
         questions: {
             id: string;
-            points: number;
             question: string;
-            options: import("@prisma/client/runtime/client").JsonValue;
+            options: import("@prisma/client/runtime/library").JsonValue;
+            points: number;
         }[];
         answers: {
             questionId: string;
@@ -81,9 +81,9 @@ export declare class TestController {
         remainingTime: number;
         questions: {
             id: string;
-            points: number;
             question: string;
-            options: import("@prisma/client/runtime/client").JsonValue;
+            options: import("@prisma/client/runtime/library").JsonValue;
+            points: number;
         }[];
         answers: {
             questionId: string;

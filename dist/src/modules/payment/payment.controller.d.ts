@@ -30,8 +30,8 @@ export declare class PaymentController {
     getPaymentHistory(userId: string): Promise<({
         refund: {
             id: string;
-            createdAt: Date;
             status: import("@prisma/client").$Enums.RefundStatus;
+            createdAt: Date;
             updatedAt: Date;
             amount: number;
             paymentId: string;
@@ -48,11 +48,11 @@ export declare class PaymentController {
             };
         } & {
             id: string;
-            createdAt: Date;
             status: import("@prisma/client").$Enums.ApplicationStatus;
+            createdAt: Date;
             updatedAt: Date;
-            candidateId: string;
             jobId: string;
+            candidateId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
@@ -60,8 +60,8 @@ export declare class PaymentController {
         };
     } & {
         id: string;
-        createdAt: Date;
         status: import("@prisma/client").$Enums.PaymentStatus;
+        createdAt: Date;
         updatedAt: Date;
         applicationId: string;
         razorpayOrderId: string | null;
@@ -70,15 +70,15 @@ export declare class PaymentController {
         amount: number;
         currency: string;
         failureReason: string | null;
-        webhookPayload: import("@prisma/client/runtime/client").JsonValue | null;
+        webhookPayload: import("@prisma/client/runtime/library").JsonValue | null;
         orderCreatedAt: Date | null;
         paidAt: Date | null;
     })[]>;
     getPayment(userId: string, paymentId: string): Promise<{
         refund: {
             id: string;
-            createdAt: Date;
             status: import("@prisma/client").$Enums.RefundStatus;
+            createdAt: Date;
             updatedAt: Date;
             amount: number;
             paymentId: string;
@@ -92,8 +92,8 @@ export declare class PaymentController {
             candidate: {
                 id: string;
                 createdAt: Date;
-                userId: string;
                 updatedAt: Date;
+                userId: string;
                 firstName: string;
                 lastName: string;
                 headline: string | null;
@@ -112,18 +112,18 @@ export declare class PaymentController {
             };
             job: {
                 id: string;
-                createdAt: Date;
                 status: import("@prisma/client").$Enums.JobStatus;
+                createdAt: Date;
                 updatedAt: Date;
-                expiresAt: Date | null;
                 companyName: string;
-                location: string;
-                description: string;
-                slug: string;
                 title: string;
+                description: string;
+                testId: string | null;
+                slug: string;
                 requirements: string | null;
                 responsibilities: string | null;
                 companyLogo: string | null;
+                location: string;
                 isRemote: boolean;
                 salaryMin: number | null;
                 salaryMax: number | null;
@@ -134,17 +134,17 @@ export declare class PaymentController {
                 maxApplications: number;
                 applicationCount: number;
                 referralFee: number;
-                testId: string | null;
                 hrId: string | null;
                 postedAt: Date | null;
+                expiresAt: Date | null;
             };
         } & {
             id: string;
-            createdAt: Date;
             status: import("@prisma/client").$Enums.ApplicationStatus;
+            createdAt: Date;
             updatedAt: Date;
-            candidateId: string;
             jobId: string;
+            candidateId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
@@ -152,8 +152,8 @@ export declare class PaymentController {
         };
     } & {
         id: string;
-        createdAt: Date;
         status: import("@prisma/client").$Enums.PaymentStatus;
+        createdAt: Date;
         updatedAt: Date;
         applicationId: string;
         razorpayOrderId: string | null;
@@ -162,14 +162,14 @@ export declare class PaymentController {
         amount: number;
         currency: string;
         failureReason: string | null;
-        webhookPayload: import("@prisma/client/runtime/client").JsonValue | null;
+        webhookPayload: import("@prisma/client/runtime/library").JsonValue | null;
         orderCreatedAt: Date | null;
         paidAt: Date | null;
     }>;
     requestRefund(userId: string, dto: RequestRefundDto): Promise<{
         id: string;
-        createdAt: Date;
         status: import("@prisma/client").$Enums.RefundStatus;
+        createdAt: Date;
         updatedAt: Date;
         amount: number;
         paymentId: string;

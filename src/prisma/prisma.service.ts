@@ -1,7 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 
 @Injectable()
 export class PrismaService
@@ -9,32 +7,15 @@ export class PrismaService
     implements OnModuleInit, OnModuleDestroy {
 
     private readonly logger = new Logger(PrismaService.name);
-    private pool: Pool;
 
     constructor() {
-        const databaseUrl = process.env.DATABASE_URL;
-
-        if (!databaseUrl) {
-            throw new Error('DATABASE_URL environment variable is required');
-        }
-
-        // Create pg pool with SSL for Neon
-        const pool = new Pool({
-            connectionString: databaseUrl,
-            ssl: { rejectUnauthorized: false }
-        });
-
-        const adapter = new PrismaPg(pool);
-
         super({
-            adapter,
             log: process.env.NODE_ENV === 'development'
                 ? ['query', 'info', 'warn', 'error']
                 : ['error'],
         });
 
-        this.pool = pool;
-        this.logger.log('PrismaService initialized with pg adapter');
+        this.logger.log('PrismaService initialized');
     }
 
     async onModuleInit() {
@@ -50,7 +31,6 @@ export class PrismaService
 
     async onModuleDestroy() {
         await this.$disconnect();
-        await this.pool.end();
     }
 
     // Helper for transactions with retry

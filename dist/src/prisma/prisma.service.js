@@ -13,29 +13,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
-const adapter_pg_1 = require("@prisma/adapter-pg");
-const pg_1 = require("pg");
 let PrismaService = PrismaService_1 = class PrismaService extends client_1.PrismaClient {
     logger = new common_1.Logger(PrismaService_1.name);
-    pool;
     constructor() {
-        const databaseUrl = process.env.DATABASE_URL;
-        if (!databaseUrl) {
-            throw new Error('DATABASE_URL environment variable is required');
-        }
-        const pool = new pg_1.Pool({
-            connectionString: databaseUrl,
-            ssl: { rejectUnauthorized: false }
-        });
-        const adapter = new adapter_pg_1.PrismaPg(pool);
         super({
-            adapter,
             log: process.env.NODE_ENV === 'development'
                 ? ['query', 'info', 'warn', 'error']
                 : ['error'],
         });
-        this.pool = pool;
-        this.logger.log('PrismaService initialized with pg adapter');
+        this.logger.log('PrismaService initialized');
     }
     async onModuleInit() {
         try {
@@ -50,7 +36,6 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
     }
     async onModuleDestroy() {
         await this.$disconnect();
-        await this.pool.end();
     }
     async executeInTransaction(fn, maxRetries = 3) {
         let lastError;

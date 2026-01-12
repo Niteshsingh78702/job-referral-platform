@@ -32,8 +32,8 @@ export declare class AuthService {
         candidate: {
             id: string;
             createdAt: Date;
-            userId: string;
             updatedAt: Date;
+            userId: string;
             firstName: string;
             lastName: string;
             headline: string | null;
@@ -50,33 +50,16 @@ export declare class AuthService {
             country: string | null;
             willingToRelocate: boolean;
         } | null;
-        employee: {
-            id: string;
-            createdAt: Date;
-            userId: string;
-            updatedAt: Date;
-            companyName: string;
-            companyEmail: string;
-            designation: string | null;
-            employeeId: string | null;
-            linkedinUrl: string | null;
-            isVerified: boolean;
-            verifiedAt: Date | null;
-            referralCount: number;
-            successfulReferrals: number;
-            badges: string[];
-            points: number;
-        } | null;
         hr: {
             id: string;
             createdAt: Date;
-            userId: string;
             updatedAt: Date;
+            userId: string;
             companyName: string;
             companyEmail: string;
+            companyWebsite: string | null;
             designation: string | null;
             linkedinUrl: string | null;
-            companyWebsite: string | null;
             approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
             approvedBy: string | null;
             approvedAt: Date | null;
@@ -84,14 +67,31 @@ export declare class AuthService {
             totalJobsPosted: number;
             activeJobs: number;
         } | null;
+        employee: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            companyName: string;
+            companyEmail: string;
+            designation: string | null;
+            linkedinUrl: string | null;
+            points: number;
+            employeeId: string | null;
+            isVerified: boolean;
+            verifiedAt: Date | null;
+            referralCount: number;
+            successfulReferrals: number;
+            badges: string[];
+        } | null;
         id: string;
-        createdAt: Date;
         email: string;
         phone: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         status: import("@prisma/client").$Enums.UserStatus;
         emailVerified: boolean;
         phoneVerified: boolean;
+        createdAt: Date;
         updatedAt: Date;
         lastLoginAt: Date | null;
     }>;

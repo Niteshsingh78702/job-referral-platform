@@ -23,7 +23,10 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
         if (!databaseUrl) {
             throw new Error('DATABASE_URL environment variable is required');
         }
-        const pool = new pg_1.Pool({ connectionString: databaseUrl });
+        const pool = new pg_1.Pool({
+            connectionString: databaseUrl,
+            ssl: { rejectUnauthorized: false }
+        });
         const adapter = new adapter_pg_1.PrismaPg(pool);
         super({
             adapter,

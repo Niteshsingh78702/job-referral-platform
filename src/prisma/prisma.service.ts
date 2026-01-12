@@ -18,16 +18,19 @@ export class PrismaService
             throw new Error('DATABASE_URL environment variable is required');
         }
 
-        // Create pg pool for standard PostgreSQL connection
-        const pool = new Pool({ connectionString: databaseUrl });
+        // Create pg pool with SSL for Neon
+        const pool = new Pool({
+            connectionString: databaseUrl,
+            ssl: { rejectUnauthorized: false }
+        });
+
         const adapter = new PrismaPg(pool);
 
         super({
             adapter,
-            log:
-                process.env.NODE_ENV === 'development'
-                    ? ['query', 'info', 'warn', 'error']
-                    : ['error'],
+            log: process.env.NODE_ENV === 'development'
+                ? ['query', 'info', 'warn', 'error']
+                : ['error'],
         });
 
         this.pool = pool;

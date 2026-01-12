@@ -2,8 +2,9 @@
 // Database: PostgreSQL
 
 generator client {
-  provider = "prisma-client-js"
-  engineType = "client"
+  provider        = "prisma-client-js"
+  engineType      = "client"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {

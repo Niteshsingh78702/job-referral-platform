@@ -280,12 +280,24 @@ async function loadJobs(page = 1, status = '') {
             headers: { 'Authorization': `Bearer ${adminState.token}` },
         });
 
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
 
-        if (data.success) {
-            adminState.jobs = data.data.data;
+        if (data.success && data.data) {
+            adminState.jobs = data.data.data || data.data;
             renderJobsTable();
-            renderPagination('jobsPagination', data.data.meta, (p) => loadJobs(p, status));
+            if (data.data.meta) {
+                renderPagination('jobsPagination', data.data.meta, (p) => loadJobs(p, status));
+            }
+        } else {
+            console.error('Failed to load jobs:', data);
+            showToast('Failed to load jobs', 'error');
         }
     } catch (error) {
         console.error('Error loading jobs:', error);
@@ -296,7 +308,7 @@ async function loadJobs(page = 1, status = '') {
 function renderJobsTable() {
     const container = document.getElementById('jobsTableContainer');
 
-    if (adminState.jobs.length === 0) {
+    if (!adminState.jobs || adminState.jobs.length === 0) {
         container.innerHTML = '<p class="loading">No jobs found</p>';
         return;
     }
@@ -315,22 +327,24 @@ function renderJobsTable() {
                 </tr>
             </thead>
             <tbody>
-                ${adminState.jobs.map(job => `
+                ${adminState.jobs.map(job => {
+        const appCount = job._count?.applications || 0;
+        return `
                     <tr>
                         <td>${job.title}</td>
                         <td>${job.companyName || job.hr?.companyName || 'N/A'}</td>
                         <td>${job.location || 'N/A'}</td>
                         <td><span class="badge badge-${getStatusBadge(job.status)}">${job.status}</span></td>
-                        <td>${job._count?.applications || 0}</td>
-                        <td>${formatDate(job.postedAt)}</td>
+                        <td>${appCount}</td>
+                        <td>${formatDate(job.postedAt || job.createdAt)}</td>
                         <td>
                             <button class="btn btn-sm btn-primary" onclick="editJob('${job.id}')">Edit</button>
                             ${job.status === 'PENDING' ? `<button class="btn btn-sm btn-success" onclick="approveJob('${job.id}')">Approve</button>` : ''}
-                            ${job.status === 'ACTIVE' ? `<button class="btn btn-sm btn-danger" onclick="expireJob('${job.id}')">Expire</button>` : ''}
-                            ${job._count?.applications === 0 ? `<button class="btn btn-sm btn-danger" onclick="deleteJob('${job.id}')">Delete</button>` : ''}
+                            ${job.status === 'ACTIVE' ? `<button class="btn btn-sm btn-warning" onclick="expireJob('${job.id}')">Expire</button>` : ''}
+                            <button class="btn btn-sm btn-danger" onclick="deleteJob('${job.id}')">Delete</button>
                         </td>
                     </tr>
-                `).join('')}
+                `}).join('')}
             </tbody>
         </table>
     `;
@@ -455,13 +469,30 @@ async function approveJob(jobId) {
 }
 
 async function expireJob(jobId) {
-    if (!confirm('Expire this job?')) return;
+    if (!confirm('Expire this job? It will no longer be visible to candidates.')) return;
+
+    // Check token
+    if (!adminState.token) {
+        showToast('Session expired. Please login again.', 'error');
+        logout();
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE_URL}/admin/jobs/${jobId}/expire`, {
             method: 'PATCH',
-            headers: { 'Authorization': `Bearer ${adminState.token}` },
+            headers: {
+                'Authorization': `Bearer ${adminState.token}`,
+                'Content-Type': 'application/json'
+            },
         });
+
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
 
         const data = await response.json();
 
@@ -480,11 +511,28 @@ async function expireJob(jobId) {
 async function deleteJob(jobId) {
     if (!confirm('Delete this job? This cannot be undone.')) return;
 
+    // Check token
+    if (!adminState.token) {
+        showToast('Session expired. Please login again.', 'error');
+        logout();
+        return;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/admin/jobs/${jobId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${adminState.token}` },
+            headers: {
+                'Authorization': `Bearer ${adminState.token}`,
+                'Content-Type': 'application/json'
+            },
         });
+
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
 
         const data = await response.json();
 

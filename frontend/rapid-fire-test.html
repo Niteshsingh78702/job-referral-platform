@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Test - JobRefer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+        }
+
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header with timer */
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .test-title h1 {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .test-title p {
+            color: var(--text-dim);
+        }
+
+        .timer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .timer.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .timer.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        /* Progress bar */
+        .progress-section {
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #8b5cf6);
+            transition: width 0.3s ease;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Question navigation */
+        .question-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .nav-btn.current {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .nav-btn.answered {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        /* Question card */
+        .question-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .question-number {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .difficulty {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .difficulty.EASY {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .difficulty.MEDIUM {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .difficulty.HARD {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        /* Options */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .option.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .option-letter {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--border);
+            border-radius: 8px;
+            font-weight: 700;
+            margin-right: 16px;
+            transition: all 0.2s;
+        }
+
+        .option.selected .option-letter {
+            background: var(--primary);
+        }
+
+        .option-text {
+            flex: 1;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .btn-exit {
+            background: transparent;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+        }
+
+        /* Exit confirmation modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 480px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .modal h2 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: var(--danger);
+        }
+
+        .modal p {
+            color: var(--text-dim);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* Results page */
+        .results-container {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results-container.active {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+
+        .result-score {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .result-score.pass {
+            color: var(--success);
+        }
+
+        .result-score.fail {
+            color: var(--danger);
+        }
+
+        .result-message {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 32px;
+        }
+
+        .result-details {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 16px; color: var(--text-dim);">Loading test...</p>
+        </div>
+
+        <!-- Test Content -->
+        <div id="testContent" class="hidden">
+            <!-- Header -->
+            <div class="test-header">
+                <div class="test-title">
+                    <h1 id="testTitle">Skill Assessment Test</h1>
+                    <p id="testSubtitle">Answer all questions within the time limit</p>
+                </div>
+                <div class="timer" id="timer">
+                    ⏱️ <span id="timerDisplay">20:00</span>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-section">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-info">
+                    <span><span id="answeredCount">0</span> of <span id="totalQuestions">0</span> answered</span>
+                    <span id="currentQuestion">Question 1</span>
+                </div>
+            </div>
+
+            <!-- Question Navigation -->
+            <div class="question-nav" id="questionNav"></div>
+
+            <!-- Question Card -->
+            <div class="question-card">
+                <div class="question-header">
+                    <span class="question-number" id="questionLabel">Question 1 of 20</span>
+                    <span class="difficulty" id="difficultyBadge">MEDIUM</span>
+                </div>
+                <div class="question-text" id="questionText">Loading question...</div>
+                <div class="options" id="optionsContainer"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <div>
+                    <button class="btn btn-secondary" id="prevBtn" onclick="navigateQuestion(-1)">← Previous</button>
+                    <button class="btn btn-secondary" id="nextBtn" onclick="navigateQuestion(1)">Next →</button>
+                </div>
+                <div>
+                    <button class="btn btn-exit" onclick="showExitModal()">Exit Test</button>
+                    <button class="btn btn-submit" onclick="showSubmitModal()">Submit Test</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsContainer" class="results-container">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <div class="result-score" id="resultScore">85%</div>
+            <div class="result-message" id="resultMessage">Congratulations! You passed!</div>
+            <div class="result-details">
+                <div class="result-row">
+                    <span>Total Questions</span>
+                    <span id="resultTotal">20</span>
+                </div>
+                <div class="result-row">
+                    <span>Correct Answers</span>
+                    <span id="resultCorrect" style="color: var(--success)">17</span>
+                </div>
+                <div class="result-row">
+                    <span>Passing Score</span>
+                    <span id="resultPassing">70%</span>
+                </div>
+                <div class="result-row">
+                    <span>Your Score</span>
+                    <span id="resultYourScore">85%</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="window.location.href='index.html#jobs'">Browse More Jobs</button>
+        </div>
+    </div>
+
+    <!-- Exit Confirmation Modal -->
+    <div class="modal-overlay" id="exitModal">
+        <div class="modal">
+            <h2>⚠️ Exit Test?</h2>
+            <p>If you exit now, this will count as a <strong>failed attempt</strong>. You will need to wait <strong>24
+                    hours</strong> before retaking this test.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="hideExitModal()">Continue Test</button>
+                <button class="btn btn-exit" onclick="exitTest()"
+                    style="background: var(--danger); color: white; border: none;">Exit & Fail</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Confirmation Modal -->
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal">
+            <h2>📝 Submit Test?</h2>
+            <p id="submitMessage">You have answered <strong>15 of 20</strong> questions. Are you sure you want to
+                submit?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="hideSubmitModal()">Review Answers</button>
+                <button class="btn btn-submit" onclick="submitTest()">Submit Test</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        let sessionId = null;
+        let questions = [];
+        let currentIndex = 0;
+        let timerInterval = null;
+        let remainingSeconds = 0;
+
+        // Get session ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        sessionId = urlParams.get('session');
+
+        // Token from localStorage
+        const token = localStorage.getItem('accessToken');
+
+        if (!sessionId || !token) {
+            alert('Invalid test session. Please start from the jobs page.');
+            window.location.href = 'index.html#jobs';
+        }
+
+        // Load test state
+        async function loadTest() {
+            try {
+                const res = await fetch(`${API_BASE}/rapid-fire/session/${sessionId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+
+                questions = data.data.questions;
+                remainingSeconds = data.data.remainingTime;
+
+                document.getElementById('totalQuestions').textContent = questions.length;
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('testContent').classList.remove('hidden');
+
+                renderQuestionNav();
+                renderQuestion(0);
+                startTimer();
+                updateProgress();
+            } catch (error) {
+                alert(error.message || 'Failed to load test');
+                window.location.href = 'index.html#jobs';
+            }
+        }
+
+        // Render question navigation buttons
+        function renderQuestionNav() {
+            const nav = document.getElementById('questionNav');
+            nav.innerHTML = questions.map((q, i) => `
+                <button class="nav-btn ${i === currentIndex ? 'current' : ''} ${q.answered ? 'answered' : ''}" 
+                        onclick="goToQuestion(${i})">
+                    ${i + 1}
+                </button>
+            `).join('');
+        }
+
+        // Render current question
+        function renderQuestion(index) {
+            currentIndex = index;
+            const q = questions[index];
+
+            document.getElementById('questionLabel').textContent = `Question ${index + 1} of ${questions.length}`;
+            document.getElementById('currentQuestion').textContent = `Question ${index + 1}`;
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('difficultyBadge').textContent = q.difficulty;
+            document.getElementById('difficultyBadge').className = `difficulty ${q.difficulty}`;
+
+            const optionsHtml = (q.options || []).map((opt, i) => `
+                <div class="option ${q.selectedAnswer === i ? 'selected' : ''}" onclick="selectOption(${i})">
+                    <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                    <span class="option-text">${opt}</span>
+                </div>
+            `).join('');
+            document.getElementById('optionsContainer').innerHTML = optionsHtml;
+
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+                btn.classList.toggle('current', i === index);
+                btn.classList.toggle('answered', questions[i].answered);
+            });
+
+            // Update prev/next buttons
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === questions.length - 1;
+        }
+
+        // Go to specific question
+        function goToQuestion(index) {
+            renderQuestion(index);
+        }
+
+        // Navigate prev/next
+        function navigateQuestion(delta) {
+            const newIndex = currentIndex + delta;
+            if (newIndex >= 0 && newIndex < questions.length) {
+                renderQuestion(newIndex);
+            }
+        }
+
+        // Select option
+        async function selectOption(optionIndex) {
+            const q = questions[currentIndex];
+            q.selectedAnswer = optionIndex;
+            q.answered = true;
+
+            renderQuestion(currentIndex);
+            updateProgress();
+
+            // Save to server
+            try {
+                await fetch(`${API_BASE}/rapid-fire/session/${sessionId}/answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        questionId: q.id,
+                        selectedAnswer: optionIndex
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to save answer:', error);
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const answered = questions.filter(q => q.answered).length;
+            document.getElementById('answeredCount').textContent = answered;
+            document.getElementById('progressFill').style.width = `${(answered / questions.length) * 100}%`;
+        }
+
+        // Timer
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateTimerDisplay();
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    submitTest(true);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            document.getElementById('timerDisplay').textContent =
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            const timer = document.getElementById('timer');
+            timer.classList.remove('warning', 'danger');
+            if (remainingSeconds <= 60) {
+                timer.classList.add('danger');
+            } else if (remainingSeconds <= 300) {
+                timer.classList.add('warning');
+            }
+        }
+
+        // Modals
+        function showExitModal() {
+            document.getElementById('exitModal').classList.add('active');
+        }
+
+        function hideExitModal() {
+            document.getElementById('exitModal').classList.remove('active');
+        }
+
+        function showSubmitModal() {
+            const answered = questions.filter(q => q.answered).length;
+            document.getElementById('submitMessage').innerHTML =
+                `You have answered <strong>${answered} of ${questions.length}</strong> questions. Are you sure you want to submit?`;
+            document.getElementById('submitModal').classList.add('active');
+        }
+
+        function hideSubmitModal() {
+            document.getElementById('submitModal').classList.remove('active');
+        }
+
+        // Exit test
+        async function exitTest() {
+            clearInterval(timerInterval);
+            try {
+                const res = await fetch(`${API_BASE}/rapid-fire/session/${sessionId}/exit`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                showResults({
+                    isPassed: false,
+                    score: 0,
+                    correctCount: 0,
+                    totalQuestions: questions.length,
+                    passingScore: 70,
+                    message: data.data?.message || 'Test exited. You can retry after 24 hours.'
+                });
+            } catch (error) {
+                alert('Failed to exit test. Please try again.');
+                hideExitModal();
+            }
+        }
+
+        // Submit test
+        async function submitTest(isAutoSubmit = false) {
+            hideSubmitModal();
+            clearInterval(timerInterval);
+
+            document.getElementById('testContent').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/rapid-fire/session/${sessionId}/submit`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showResults(data.data);
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert(error.message || 'Failed to submit test');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('testContent').classList.remove('hidden');
+            }
+        }
+
+        // Show results
+        function showResults(result) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('testContent').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.add('active');
+
+            document.getElementById('resultIcon').textContent = result.isPassed ? '🎉' : '😔';
+            document.getElementById('resultScore').textContent = `${Math.round(result.score)}%`;
+            document.getElementById('resultScore').className = `result-score ${result.isPassed ? 'pass' : 'fail'}`;
+            document.getElementById('resultMessage').textContent = result.message;
+            document.getElementById('resultTotal').textContent = result.totalQuestions;
+            document.getElementById('resultCorrect').textContent = result.correctCount;
+            document.getElementById('resultPassing').textContent = `${result.passingScore}%`;
+            document.getElementById('resultYourScore').textContent = `${Math.round(result.score)}%`;
+        }
+
+        // Prevent page refresh during test
+        window.addEventListener('beforeunload', (e) => {
+            if (questions.length > 0 && !document.getElementById('resultsContainer').classList.contains('active')) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // Load test on page load
+        loadTest();
+    </script>
+</body>
+
+</html>

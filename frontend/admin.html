@@ -540,6 +540,8 @@
                 <li><a href="#dashboard" class="nav-link active" data-page="dashboard"><span
                             class="sidebar-icon">📊</span> Dashboard</a></li>
                 <li><a href="#jobs" class="nav-link" data-page="jobs"><span class="sidebar-icon">💼</span> Jobs</a></li>
+                <li><a href="#questions" class="nav-link" data-page="questions"><span class="sidebar-icon">❓</span>
+                        Question Bank</a></li>
                 <li><a href="#users" class="nav-link" data-page="users"><span class="sidebar-icon">👥</span> Users</a>
                 </li>
                 <li><a href="#candidates" class="nav-link" data-page="candidates"><span class="sidebar-icon">👤</span>
@@ -608,6 +610,55 @@
                     </div>
                     <div id="jobsTableContainer"></div>
                     <div class="pagination" id="jobsPagination"></div>
+                </div>
+            </div>
+
+            <!-- Question Bank Page -->
+            <div id="questionsPage" class="page-content hidden">
+                <div class="data-section">
+                    <div class="section-header">
+                        <h3>Question Bank</h3>
+                        <button class="btn btn-primary" onclick="showCreateQuestionModal()">+ Add Question</button>
+                    </div>
+                    <div class="stats-grid" style="margin-bottom: 24px;">
+                        <div class="stat-card">
+                            <h3>Total Questions</h3>
+                            <div class="value" id="statTotalQuestions">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Easy</h3>
+                            <div class="value" style="color: var(--success);" id="statEasyQuestions">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Medium</h3>
+                            <div class="value" style="color: var(--warning);" id="statMediumQuestions">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Hard</h3>
+                            <div class="value" style="color: var(--danger);" id="statHardQuestions">0</div>
+                        </div>
+                    </div>
+                    <div class="search-filter">
+                        <input type="text" class="search-input" placeholder="Search questions..." id="questionSearch">
+                        <select id="questionDifficultyFilter">
+                            <option value="">All Difficulty</option>
+                            <option value="EASY">Easy</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HARD">Hard</option>
+                        </select>
+                        <select id="questionCategoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="TECHNICAL">Technical</option>
+                            <option value="BEHAVIORAL">Behavioral</option>
+                            <option value="APTITUDE">Aptitude</option>
+                            <option value="DOMAIN_SPECIFIC">Domain Specific</option>
+                        </select>
+                        <select id="questionRoleFilter">
+                            <option value="">All Roles</option>
+                        </select>
+                    </div>
+                    <div id="questionsTableContainer"></div>
+                    <div class="pagination" id="questionsPagination"></div>
                 </div>
             </div>
 
@@ -759,6 +810,84 @@
                 <div style="display:flex;gap:12px;margin-top:24px;">
                     <button type="submit" class="btn btn-primary" style="flex:1;">Save Job</button>
                     <button type="button" class="btn btn-danger" onclick="closeJobModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Question Create/Edit Modal -->
+    <div id="questionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="questionModalTitle">Add New Question</h3>
+                <button class="close-modal" onclick="closeQuestionModal()">×</button>
+            </div>
+            <form id="questionForm">
+                <div class="form-group">
+                    <label>Question Text *</label>
+                    <textarea id="questionText" rows="3"
+                        style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical;"
+                        required placeholder="Enter the question..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Option A *</label>
+                    <input type="text" id="optionA" required placeholder="First option">
+                </div>
+                <div class="form-group">
+                    <label>Option B *</label>
+                    <input type="text" id="optionB" required placeholder="Second option">
+                </div>
+                <div class="form-group">
+                    <label>Option C *</label>
+                    <input type="text" id="optionC" required placeholder="Third option">
+                </div>
+                <div class="form-group">
+                    <label>Option D *</label>
+                    <input type="text" id="optionD" required placeholder="Fourth option">
+                </div>
+                <div class="form-group">
+                    <label>Correct Answer *</label>
+                    <select id="correctAnswer" required style="width:100%;">
+                        <option value="0">Option A</option>
+                        <option value="1">Option B</option>
+                        <option value="2">Option C</option>
+                        <option value="3">Option D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Difficulty *</label>
+                    <select id="questionDifficulty" required style="width:100%;">
+                        <option value="EASY">Easy</option>
+                        <option value="MEDIUM" selected>Medium</option>
+                        <option value="HARD">Hard</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="questionCategory" required style="width:100%;">
+                        <option value="TECHNICAL">Technical</option>
+                        <option value="BEHAVIORAL">Behavioral</option>
+                        <option value="APTITUDE">Aptitude</option>
+                        <option value="DOMAIN_SPECIFIC">Domain Specific</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Role Type (e.g., JAVA_BACKEND, REACT_FRONTEND)</label>
+                    <input type="text" id="roleType" placeholder="e.g., JAVA_BACKEND_0_3">
+                </div>
+                <div class="form-group">
+                    <label>Tags (comma separated)</label>
+                    <input type="text" id="questionTags" placeholder="e.g., Java, OOP, Design Patterns">
+                </div>
+                <div class="form-group">
+                    <label>Explanation (shown after answer)</label>
+                    <textarea id="questionExplanation" rows="2"
+                        style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical;"
+                        placeholder="Brief explanation of the correct answer..."></textarea>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:24px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">Save Question</button>
+                    <button type="button" class="btn btn-danger" onclick="closeQuestionModal()">Cancel</button>
                 </div>
             </form>
         </div>

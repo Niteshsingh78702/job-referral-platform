@@ -16,7 +16,10 @@ const adminState = {
     payments: [],
     refunds: [],
     auditLogs: [],
+    questions: [],
+    questionStats: {},
     currentJobId: null,
+    currentQuestionId: null,
 };
 
 // Initialize on page load
@@ -185,6 +188,7 @@ function navigateToPage(page) {
     const pageMap = {
         'dashboard': 'dashboardPage',
         'jobs': 'jobsPage',
+        'questions': 'questionsPage',
         'users': 'usersPage',
         'candidates': 'candidatesPage',
         'hr': 'hrPage',
@@ -212,6 +216,9 @@ async function loadPageData(page) {
             break;
         case 'jobs':
             await loadJobs();
+            break;
+        case 'questions':
+            await loadQuestions();
             break;
         case 'users':
             await loadUsers();
@@ -1423,3 +1430,239 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// ==========================================
+// QUESTION BANK MANAGEMENT
+// ==========================================
+
+async function loadQuestions(page = 1) {
+    try {
+        // Load stats first
+        await loadQuestionStats();
+
+        const difficulty = document.getElementById('questionDifficultyFilter')?.value || '';
+        const category = document.getElementById('questionCategoryFilter')?.value || '';
+        const search = document.getElementById('questionSearch')?.value || '';
+
+        let url = `${API_BASE_URL}/admin/questions?page=${page}&limit=10`;
+        if (difficulty) url += `&difficulty=${difficulty}`;
+        if (category) url += `&category=${category}`;
+        if (search) url += `&search=${search}`;
+
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${adminState.token}` },
+        });
+
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            adminState.questions = data.data.data || data.data;
+            renderQuestionsTable();
+            if (data.data.meta) {
+                renderPagination('questionsPagination', data.data.meta, (p) => loadQuestions(p));
+            }
+        }
+    } catch (error) {
+        console.error('Error loading questions:', error);
+        showToast('Failed to load questions', 'error');
+    }
+}
+
+async function loadQuestionStats() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/questions/stats`, {
+            headers: { 'Authorization': `Bearer ${adminState.token}` },
+        });
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            adminState.questionStats = data.data;
+            document.getElementById('statTotalQuestions').textContent = data.data.total || 0;
+
+            const byDifficulty = data.data.byDifficulty || [];
+            const easy = byDifficulty.find(d => d.difficulty === 'EASY')?._count || 0;
+            const medium = byDifficulty.find(d => d.difficulty === 'MEDIUM')?._count || 0;
+            const hard = byDifficulty.find(d => d.difficulty === 'HARD')?._count || 0;
+
+            document.getElementById('statEasyQuestions').textContent = easy;
+            document.getElementById('statMediumQuestions').textContent = medium;
+            document.getElementById('statHardQuestions').textContent = hard;
+        }
+    } catch (error) {
+        console.error('Error loading question stats:', error);
+    }
+}
+
+function renderQuestionsTable() {
+    const container = document.getElementById('questionsTableContainer');
+
+    if (!adminState.questions || adminState.questions.length === 0) {
+        container.innerHTML = '<p class="loading">No questions found. Click "Add Question" to create one.</p>';
+        return;
+    }
+
+    const diffBadge = (diff) => {
+        const colors = { EASY: 'success', MEDIUM: 'warning', HARD: 'danger' };
+        return `<span class="badge badge-${colors[diff] || 'info'}">${diff}</span>`;
+    };
+
+    const table = `
+        <table>
+            <thead>
+                <tr>
+                    <th style="max-width: 300px;">Question</th>
+                    <th>Difficulty</th>
+                    <th>Category</th>
+                    <th>Role Type</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${adminState.questions.map(q => `
+                    <tr>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${q.question}
+                        </td>
+                        <td>${diffBadge(q.difficulty)}</td>
+                        <td><span class="badge badge-info">${q.category}</span></td>
+                        <td>${q.roleType || 'General'}</td>
+                        <td>${formatDate(q.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewQuestion('${q.id}')">View</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteQuestion('${q.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = table;
+}
+
+function showCreateQuestionModal() {
+    adminState.currentQuestionId = null;
+    document.getElementById('questionModalTitle').textContent = 'Add New Question';
+    document.getElementById('questionForm').reset();
+    document.getElementById('questionModal').classList.add('active');
+}
+
+function closeQuestionModal() {
+    document.getElementById('questionModal').classList.remove('active');
+}
+
+function viewQuestion(questionId) {
+    const q = adminState.questions.find(q => q.id === questionId);
+    if (!q) return;
+
+    adminState.currentQuestionId = questionId;
+    document.getElementById('questionModalTitle').textContent = 'View Question';
+
+    document.getElementById('questionText').value = q.question;
+    document.getElementById('optionA').value = q.options?.[0] || '';
+    document.getElementById('optionB').value = q.options?.[1] || '';
+    document.getElementById('optionC').value = q.options?.[2] || '';
+    document.getElementById('optionD').value = q.options?.[3] || '';
+    document.getElementById('correctAnswer').value = q.correctAnswer?.toString() || '0';
+    document.getElementById('questionDifficulty').value = q.difficulty;
+    document.getElementById('questionCategory').value = q.category;
+    document.getElementById('roleType').value = q.roleType || '';
+    document.getElementById('questionTags').value = (q.tags || []).join(', ');
+    document.getElementById('questionExplanation').value = q.explanation || '';
+
+    document.getElementById('questionModal').classList.add('active');
+}
+
+document.getElementById('questionForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const questionData = {
+        question: document.getElementById('questionText').value,
+        options: [
+            document.getElementById('optionA').value,
+            document.getElementById('optionB').value,
+            document.getElementById('optionC').value,
+            document.getElementById('optionD').value,
+        ],
+        correctAnswer: parseInt(document.getElementById('correctAnswer').value),
+        difficulty: document.getElementById('questionDifficulty').value,
+        category: document.getElementById('questionCategory').value,
+        roleType: document.getElementById('roleType').value || undefined,
+        tags: document.getElementById('questionTags').value.split(',').map(t => t.trim()).filter(t => t),
+        explanation: document.getElementById('questionExplanation').value || undefined,
+    };
+
+    try {
+        const url = `${API_BASE_URL}/admin/questions`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminState.token}`,
+            },
+            body: JSON.stringify(questionData),
+        });
+
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Question saved successfully!', 'success');
+            closeQuestionModal();
+            loadQuestions();
+        } else {
+            showToast(data.message || 'Failed to save question', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving question:', error);
+        showToast('Failed to save question', 'error');
+    }
+});
+
+async function deleteQuestion(questionId) {
+    const confirmed = await showConfirmModal({
+        icon: '🗑️',
+        title: 'Delete Question',
+        message: 'Are you sure you want to delete this question?',
+        confirmText: 'Yes, Delete',
+        confirmClass: 'btn-danger'
+    });
+
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/questions/${questionId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${adminState.token}` },
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Question deleted successfully', 'success');
+            loadQuestions();
+        } else {
+            showToast(data.message || 'Failed to delete question', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting question:', error);
+        showToast('Failed to delete question', 'error');
+    }
+}
+
+// Setup filters for questions
+document.getElementById('questionDifficultyFilter')?.addEventListener('change', () => loadQuestions());
+document.getElementById('questionCategoryFilter')?.addEventListener('change', () => loadQuestions());
+document.getElementById('questionSearch')?.addEventListener('input', debounce(() => loadQuestions(), 500));

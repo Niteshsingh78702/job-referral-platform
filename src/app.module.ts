@@ -22,6 +22,7 @@ import { ReferralModule } from './modules/referral/referral.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HRModule } from './modules/hr/hr.module';
 import { EmployeeModule } from './modules/employee/employee.module';
+import { SkillBucketModule } from './modules/skill-bucket/skill-bucket.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { EmployeeModule } from './modules/employee/employee.module';
     AdminModule,
     HRModule,
     EmployeeModule,
+    SkillBucketModule,
   ],
   providers: [
     // Global Exception Filter

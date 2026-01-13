@@ -11,10 +11,15 @@ import {
     ApplicationStatus,
     UserRole,
 } from '../../common/constants';
+import { SkillBucketService } from '../skill-bucket/skill-bucket.service';
+import { SkillTestStatusDto } from '../skill-bucket/dto';
 
 @Injectable()
 export class JobService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private skillBucketService: SkillBucketService,
+    ) { }
 
     // Create job
     async createJob(hrId: string, dto: CreateJobDto) {
@@ -228,9 +233,16 @@ export class JobService {
             throw new NotFoundException('Candidate profile not found');
         }
 
-        // Get job
+        // Get job with skillBucket
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
+            include: {
+                skillBucket: {
+                    include: {
+                        test: true,
+                    },
+                },
+            },
         });
 
         if (!job) {
@@ -259,16 +271,52 @@ export class JobService {
             throw new BadRequestException('Already applied for this job');
         }
 
+        // Skill-based test logic
+        let applicationStatus = ApplicationStatus.REFERRAL_PENDING;
+        let skillTestStatus: SkillTestStatusDto | null = null;
+
+        if (job.skillBucketId && job.skillBucket) {
+            // Check candidate's skill test status
+            skillTestStatus = await this.skillBucketService.checkCandidateSkillStatus(
+                candidate.id,
+                job.skillBucketId,
+            );
+
+            if (skillTestStatus.isPassed && skillTestStatus.isValid) {
+                // Valid pass - allow instant application without test
+                applicationStatus = ApplicationStatus.REFERRAL_PENDING;
+            } else if (skillTestStatus.isPassed && !skillTestStatus.isValid) {
+                // Expired pass - need to retest
+                throw new BadRequestException(
+                    `Your ${skillTestStatus.skillBucketName} verification has expired. Please retake the HR Shortlisting Check.`
+                );
+            } else if (skillTestStatus.isFailed && !skillTestStatus.canRetest) {
+                // Failed and in cooldown
+                throw new BadRequestException(
+                    `You can retry the ${skillTestStatus.skillBucketName} HR Shortlisting Check after ${skillTestStatus.retestInHours} hours.`
+                );
+            } else {
+                // Never taken or can retest - need to take the test
+                applicationStatus = ApplicationStatus.TEST_PENDING;
+            }
+        } else if (job.testId) {
+            // Fallback to old per-job test logic (for backwards compatibility)
+            applicationStatus = ApplicationStatus.TEST_PENDING;
+        }
+
         // Create application
         const application = await this.prisma.$transaction(async (tx) => {
             const app = await tx.jobApplication.create({
                 data: {
                     candidateId: candidate.id,
                     jobId: job.id,
-                    status: job.testId
-                        ? ApplicationStatus.TEST_PENDING
-                        : ApplicationStatus.REFERRAL_PENDING,
+                    status: applicationStatus,
                     coverLetter: dto.coverLetter,
+                    // If valid skill pass, mark test as passed
+                    ...(skillTestStatus?.isPassed && skillTestStatus?.isValid && {
+                        testScore: skillTestStatus.score,
+                        testPassedAt: new Date(),
+                    }),
                 },
             });
 
@@ -281,7 +329,18 @@ export class JobService {
             return app;
         });
 
-        return application;
+        // Return with skill status info
+        return {
+            ...application,
+            skillTestInfo: skillTestStatus ? {
+                skillBucketName: skillTestStatus.skillBucketName,
+                displayName: skillTestStatus.displayName,
+                isPassed: skillTestStatus.isPassed,
+                isValid: skillTestStatus.isValid,
+                validTill: skillTestStatus.validTill,
+                validDaysRemaining: skillTestStatus.validDaysRemaining,
+            } : null,
+        };
     }
 
     // Get HR's jobs

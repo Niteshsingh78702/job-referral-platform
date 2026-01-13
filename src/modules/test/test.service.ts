@@ -16,6 +16,7 @@ import {
     AuditAction,
     REDIS_KEYS,
 } from '../../common/constants';
+import { SkillBucketService } from '../skill-bucket/skill-bucket.service';
 
 interface TestSessionData {
     sessionId: string;
@@ -39,6 +40,7 @@ export class TestService {
     constructor(
         private prisma: PrismaService,
         private configService: ConfigService,
+        private skillBucketService: SkillBucketService,
     ) {
         this.initRedis();
     }
@@ -549,6 +551,38 @@ export class TestService {
                 testPassedAt: isPassed ? new Date() : null,
             },
         });
+
+        // SKILL-BASED TEST: Record skill test attempt if job has a skill bucket
+        try {
+            const application = await this.prisma.jobApplication.findUnique({
+                where: { id: session.applicationId },
+                include: {
+                    candidate: true,
+                    job: {
+                        include: {
+                            skillBucket: true,
+                        },
+                    },
+                },
+            });
+
+            if (application?.job?.skillBucketId) {
+                await this.skillBucketService.recordSkillTestAttempt(
+                    application.candidate.id,
+                    application.job.skillBucketId,
+                    isPassed,
+                    score,
+                    session.id,
+                );
+                this.logger.log(
+                    `Recorded skill test attempt for candidate ${application.candidate.id} ` +
+                    `on skill bucket ${application.job.skillBucketId}: passed=${isPassed}`
+                );
+            }
+        } catch (error) {
+            this.logger.error('Failed to record skill test attempt:', error);
+            // Don't fail the submission if skill tracking fails
+        }
 
         // If passed, create referral entry
         if (isPassed) {

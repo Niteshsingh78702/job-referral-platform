@@ -2705,3 +2705,201 @@ a:hover {
         flex-wrap: wrap;
     }
 }
+
+/* =============================================
+   Skill-Based Test System - Interview Ready Badge
+   ============================================= */
+
+/* Interview-Ready Badge */
+.interview-ready-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(34, 197, 94, 0.2) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--success);
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+.interview-ready-badge .badge-icon {
+    font-size: 14px;
+}
+
+.interview-ready-badge .badge-text {
+    background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.interview-ready-badge .validity-info {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+@keyframes badge-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 12px 2px rgba(16, 185, 129, 0.2);
+    }
+}
+
+/* Skill Test Status Card */
+.skill-test-status {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+}
+
+.skill-test-status.valid {
+    border-color: var(--success);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.skill-test-status.expired {
+    border-color: var(--warning);
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.skill-test-status.cooldown {
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.skill-test-status.pending {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.skill-test-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.skill-test-message {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Cooldown Timer */
+.cooldown-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(251, 146, 60, 0.12) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--error);
+}
+
+.cooldown-timer .timer-icon {
+    font-size: 18px;
+}
+
+.cooldown-timer .timer-text {
+    color: var(--text-secondary);
+}
+
+.cooldown-timer .timer-value {
+    font-weight: 700;
+    color: var(--error);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Validity Expiry Display */
+.validity-expiry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--success);
+}
+
+.validity-expiry .expiry-icon {
+    font-size: 16px;
+}
+
+.validity-expiry .expiry-date {
+    font-weight: 600;
+}
+
+/* HR Shortlisting Check Label */
+.hr-check-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hr-check-label .check-icon {
+    font-size: 14px;
+}
+
+/* Skill Bucket Tag on Job Cards */
+.job-skill-bucket {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(139, 92, 246, 0.15);
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #a78bfa;
+    margin-left: auto;
+}
+
+/* Test Prompt Modal Toast */
+.skill-test-prompt {
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+.skill-test-prompt h4 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.skill-test-prompt p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.skill-test-prompt .btn {
+    min-width: 160px;
+}

@@ -34,6 +34,25 @@ document.addEventListener('DOMContentLoaded', () => {
             profileMenu.classList.remove('active');
         }
     });
+
+    // Auto-filter: Apply filters automatically when dropdown values change
+    const filterIds = ['locationFilter', 'experienceFilter', 'jobTypeFilter', 'workModeFilter', 'postedDateFilter', 'sortBy'];
+    filterIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => searchJobs());
+        }
+    });
+
+    // Also trigger search on Enter key in search input
+    const searchInput = document.getElementById('jobSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchJobs();
+            }
+        });
+    }
 });
 
 // =============================================

@@ -854,11 +854,9 @@ function toggleSavedJobsView() {
         } else {
             renderJobs(savedJobsList);
         }
-        showToast('info', 'Showing saved jobs');
     } else {
         btn.classList.remove('active');
         renderJobs(state.jobs);
-        showToast('info', 'Showing all jobs');
     }
 }
 
@@ -976,7 +974,7 @@ function searchJobs() {
 
     if (filteredJobs.length > 0) {
         renderJobs(filteredJobs);
-        showToast('success', `Found ${filteredJobs.length} job${filteredJobs.length > 1 ? 's' : ''}`);
+        // Removed: showToast - silent filtering is more professional
     } else {
         document.getElementById('jobsGrid').innerHTML = `
             <div class="empty-state" style="text-align: center; padding: 60px 20px; grid-column: 1 / -1;">
@@ -1002,7 +1000,7 @@ function clearAllFilters() {
     document.getElementById('savedJobsBtn')?.classList.remove('active');
 
     renderJobs(state.jobs);
-    showToast('info', 'Filters cleared');
+    // Removed: showToast - silent filtering is more professional
 }
 
 async function applyForJob(jobId) {

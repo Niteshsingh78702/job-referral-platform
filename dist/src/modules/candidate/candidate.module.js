@@ -10,11 +10,14 @@ exports.CandidateModule = void 0;
 const common_1 = require("@nestjs/common");
 const candidate_controller_1 = require("./candidate.controller");
 const candidate_service_1 = require("./candidate.service");
+const cloudinary_module_1 = require("../cloudinary/cloudinary.module");
+const resume_parser_module_1 = require("../resume-parser/resume-parser.module");
 let CandidateModule = class CandidateModule {
 };
 exports.CandidateModule = CandidateModule;
 exports.CandidateModule = CandidateModule = __decorate([
     (0, common_1.Module)({
+        imports: [cloudinary_module_1.CloudinaryModule, resume_parser_module_1.ResumeParserModule],
         controllers: [candidate_controller_1.CandidateController],
         providers: [candidate_service_1.CandidateService],
         exports: [candidate_service_1.CandidateService],

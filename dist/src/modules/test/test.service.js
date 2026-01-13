@@ -19,15 +19,18 @@ const config_1 = require("@nestjs/config");
 const ioredis_1 = __importDefault(require("ioredis"));
 const prisma_service_1 = require("../../prisma/prisma.service");
 const constants_1 = require("../../common/constants");
+const skill_bucket_service_1 = require("../skill-bucket/skill-bucket.service");
 let TestService = TestService_1 = class TestService {
     prisma;
     configService;
+    skillBucketService;
     redis = null;
     logger = new common_1.Logger(TestService_1.name);
     sessionStore = new Map();
-    constructor(prisma, configService) {
+    constructor(prisma, configService, skillBucketService) {
         this.prisma = prisma;
         this.configService = configService;
+        this.skillBucketService = skillBucketService;
         this.initRedis();
     }
     initRedis() {
@@ -253,6 +256,9 @@ let TestService = TestService_1 = class TestService {
         if (!session) {
             throw new common_1.NotFoundException('Session not found');
         }
+        if (!session.test) {
+            throw new common_1.BadRequestException('This is a rapid-fire test session. Use the rapid-fire endpoints.');
+        }
         const orderedQuestions = sessionData.questionOrder.map((i) => session.test.questions[i]);
         return {
             sessionId: session.id,
@@ -421,6 +427,27 @@ let TestService = TestService_1 = class TestService {
                 testPassedAt: isPassed ? new Date() : null,
             },
         });
+        try {
+            const application = await this.prisma.jobApplication.findUnique({
+                where: { id: session.applicationId },
+                include: {
+                    candidate: true,
+                    job: {
+                        include: {
+                            skillBucket: true,
+                        },
+                    },
+                },
+            });
+            if (application?.job?.skillBucketId) {
+                await this.skillBucketService.recordSkillTestAttempt(application.candidate.id, application.job.skillBucketId, isPassed, score, session.id);
+                this.logger.log(`Recorded skill test attempt for candidate ${application.candidate.id} ` +
+                    `on skill bucket ${application.job.skillBucketId}: passed=${isPassed}`);
+            }
+        }
+        catch (error) {
+            this.logger.error('Failed to record skill test attempt:', error);
+        }
         if (isPassed) {
             await this.prisma.referral.create({
                 data: {
@@ -463,6 +490,7 @@ exports.TestService = TestService;
 exports.TestService = TestService = TestService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        skill_bucket_service_1.SkillBucketService])
 ], TestService);
 //# sourceMappingURL=test.service.js.map

@@ -38,6 +38,14 @@ let AuthController = class AuthController {
         };
         return this.authService.login(dto, deviceInfo);
     }
+    async googleLogin(dto, req) {
+        const deviceInfo = {
+            ip: req.ip || req.headers['x-forwarded-for'],
+            userAgent: req.headers['user-agent'],
+            deviceId: req.headers['x-device-id'],
+        };
+        return this.authService.googleLogin(dto, deviceInfo);
+    }
     async sendOtp(dto) {
         return this.authService.sendOtp(dto);
     }
@@ -50,8 +58,14 @@ let AuthController = class AuthController {
     async logout(userId) {
         return this.authService.logout(userId);
     }
+    async forgotPassword(dto) {
+        return this.authService.forgotPassword(dto);
+    }
     async resetPassword(dto) {
         return this.authService.resetPassword(dto);
+    }
+    async resetPasswordWithToken(dto) {
+        return this.authService.resetPasswordWithToken(dto);
     }
     async changePassword(userId, dto) {
         return this.authService.changePassword(userId, dto);
@@ -81,6 +95,16 @@ __decorate([
     __metadata("design:paramtypes", [dto_1.LoginDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, common_1.Post)('google'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.GoogleAuthDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleLogin", null);
 __decorate([
     (0, decorators_1.Public)(),
     (0, common_1.Post)('send-otp'),
@@ -118,6 +142,15 @@ __decorate([
 ], AuthController.prototype, "logout", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, common_1.Post)('forgot-password'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, decorators_1.Public)(),
     (0, common_1.Post)('reset-password'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
@@ -125,6 +158,15 @@ __decorate([
     __metadata("design:paramtypes", [dto_1.ResetPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, common_1.Post)('reset-password-with-token'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.ResetPasswordWithTokenDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resetPasswordWithToken", null);
 __decorate([
     (0, common_1.Post)('change-password'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

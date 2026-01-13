@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 // Core
 import { PrismaModule } from './prisma/prisma.module';
+import { EmailModule } from './modules/email';
 
 // Common
 import { JwtAuthGuard, RolesGuard } from './common/guards';
@@ -23,6 +24,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { HRModule } from './modules/hr/hr.module';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { SkillBucketModule } from './modules/skill-bucket/skill-bucket.module';
+import { QuestionBankModule } from './modules/question-bank/question-bank.module';
+import { TestTemplateModule } from './modules/test-template/test-template.module';
 
 @Module({
   imports: [
@@ -62,6 +65,9 @@ import { SkillBucketModule } from './modules/skill-bucket/skill-bucket.module';
     // Database
     PrismaModule,
 
+    // Email (Global)
+    EmailModule,
+
     // Feature Modules
     AuthModule,
     CandidateModule,
@@ -73,6 +79,8 @@ import { SkillBucketModule } from './modules/skill-bucket/skill-bucket.module';
     HRModule,
     EmployeeModule,
     SkillBucketModule,
+    QuestionBankModule,
+    TestTemplateModule,
   ],
   providers: [
     // Global Exception Filter

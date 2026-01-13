@@ -96,3 +96,39 @@ export class ChangePasswordDto {
     @MinLength(8)
     newPassword: string;
 }
+
+// Google OAuth
+export class GoogleAuthDto {
+    @IsString()
+    idToken: string;
+
+    @IsEnum(UserRole)
+    @IsOptional()
+    role?: UserRole = UserRole.CANDIDATE;
+
+    // For Employee/HR registration via Google
+    @IsOptional()
+    @IsString()
+    companyName?: string;
+
+    @IsOptional()
+    @IsString()
+    designation?: string;
+}
+
+// Forgot Password - Request reset link
+export class ForgotPasswordDto {
+    @IsEmail()
+    email: string;
+}
+
+// Reset Password with Token (from email link)
+export class ResetPasswordWithTokenDto {
+    @IsString()
+    token: string;
+
+    @IsString()
+    @MinLength(8)
+    newPassword: string;
+}
+

@@ -17,4 +17,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./otp.service"), exports);
 __exportStar(require("./token.service"), exports);
 __exportStar(require("./auth.service"), exports);
+__exportStar(require("./google-auth.service"), exports);
 //# sourceMappingURL=index.js.map

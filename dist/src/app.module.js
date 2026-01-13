@@ -13,6 +13,7 @@ const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_module_1 = require("./prisma/prisma.module");
+const email_1 = require("./modules/email");
 const guards_1 = require("./common/guards");
 const filters_1 = require("./common/filters");
 const interceptors_1 = require("./common/interceptors");
@@ -25,6 +26,9 @@ const referral_module_1 = require("./modules/referral/referral.module");
 const admin_module_1 = require("./modules/admin/admin.module");
 const hr_module_1 = require("./modules/hr/hr.module");
 const employee_module_1 = require("./modules/employee/employee.module");
+const skill_bucket_module_1 = require("./modules/skill-bucket/skill-bucket.module");
+const question_bank_module_1 = require("./modules/question-bank/question-bank.module");
+const test_template_module_1 = require("./modules/test-template/test-template.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -59,6 +63,7 @@ exports.AppModule = AppModule = __decorate([
                 }),
             }),
             prisma_module_1.PrismaModule,
+            email_1.EmailModule,
             auth_module_1.AuthModule,
             candidate_module_1.CandidateModule,
             job_module_1.JobModule,
@@ -68,6 +73,9 @@ exports.AppModule = AppModule = __decorate([
             admin_module_1.AdminModule,
             hr_module_1.HRModule,
             employee_module_1.EmployeeModule,
+            skill_bucket_module_1.SkillBucketModule,
+            question_bank_module_1.QuestionBankModule,
+            test_template_module_1.TestTemplateModule,
         ],
         providers: [
             {

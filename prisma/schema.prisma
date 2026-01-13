@@ -123,11 +123,93 @@ enum EarningStatus {
   CANCELLED // Referral cancelled/expired
 }
 
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionCategory {
+  TECHNICAL
+  BEHAVIORAL
+  APTITUDE
+  DOMAIN_SPECIFIC
+}
+
+enum TestType {
+  STANDARD
+  RAPID_FIRE
+}
+
+// ===========================================
+// QUESTION BANK & TEST TEMPLATE MODELS
+// ===========================================
+
+model QuestionBank {
+  id            String   @id @default(uuid())
+  question      String   @db.Text
+  options       Json     // ["Option A", "Option B", "Option C", "Option D"]
+  correctAnswer Int      // 0, 1, 2, or 3
+  explanation   String?  @db.Text
+  
+  // Categorization
+  difficulty    QuestionDifficulty @default(MEDIUM)
+  category      QuestionCategory   @default(TECHNICAL)
+  tags          String[]           // ["Java", "DSA", "Backend"]
+  roleType      String?            // "JAVA_BACKEND_0_3", etc.
+  
+  // Metadata
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  isActive      Boolean  @default(true)
+  
+  // Performance indexes
+  @@index([roleType, isActive])
+  @@index([difficulty])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model TestTemplate {
+  id               String   @id @default(uuid())
+  name             String   // "Java Backend - Rapid Fire"
+  description      String?
+  testType         TestType @default(RAPID_FIRE)
+  
+  // Test parameters
+  duration         Int      @default(20) // minutes
+  passingCriteria  Float    @default(70.0) // percentage
+  questionPoolSize Int      @default(100)
+  
+  // Question selection
+  autoSelect       Boolean  @default(true)
+  selectionTags    String[] // ["Java", "DSA"] for auto
+  selectionRoleType String? // Role type for auto-select
+  
+  // Rapid fire settings
+  allowSkip        Boolean  @default(true)
+  showLiveScore    Boolean  @default(false)
+  
+  // Metadata
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  isActive         Boolean  @default(true)
+  
+  // Relations
+  skillBuckets     SkillBucket[]
+  testSessions     TestSession[]
+  
+  @@index([isActive])
+  @@index([testType])
+}
+
 // ===========================================
 // SKILL BUCKET MODELS (Skill-Based Test System)
 // ===========================================
 
 model SkillBucket {
+
   id String @id @default(uuid())
 
   code        String  @unique // e.g., JAVA_BACKEND_0_3, REACT_FRONTEND_0_3
@@ -144,15 +226,21 @@ model SkillBucket {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
+  // Relations - Legacy standard test
   test     Test?              @relation(fields: [testId], references: [id])
   testId   String?            @unique
+  
+  // Relations - New test template for rapid fire
+  testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
+  testTemplateId String?
+  
   jobs     Job[]
   attempts SkillTestAttempt[]
 
   @@index([code])
   @@index([isActive])
 }
+
 
 model SkillTestAttempt {
   id String @id @default(uuid())
@@ -199,6 +287,10 @@ model User {
   emailVerified Boolean    @default(false)
   phoneVerified Boolean    @default(false)
 
+  // OAuth provider fields
+  googleId     String? @unique
+  authProvider String  @default("email") // email, google
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   lastLoginAt DateTime?
@@ -208,16 +300,33 @@ model User {
   hr        HR?
   employee  Employee?
 
-  otpTokens     OTPToken[]
-  refreshTokens RefreshToken[]
-  deviceLogs    DeviceLog[]
-  auditLogs     AuditLog[]
-  notifications Notification[]
+  otpTokens           OTPToken[]
+  refreshTokens       RefreshToken[]
+  deviceLogs          DeviceLog[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
   @@index([phone])
   @@index([role])
   @@index([status])
+  @@index([googleId])
+}
+
+model PasswordResetToken {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
 }
 
 model OTPToken {
@@ -616,8 +725,12 @@ model TestSession {
   applicationId String
   application   JobApplication @relation(fields: [applicationId], references: [id])
 
-  testId String
-  test   Test   @relation(fields: [testId], references: [id])
+  testId String?
+  test   Test?   @relation(fields: [testId], references: [id])
+  
+  // Rapid fire test template support
+  testTemplateId String?
+  testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
 
   status TestSessionStatus @default(ACTIVE)
 
@@ -636,8 +749,13 @@ model TestSession {
   tabSwitchCount Int @default(0)
   warningCount   Int @default(0)
 
-  // Question order (shuffled indices)
+  // Question order (shuffled indices for standard tests)
   questionOrder Int[]
+  
+  // Rapid fire: store selected question IDs from QuestionBank
+  selectedQuestionIds String[]
+  // Track how many questions answered (for rapid fire progress)
+  answeredCount Int @default(0)
 
   createdAt DateTime @default(now())
 
@@ -647,8 +765,10 @@ model TestSession {
 
   @@index([applicationId])
   @@index([testId])
+  @@index([testTemplateId])
   @@index([status])
 }
+
 
 model TestAnswer {
   id String @id @default(uuid())

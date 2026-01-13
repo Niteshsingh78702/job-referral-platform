@@ -16,6 +16,9 @@ import {
     RefreshTokenDto,
     ResetPasswordDto,
     ChangePasswordDto,
+    GoogleAuthDto,
+    ForgotPasswordDto,
+    ResetPasswordWithTokenDto,
 } from './dto';
 import { Public, CurrentUser } from '../../common/decorators';
 
@@ -48,6 +51,18 @@ export class AuthController {
     }
 
     @Public()
+    @Post('google')
+    @HttpCode(HttpStatus.OK)
+    async googleLogin(@Body() dto: GoogleAuthDto, @Req() req: any) {
+        const deviceInfo = {
+            ip: req.ip || req.headers['x-forwarded-for'],
+            userAgent: req.headers['user-agent'],
+            deviceId: req.headers['x-device-id'],
+        };
+        return this.authService.googleLogin(dto, deviceInfo);
+    }
+
+    @Public()
     @Post('send-otp')
     @HttpCode(HttpStatus.OK)
     async sendOtp(@Body() dto: SendOtpDto) {
@@ -75,10 +90,24 @@ export class AuthController {
     }
 
     @Public()
+    @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
+    async forgotPassword(@Body() dto: ForgotPasswordDto) {
+        return this.authService.forgotPassword(dto);
+    }
+
+    @Public()
     @Post('reset-password')
     @HttpCode(HttpStatus.OK)
     async resetPassword(@Body() dto: ResetPasswordDto) {
         return this.authService.resetPassword(dto);
+    }
+
+    @Public()
+    @Post('reset-password-with-token')
+    @HttpCode(HttpStatus.OK)
+    async resetPasswordWithToken(@Body() dto: ResetPasswordWithTokenDto) {
+        return this.authService.resetPasswordWithToken(dto);
     }
 
     @Post('change-password')
@@ -95,3 +124,4 @@ export class AuthController {
         return this.authService.getCurrentUser(userId);
     }
 }
+

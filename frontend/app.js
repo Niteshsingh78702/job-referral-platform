@@ -1167,16 +1167,34 @@ function showModal(type) {
     const modal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
 
     overlay.classList.add('active');
     modal.classList.add('active');
 
+    // Hide all forms first
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'none';
+    if (forgotPasswordForm) forgotPasswordForm.style.display = 'none';
+    if (resetPasswordForm) resetPasswordForm.style.display = 'none';
+
+    // Show the requested form
     if (type === 'login') {
         loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
     } else if (type === 'register') {
-        loginForm.style.display = 'none';
         registerForm.style.display = 'block';
+    } else if (type === 'forgotPassword') {
+        if (forgotPasswordForm) {
+            forgotPasswordForm.style.display = 'block';
+            // Reset the form state
+            const formEl = document.getElementById('forgotPasswordFormEl');
+            const successEl = document.getElementById('forgotPasswordSuccess');
+            if (formEl) formEl.style.display = 'block';
+            if (successEl) successEl.style.display = 'none';
+        }
+    } else if (type === 'resetPassword') {
+        if (resetPasswordForm) resetPasswordForm.style.display = 'block';
     } else if (type === 'editProfile') {
         showProfileModal();
         return;
@@ -1251,6 +1269,203 @@ function scrollToSection(selector) {
     if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
     }
+}
+
+// =============================================
+// Google Sign-In
+// =============================================
+async function handleGoogleLogin() {
+    // Check if Google API is loaded
+    if (typeof google === 'undefined' || !google.accounts) {
+        showToast('error', 'Google Sign-In is not configured. Please contact support.');
+        console.error('Google API not loaded. Add Google Identity Services script to index.html');
+        return;
+    }
+
+    try {
+        // Initialize Google Sign-In
+        google.accounts.id.initialize({
+            client_id: window.GOOGLE_CLIENT_ID || '',
+            callback: handleGoogleCredential,
+            auto_select: false,
+        });
+
+        // Prompt one-tap sign in
+        google.accounts.id.prompt((notification) => {
+            if (notification.isNotDisplayed()) {
+                console.log('Google prompt not displayed:', notification.getNotDisplayedReason());
+            }
+        });
+    } catch (error) {
+        console.error('Google Sign-In error:', error);
+        showToast('error', 'Google Sign-In failed. Please try again.');
+    }
+}
+
+async function handleGoogleCredential(response) {
+    if (!response.credential) {
+        showToast('error', 'Google Sign-In failed. No credential received.');
+        return;
+    }
+
+    try {
+        const apiResponse = await fetch(`${API_BASE_URL}/auth/google`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                idToken: response.credential,
+                role: 'CANDIDATE',
+            }),
+        });
+
+        const data = await apiResponse.json();
+
+        if (data.success) {
+            state.token = data.data.token.accessToken;
+            state.user = data.data.user;
+
+            localStorage.setItem('token', state.token);
+            localStorage.setItem('user', JSON.stringify(state.user));
+
+            closeModal();
+
+            if (data.data.isNewUser) {
+                showToast('success', 'Welcome to JobRefer! Your account has been created.');
+            } else {
+                showToast('success', 'Welcome back!');
+            }
+
+            // Redirect based on role
+            setTimeout(() => {
+                if (state.user.role === 'EMPLOYEE') {
+                    window.location.href = 'employee-dashboard.html';
+                } else if (state.user.role === 'HR') {
+                    window.location.href = 'hr-dashboard.html';
+                } else if (state.user.role === 'ADMIN') {
+                    window.location.href = 'admin.html';
+                } else {
+                    updateUIForLoggedInUser();
+                    scrollToSection('#dashboard');
+                }
+            }, 500);
+        } else {
+            showToast('error', data.message || 'Google Sign-In failed.');
+        }
+    } catch (error) {
+        console.error('Google auth error:', error);
+        showToast('error', 'Unable to connect to server. Please try again.');
+    }
+}
+
+// =============================================
+// Forgot Password
+// =============================================
+async function handleForgotPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('forgotEmail').value;
+    const btn = document.getElementById('forgotPasswordBtn');
+    const formEl = document.getElementById('forgotPasswordFormEl');
+    const successEl = document.getElementById('forgotPasswordSuccess');
+
+    btn.disabled = true;
+    btn.innerHTML = 'Sending...';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        // Always show success to prevent email enumeration
+        formEl.style.display = 'none';
+        successEl.style.display = 'block';
+        showToast('success', 'Check your email for reset instructions!');
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        formEl.style.display = 'none';
+        successEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Send Reset Link';
+    }
+}
+
+// =============================================
+// Reset Password (via email link)
+// =============================================
+async function handleResetPassword(event) {
+    event.preventDefault();
+
+    const token = document.getElementById('resetToken').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (newPassword !== confirmPassword) {
+        showToast('error', 'Passwords do not match!');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('error', 'Password must be at least 8 characters!');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/reset-password-with-token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token, newPassword }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('success', 'Password reset successfully! Please login.');
+            showModal('login');
+        } else {
+            showToast('error', data.message || 'Failed to reset password.');
+        }
+    } catch (error) {
+        console.error('Reset password error:', error);
+        showToast('error', 'Unable to connect to server. Please try again.');
+    }
+}
+
+// Check URL hash for reset token on page load
+function checkResetPasswordToken() {
+    const hash = window.location.hash;
+    if (hash.includes('reset-password')) {
+        const urlParams = new URLSearchParams(hash.split('?')[1] || '');
+        const token = urlParams.get('token');
+
+        if (token) {
+            setTimeout(() => {
+                const tokenInput = document.getElementById('resetToken');
+                if (tokenInput) {
+                    tokenInput.value = token;
+                    showModal('resetPassword');
+                }
+            }, 500);
+        }
+    }
+}
+
+// Initialize reset password check
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkResetPasswordToken);
+} else {
+    checkResetPasswordToken();
 }
 
 // =============================================

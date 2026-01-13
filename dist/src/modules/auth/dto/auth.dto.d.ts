@@ -35,3 +35,16 @@ export declare class ChangePasswordDto {
     currentPassword: string;
     newPassword: string;
 }
+export declare class GoogleAuthDto {
+    idToken: string;
+    role?: UserRole;
+    companyName?: string;
+    designation?: string;
+}
+export declare class ForgotPasswordDto {
+    email: string;
+}
+export declare class ResetPasswordWithTokenDto {
+    token: string;
+    newPassword: string;
+}

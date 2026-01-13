@@ -30,8 +30,8 @@ exports.AuthModule = AuthModule = __decorate([
             }),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [services_1.AuthService, services_1.OtpService, services_1.TokenService],
-        exports: [services_1.AuthService, services_1.TokenService],
+        providers: [services_1.AuthService, services_1.OtpService, services_1.TokenService, services_1.GoogleAuthService],
+        exports: [services_1.AuthService, services_1.TokenService, services_1.GoogleAuthService],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

@@ -1,12 +1,17 @@
 import { PrismaService } from '../../../prisma/prisma.service';
 import { OtpService } from './otp.service';
 import { TokenService, TokenPair } from './token.service';
-import { RegisterDto, LoginDto, SendOtpDto, VerifyOtpDto, RefreshTokenDto, ResetPasswordDto, ChangePasswordDto } from '../dto';
+import { GoogleAuthService } from './google-auth.service';
+import { EmailService } from '../../email';
+import { RegisterDto, LoginDto, SendOtpDto, VerifyOtpDto, RefreshTokenDto, ResetPasswordDto, ChangePasswordDto, GoogleAuthDto, ForgotPasswordDto, ResetPasswordWithTokenDto } from '../dto';
 export declare class AuthService {
     private prisma;
     private otpService;
     private tokenService;
-    constructor(prisma: PrismaService, otpService: OtpService, tokenService: TokenService);
+    private googleAuthService;
+    private emailService;
+    private readonly logger;
+    constructor(prisma: PrismaService, otpService: OtpService, tokenService: TokenService, googleAuthService: GoogleAuthService, emailService: EmailService);
     register(dto: RegisterDto, deviceInfo?: any): Promise<TokenPair>;
     login(dto: LoginDto, deviceInfo?: any): Promise<{
         token: TokenPair;
@@ -29,6 +34,23 @@ export declare class AuthService {
         message: string;
     }>;
     getCurrentUser(userId: string): Promise<{
+        hr: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            companyName: string;
+            companyEmail: string;
+            companyWebsite: string | null;
+            designation: string | null;
+            linkedinUrl: string | null;
+            approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
+            approvedBy: string | null;
+            approvedAt: Date | null;
+            rejectionReason: string | null;
+            totalJobsPosted: number;
+            activeJobs: number;
+        } | null;
         candidate: {
             id: string;
             createdAt: Date;
@@ -50,23 +72,6 @@ export declare class AuthService {
             country: string | null;
             willingToRelocate: boolean;
         } | null;
-        hr: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            companyName: string;
-            companyEmail: string;
-            companyWebsite: string | null;
-            designation: string | null;
-            linkedinUrl: string | null;
-            approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
-            approvedBy: string | null;
-            approvedAt: Date | null;
-            rejectionReason: string | null;
-            totalJobsPosted: number;
-            activeJobs: number;
-        } | null;
         employee: {
             id: string;
             createdAt: Date;
@@ -85,14 +90,27 @@ export declare class AuthService {
             badges: string[];
         } | null;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         phone: string | null;
+        googleId: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         status: import("@prisma/client").$Enums.UserStatus;
         emailVerified: boolean;
         phoneVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        authProvider: string;
         lastLoginAt: Date | null;
+    }>;
+    forgotPassword(dto: ForgotPasswordDto): Promise<{
+        message: string;
+    }>;
+    resetPasswordWithToken(dto: ResetPasswordWithTokenDto): Promise<{
+        message: string;
+    }>;
+    googleLogin(dto: GoogleAuthDto, deviceInfo?: any): Promise<{
+        token: TokenPair;
+        user: any;
+        isNewUser: boolean;
     }>;
 }

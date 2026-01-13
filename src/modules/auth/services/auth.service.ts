@@ -3,11 +3,15 @@ import {
     UnauthorizedException,
     ConflictException,
     BadRequestException,
+    Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { OtpService } from './otp.service';
 import { TokenService, TokenPair, JwtPayload } from './token.service';
+import { GoogleAuthService } from './google-auth.service';
+import { EmailService } from '../../email';
 import {
     RegisterDto,
     LoginDto,
@@ -16,15 +20,22 @@ import {
     RefreshTokenDto,
     ResetPasswordDto,
     ChangePasswordDto,
+    GoogleAuthDto,
+    ForgotPasswordDto,
+    ResetPasswordWithTokenDto,
 } from '../dto';
 import { UserRole, UserStatus, AuditAction } from '../../../common/constants';
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         private prisma: PrismaService,
         private otpService: OtpService,
         private tokenService: TokenService,
+        private googleAuthService: GoogleAuthService,
+        private emailService: EmailService,
     ) { }
 
     // Register new user
@@ -440,5 +451,268 @@ export class AuthService {
         // Remove sensitive data
         const { passwordHash, ...userWithoutPassword } = user;
         return userWithoutPassword;
+    }
+
+    // ==========================================
+    // FORGOT PASSWORD / RESET WITH TOKEN
+    // ==========================================
+
+    // Request password reset (sends email with link)
+    async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+        const user = await this.prisma.user.findUnique({
+            where: { email: dto.email },
+            include: { candidate: true },
+        });
+
+        // Always return success message to prevent email enumeration
+        if (!user) {
+            this.logger.log(`Password reset requested for non-existent email: ${dto.email}`);
+            return { message: 'If an account exists with this email, you will receive a password reset link.' };
+        }
+
+        // Generate secure reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        // Delete any existing reset tokens for this user
+        await this.prisma.passwordResetToken.deleteMany({
+            where: { userId: user.id },
+        });
+
+        // Create new reset token
+        await this.prisma.passwordResetToken.create({
+            data: {
+                userId: user.id,
+                token: resetToken,
+                expiresAt,
+            },
+        });
+
+        // Get user name for email
+        const userName = user.candidate?.firstName || 'User';
+
+        // Send reset email
+        await this.emailService.sendPasswordResetEmail(
+            user.email,
+            resetToken,
+            userName,
+        );
+
+        return { message: 'If an account exists with this email, you will receive a password reset link.' };
+    }
+
+    // Reset password with token (from email link)
+    async resetPasswordWithToken(dto: ResetPasswordWithTokenDto): Promise<{ message: string }> {
+        const resetToken = await this.prisma.passwordResetToken.findUnique({
+            where: { token: dto.token },
+            include: { user: true },
+        });
+
+        if (!resetToken) {
+            throw new BadRequestException('Invalid or expired reset link');
+        }
+
+        if (resetToken.usedAt) {
+            throw new BadRequestException('This reset link has already been used');
+        }
+
+        if (new Date() > resetToken.expiresAt) {
+            throw new BadRequestException('This reset link has expired');
+        }
+
+        // Update password
+        const passwordHash = await bcrypt.hash(dto.newPassword, 12);
+        await this.prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: resetToken.userId },
+                data: { passwordHash },
+            });
+
+            // Mark token as used
+            await tx.passwordResetToken.update({
+                where: { id: resetToken.id },
+                data: { usedAt: new Date() },
+            });
+        });
+
+        // Revoke all refresh tokens for security
+        await this.tokenService.revokeRefreshToken(resetToken.userId);
+
+        return { message: 'Password reset successfully. Please login with your new password.' };
+    }
+
+    // ==========================================
+    // GOOGLE OAUTH LOGIN
+    // ==========================================
+
+    async googleLogin(dto: GoogleAuthDto, deviceInfo?: any): Promise<{ token: TokenPair; user: any; isNewUser: boolean }> {
+        // Verify Google token
+        const googlePayload = await this.googleAuthService.verifyIdToken(dto.idToken);
+
+        // Check if user exists by Google ID
+        let user = await this.prisma.user.findUnique({
+            where: { googleId: googlePayload.sub },
+            include: {
+                candidate: true,
+                hr: true,
+                employee: true,
+            },
+        });
+
+        let isNewUser = false;
+
+        if (!user) {
+            // Check if user exists by email (account linking)
+            const existingEmailUser = await this.prisma.user.findUnique({
+                where: { email: googlePayload.email },
+                include: {
+                    candidate: true,
+                    hr: true,
+                    employee: true,
+                },
+            });
+
+            if (existingEmailUser) {
+                // Link Google account to existing user
+                user = await this.prisma.user.update({
+                    where: { id: existingEmailUser.id },
+                    data: {
+                        googleId: googlePayload.sub,
+                        authProvider: existingEmailUser.authProvider === 'email' ? 'email,google' : existingEmailUser.authProvider,
+                        emailVerified: true, // Google verifies email
+                    },
+                    include: {
+                        candidate: true,
+                        hr: true,
+                        employee: true,
+                    },
+                });
+                this.logger.log(`Linked Google account to existing user: ${user.email}`);
+            } else {
+                // Create new user with Google
+                isNewUser = true;
+                const role = dto.role || UserRole.CANDIDATE;
+
+                user = await this.prisma.$transaction(async (tx) => {
+                    const newUser = await tx.user.create({
+                        data: {
+                            email: googlePayload.email,
+                            googleId: googlePayload.sub,
+                            authProvider: 'google',
+                            role,
+                            status: UserStatus.ACTIVE, // Google users are auto-verified
+                            emailVerified: true,
+                        },
+                    });
+
+                    // Create role-specific profile
+                    if (role === UserRole.CANDIDATE) {
+                        await tx.candidate.create({
+                            data: {
+                                userId: newUser.id,
+                                firstName: googlePayload.given_name || googlePayload.name?.split(' ')[0] || 'User',
+                                lastName: googlePayload.family_name || googlePayload.name?.split(' ').slice(1).join(' ') || '',
+                                avatarUrl: googlePayload.picture,
+                            },
+                        });
+                    } else if (role === UserRole.EMPLOYEE) {
+                        await tx.employee.create({
+                            data: {
+                                userId: newUser.id,
+                                companyName: dto.companyName || 'Unknown Company',
+                                companyEmail: googlePayload.email,
+                                designation: dto.designation,
+                            },
+                        });
+                    } else if (role === UserRole.HR) {
+                        await tx.hR.create({
+                            data: {
+                                userId: newUser.id,
+                                companyName: dto.companyName || 'Unknown Company',
+                                companyEmail: googlePayload.email,
+                                designation: dto.designation,
+                            },
+                        });
+                    }
+
+                    // Audit log
+                    await tx.auditLog.create({
+                        data: {
+                            userId: newUser.id,
+                            action: AuditAction.CREATE,
+                            entityType: 'User',
+                            entityId: newUser.id,
+                            metadata: { registrationSource: 'google' },
+                        },
+                    });
+
+                    return tx.user.findUnique({
+                        where: { id: newUser.id },
+                        include: {
+                            candidate: true,
+                            hr: true,
+                            employee: true,
+                        },
+                    });
+                });
+
+                // Send welcome email for new users
+                const userName = googlePayload.given_name || googlePayload.name || 'there';
+                await this.emailService.sendWelcomeEmail(googlePayload.email, userName);
+            }
+        }
+
+        if (!user) {
+            throw new BadRequestException('Failed to create or find user');
+        }
+
+        // Update last login
+        await this.prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: user!.id },
+                data: { lastLoginAt: new Date() },
+            });
+
+            // Log device
+            if (deviceInfo) {
+                await tx.deviceLog.create({
+                    data: {
+                        userId: user!.id,
+                        deviceId: deviceInfo.deviceId || 'unknown',
+                        ipAddress: deviceInfo.ip || 'unknown',
+                        userAgent: deviceInfo.userAgent,
+                    },
+                });
+            }
+
+            // Audit log
+            await tx.auditLog.create({
+                data: {
+                    userId: user!.id,
+                    action: AuditAction.LOGIN,
+                    entityType: 'User',
+                    entityId: user!.id,
+                    metadata: { loginMethod: 'google' },
+                },
+            });
+        });
+
+        // Generate tokens
+        const payload: JwtPayload = {
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+        };
+
+        const token = await this.tokenService.generateTokenPair(payload);
+
+        // Remove sensitive data
+        const { passwordHash, ...userWithoutPassword } = user;
+
+        return {
+            token,
+            user: userWithoutPassword,
+            isNewUser,
+        };
     }
 }

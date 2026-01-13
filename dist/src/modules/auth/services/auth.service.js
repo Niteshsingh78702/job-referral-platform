@@ -41,22 +41,31 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const bcrypt = __importStar(require("bcrypt"));
+const crypto = __importStar(require("crypto"));
 const prisma_service_1 = require("../../../prisma/prisma.service");
 const otp_service_1 = require("./otp.service");
 const token_service_1 = require("./token.service");
+const google_auth_service_1 = require("./google-auth.service");
+const email_1 = require("../../email");
 const constants_1 = require("../../../common/constants");
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     prisma;
     otpService;
     tokenService;
-    constructor(prisma, otpService, tokenService) {
+    googleAuthService;
+    emailService;
+    logger = new common_1.Logger(AuthService_1.name);
+    constructor(prisma, otpService, tokenService, googleAuthService, emailService) {
         this.prisma = prisma;
         this.otpService = otpService;
         this.tokenService = tokenService;
+        this.googleAuthService = googleAuthService;
+        this.emailService = emailService;
     }
     async register(dto, deviceInfo) {
         const existingUser = await this.prisma.user.findUnique({
@@ -355,12 +364,210 @@ let AuthService = class AuthService {
         const { passwordHash, ...userWithoutPassword } = user;
         return userWithoutPassword;
     }
+    async forgotPassword(dto) {
+        const user = await this.prisma.user.findUnique({
+            where: { email: dto.email },
+            include: { candidate: true },
+        });
+        if (!user) {
+            this.logger.log(`Password reset requested for non-existent email: ${dto.email}`);
+            return { message: 'If an account exists with this email, you will receive a password reset link.' };
+        }
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+        await this.prisma.passwordResetToken.deleteMany({
+            where: { userId: user.id },
+        });
+        await this.prisma.passwordResetToken.create({
+            data: {
+                userId: user.id,
+                token: resetToken,
+                expiresAt,
+            },
+        });
+        const userName = user.candidate?.firstName || 'User';
+        await this.emailService.sendPasswordResetEmail(user.email, resetToken, userName);
+        return { message: 'If an account exists with this email, you will receive a password reset link.' };
+    }
+    async resetPasswordWithToken(dto) {
+        const resetToken = await this.prisma.passwordResetToken.findUnique({
+            where: { token: dto.token },
+            include: { user: true },
+        });
+        if (!resetToken) {
+            throw new common_1.BadRequestException('Invalid or expired reset link');
+        }
+        if (resetToken.usedAt) {
+            throw new common_1.BadRequestException('This reset link has already been used');
+        }
+        if (new Date() > resetToken.expiresAt) {
+            throw new common_1.BadRequestException('This reset link has expired');
+        }
+        const passwordHash = await bcrypt.hash(dto.newPassword, 12);
+        await this.prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: resetToken.userId },
+                data: { passwordHash },
+            });
+            await tx.passwordResetToken.update({
+                where: { id: resetToken.id },
+                data: { usedAt: new Date() },
+            });
+        });
+        await this.tokenService.revokeRefreshToken(resetToken.userId);
+        return { message: 'Password reset successfully. Please login with your new password.' };
+    }
+    async googleLogin(dto, deviceInfo) {
+        const googlePayload = await this.googleAuthService.verifyIdToken(dto.idToken);
+        let user = await this.prisma.user.findUnique({
+            where: { googleId: googlePayload.sub },
+            include: {
+                candidate: true,
+                hr: true,
+                employee: true,
+            },
+        });
+        let isNewUser = false;
+        if (!user) {
+            const existingEmailUser = await this.prisma.user.findUnique({
+                where: { email: googlePayload.email },
+                include: {
+                    candidate: true,
+                    hr: true,
+                    employee: true,
+                },
+            });
+            if (existingEmailUser) {
+                user = await this.prisma.user.update({
+                    where: { id: existingEmailUser.id },
+                    data: {
+                        googleId: googlePayload.sub,
+                        authProvider: existingEmailUser.authProvider === 'email' ? 'email,google' : existingEmailUser.authProvider,
+                        emailVerified: true,
+                    },
+                    include: {
+                        candidate: true,
+                        hr: true,
+                        employee: true,
+                    },
+                });
+                this.logger.log(`Linked Google account to existing user: ${user.email}`);
+            }
+            else {
+                isNewUser = true;
+                const role = dto.role || constants_1.UserRole.CANDIDATE;
+                user = await this.prisma.$transaction(async (tx) => {
+                    const newUser = await tx.user.create({
+                        data: {
+                            email: googlePayload.email,
+                            googleId: googlePayload.sub,
+                            authProvider: 'google',
+                            role,
+                            status: constants_1.UserStatus.ACTIVE,
+                            emailVerified: true,
+                        },
+                    });
+                    if (role === constants_1.UserRole.CANDIDATE) {
+                        await tx.candidate.create({
+                            data: {
+                                userId: newUser.id,
+                                firstName: googlePayload.given_name || googlePayload.name?.split(' ')[0] || 'User',
+                                lastName: googlePayload.family_name || googlePayload.name?.split(' ').slice(1).join(' ') || '',
+                                avatarUrl: googlePayload.picture,
+                            },
+                        });
+                    }
+                    else if (role === constants_1.UserRole.EMPLOYEE) {
+                        await tx.employee.create({
+                            data: {
+                                userId: newUser.id,
+                                companyName: dto.companyName || 'Unknown Company',
+                                companyEmail: googlePayload.email,
+                                designation: dto.designation,
+                            },
+                        });
+                    }
+                    else if (role === constants_1.UserRole.HR) {
+                        await tx.hR.create({
+                            data: {
+                                userId: newUser.id,
+                                companyName: dto.companyName || 'Unknown Company',
+                                companyEmail: googlePayload.email,
+                                designation: dto.designation,
+                            },
+                        });
+                    }
+                    await tx.auditLog.create({
+                        data: {
+                            userId: newUser.id,
+                            action: constants_1.AuditAction.CREATE,
+                            entityType: 'User',
+                            entityId: newUser.id,
+                            metadata: { registrationSource: 'google' },
+                        },
+                    });
+                    return tx.user.findUnique({
+                        where: { id: newUser.id },
+                        include: {
+                            candidate: true,
+                            hr: true,
+                            employee: true,
+                        },
+                    });
+                });
+                const userName = googlePayload.given_name || googlePayload.name || 'there';
+                await this.emailService.sendWelcomeEmail(googlePayload.email, userName);
+            }
+        }
+        if (!user) {
+            throw new common_1.BadRequestException('Failed to create or find user');
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: user.id },
+                data: { lastLoginAt: new Date() },
+            });
+            if (deviceInfo) {
+                await tx.deviceLog.create({
+                    data: {
+                        userId: user.id,
+                        deviceId: deviceInfo.deviceId || 'unknown',
+                        ipAddress: deviceInfo.ip || 'unknown',
+                        userAgent: deviceInfo.userAgent,
+                    },
+                });
+            }
+            await tx.auditLog.create({
+                data: {
+                    userId: user.id,
+                    action: constants_1.AuditAction.LOGIN,
+                    entityType: 'User',
+                    entityId: user.id,
+                    metadata: { loginMethod: 'google' },
+                },
+            });
+        });
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+        };
+        const token = await this.tokenService.generateTokenPair(payload);
+        const { passwordHash, ...userWithoutPassword } = user;
+        return {
+            token,
+            user: userWithoutPassword,
+            isNewUser,
+        };
+    }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         otp_service_1.OtpService,
-        token_service_1.TokenService])
+        token_service_1.TokenService,
+        google_auth_service_1.GoogleAuthService,
+        email_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

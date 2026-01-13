@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ChangePasswordDto = exports.ResetPasswordDto = exports.RefreshTokenDto = exports.VerifyOtpDto = exports.SendOtpDto = exports.LoginDto = exports.RegisterDto = void 0;
+exports.ResetPasswordWithTokenDto = exports.ForgotPasswordDto = exports.GoogleAuthDto = exports.ChangePasswordDto = exports.ResetPasswordDto = exports.RefreshTokenDto = exports.VerifyOtpDto = exports.SendOtpDto = exports.LoginDto = exports.RegisterDto = void 0;
 const class_validator_1 = require("class-validator");
 const constants_1 = require("../../../common/constants");
 class RegisterDto {
@@ -151,4 +151,52 @@ __decorate([
     (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "newPassword", void 0);
+class GoogleAuthDto {
+    idToken;
+    role = constants_1.UserRole.CANDIDATE;
+    companyName;
+    designation;
+}
+exports.GoogleAuthDto = GoogleAuthDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleAuthDto.prototype, "idToken", void 0);
+__decorate([
+    (0, class_validator_1.IsEnum)(constants_1.UserRole),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], GoogleAuthDto.prototype, "role", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleAuthDto.prototype, "companyName", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleAuthDto.prototype, "designation", void 0);
+class ForgotPasswordDto {
+    email;
+}
+exports.ForgotPasswordDto = ForgotPasswordDto;
+__decorate([
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], ForgotPasswordDto.prototype, "email", void 0);
+class ResetPasswordWithTokenDto {
+    token;
+    newPassword;
+}
+exports.ResetPasswordWithTokenDto = ResetPasswordWithTokenDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ResetPasswordWithTokenDto.prototype, "token", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(8),
+    __metadata("design:type", String)
+], ResetPasswordWithTokenDto.prototype, "newPassword", void 0);
 //# sourceMappingURL=auth.dto.js.map

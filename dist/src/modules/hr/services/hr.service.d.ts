@@ -61,14 +61,16 @@ export declare class HRService {
             activeJobs: number;
         }) | null;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         phone: string | null;
+        googleId: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         status: import("@prisma/client").$Enums.UserStatus;
         emailVerified: boolean;
         phoneVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        authProvider: string;
         lastLoginAt: Date | null;
     }>;
     updateProfile(userId: string, dto: UpdateHRProfileDto): Promise<{
@@ -116,24 +118,27 @@ export declare class HRService {
         limit?: number;
     }): Promise<{
         jobs: ({
+            _count: {
+                applications: number;
+            };
             skills: {
                 id: string;
                 name: string;
                 jobId: string;
                 isRequired: boolean;
             }[];
-            _count: {
-                applications: number;
-            };
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
+            description: string;
+            skillBucketId: string | null;
+            experienceMin: number | null;
+            experienceMax: number | null;
+            testId: string | null;
+            status: import("@prisma/client").$Enums.JobStatus;
             companyName: string;
             title: string;
-            description: string;
-            testId: string | null;
             slug: string;
             requirements: string | null;
             responsibilities: string | null;
@@ -143,8 +148,6 @@ export declare class HRService {
             salaryMin: number | null;
             salaryMax: number | null;
             salaryCurrency: string;
-            experienceMin: number | null;
-            experienceMax: number | null;
             educationLevel: string | null;
             maxApplications: number;
             applicationCount: number;
@@ -162,13 +165,16 @@ export declare class HRService {
     }>;
     createJob(userId: string, dto: CreateJobDto): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
+        description: string;
+        skillBucketId: string | null;
+        experienceMin: number | null;
+        experienceMax: number | null;
+        testId: string | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
-        description: string;
-        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -178,8 +184,6 @@ export declare class HRService {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -190,13 +194,16 @@ export declare class HRService {
     }>;
     updateJobStatus(userId: string, jobId: string, dto: UpdateJobStatusDto): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
+        description: string;
+        skillBucketId: string | null;
+        experienceMin: number | null;
+        experienceMax: number | null;
+        testId: string | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
-        description: string;
-        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -206,8 +213,6 @@ export declare class HRService {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -225,18 +230,21 @@ export declare class HRService {
         }[];
         applications: {
             id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
         }[];
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
+        description: string;
+        skillBucketId: string | null;
+        experienceMin: number | null;
+        experienceMax: number | null;
+        testId: string | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
-        description: string;
-        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -246,8 +254,6 @@ export declare class HRService {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -265,13 +271,16 @@ export declare class HRService {
         }[];
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
+        description: string;
+        skillBucketId: string | null;
+        experienceMin: number | null;
+        experienceMax: number | null;
+        testId: string | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
-        description: string;
-        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -281,8 +290,6 @@ export declare class HRService {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -319,9 +326,9 @@ export declare class HRService {
             };
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             jobId: string;
             candidateId: string;
             coverLetter: string | null;

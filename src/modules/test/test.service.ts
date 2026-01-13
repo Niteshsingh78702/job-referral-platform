@@ -324,15 +324,20 @@ export class TestService {
             throw new NotFoundException('Session not found');
         }
 
+        // Standard test - check that test relation exists
+        if (!session.test) {
+            throw new BadRequestException('This is a rapid-fire test session. Use the rapid-fire endpoints.');
+        }
+
         // Reorder questions based on shuffled order
         const orderedQuestions = sessionData.questionOrder.map(
-            (i) => session.test.questions[i],
+            (i) => session.test!.questions[i],
         );
 
         return {
             sessionId: session.id,
-            testTitle: session.test.title,
-            duration: session.test.duration,
+            testTitle: session.test!.title,
+            duration: session.test!.duration,
             totalQuestions: session.totalQuestions,
             remainingTime: Math.max(0, Math.floor((sessionData.endsAt - Date.now()) / 1000)),
             questions: orderedQuestions,

@@ -1,5 +1,5 @@
 import { AuthService } from './services';
-import { RegisterDto, LoginDto, SendOtpDto, VerifyOtpDto, RefreshTokenDto, ResetPasswordDto, ChangePasswordDto } from './dto';
+import { RegisterDto, LoginDto, SendOtpDto, VerifyOtpDto, RefreshTokenDto, ResetPasswordDto, ChangePasswordDto, GoogleAuthDto, ForgotPasswordDto, ResetPasswordWithTokenDto } from './dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -7,6 +7,11 @@ export declare class AuthController {
     login(dto: LoginDto, req: any): Promise<{
         token: import("./services").TokenPair;
         user: any;
+    }>;
+    googleLogin(dto: GoogleAuthDto, req: any): Promise<{
+        token: import("./services").TokenPair;
+        user: any;
+        isNewUser: boolean;
     }>;
     sendOtp(dto: SendOtpDto): Promise<{
         message: string;
@@ -18,13 +23,36 @@ export declare class AuthController {
     logout(userId: string): Promise<{
         message: string;
     }>;
+    forgotPassword(dto: ForgotPasswordDto): Promise<{
+        message: string;
+    }>;
     resetPassword(dto: ResetPasswordDto): Promise<{
+        message: string;
+    }>;
+    resetPasswordWithToken(dto: ResetPasswordWithTokenDto): Promise<{
         message: string;
     }>;
     changePassword(userId: string, dto: ChangePasswordDto): Promise<{
         message: string;
     }>;
     getCurrentUser(userId: string): Promise<{
+        hr: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            companyName: string;
+            companyEmail: string;
+            companyWebsite: string | null;
+            designation: string | null;
+            linkedinUrl: string | null;
+            approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
+            approvedBy: string | null;
+            approvedAt: Date | null;
+            rejectionReason: string | null;
+            totalJobsPosted: number;
+            activeJobs: number;
+        } | null;
         candidate: {
             id: string;
             createdAt: Date;
@@ -46,23 +74,6 @@ export declare class AuthController {
             country: string | null;
             willingToRelocate: boolean;
         } | null;
-        hr: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            companyName: string;
-            companyEmail: string;
-            companyWebsite: string | null;
-            designation: string | null;
-            linkedinUrl: string | null;
-            approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
-            approvedBy: string | null;
-            approvedAt: Date | null;
-            rejectionReason: string | null;
-            totalJobsPosted: number;
-            activeJobs: number;
-        } | null;
         employee: {
             id: string;
             createdAt: Date;
@@ -81,14 +92,16 @@ export declare class AuthController {
             badges: string[];
         } | null;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         phone: string | null;
+        googleId: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         status: import("@prisma/client").$Enums.UserStatus;
         emailVerified: boolean;
         phoneVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        authProvider: string;
         lastLoginAt: Date | null;
     }>;
 }

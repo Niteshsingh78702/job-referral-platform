@@ -13,10 +13,13 @@ exports.JobService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const constants_1 = require("../../common/constants");
+const skill_bucket_service_1 = require("../skill-bucket/skill-bucket.service");
 let JobService = class JobService {
     prisma;
-    constructor(prisma) {
+    skillBucketService;
+    constructor(prisma, skillBucketService) {
         this.prisma = prisma;
+        this.skillBucketService = skillBucketService;
     }
     async createJob(hrId, dto) {
         const hr = await this.prisma.hR.findUnique({
@@ -184,6 +187,13 @@ let JobService = class JobService {
         }
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
+            include: {
+                skillBucket: {
+                    include: {
+                        test: true,
+                    },
+                },
+            },
         });
         if (!job) {
             throw new common_1.NotFoundException('Job not found');
@@ -205,15 +215,37 @@ let JobService = class JobService {
         if (existingApplication) {
             throw new common_1.BadRequestException('Already applied for this job');
         }
+        let applicationStatus = constants_1.ApplicationStatus.REFERRAL_PENDING;
+        let skillTestStatus = null;
+        if (job.skillBucketId && job.skillBucket) {
+            skillTestStatus = await this.skillBucketService.checkCandidateSkillStatus(candidate.id, job.skillBucketId);
+            if (skillTestStatus.isPassed && skillTestStatus.isValid) {
+                applicationStatus = constants_1.ApplicationStatus.REFERRAL_PENDING;
+            }
+            else if (skillTestStatus.isPassed && !skillTestStatus.isValid) {
+                throw new common_1.BadRequestException(`Your ${skillTestStatus.skillBucketName} verification has expired. Please retake the HR Shortlisting Check.`);
+            }
+            else if (skillTestStatus.isFailed && !skillTestStatus.canRetest) {
+                throw new common_1.BadRequestException(`You can retry the ${skillTestStatus.skillBucketName} HR Shortlisting Check after ${skillTestStatus.retestInHours} hours.`);
+            }
+            else {
+                applicationStatus = constants_1.ApplicationStatus.TEST_PENDING;
+            }
+        }
+        else if (job.testId) {
+            applicationStatus = constants_1.ApplicationStatus.TEST_PENDING;
+        }
         const application = await this.prisma.$transaction(async (tx) => {
             const app = await tx.jobApplication.create({
                 data: {
                     candidateId: candidate.id,
                     jobId: job.id,
-                    status: job.testId
-                        ? constants_1.ApplicationStatus.TEST_PENDING
-                        : constants_1.ApplicationStatus.REFERRAL_PENDING,
+                    status: applicationStatus,
                     coverLetter: dto.coverLetter,
+                    ...(skillTestStatus?.isPassed && skillTestStatus?.isValid && {
+                        testScore: skillTestStatus.score,
+                        testPassedAt: new Date(),
+                    }),
                 },
             });
             await tx.job.update({
@@ -222,7 +254,17 @@ let JobService = class JobService {
             });
             return app;
         });
-        return application;
+        return {
+            ...application,
+            skillTestInfo: skillTestStatus ? {
+                skillBucketName: skillTestStatus.skillBucketName,
+                displayName: skillTestStatus.displayName,
+                isPassed: skillTestStatus.isPassed,
+                isValid: skillTestStatus.isValid,
+                validTill: skillTestStatus.validTill,
+                validDaysRemaining: skillTestStatus.validDaysRemaining,
+            } : null,
+        };
     }
     async getHRJobs(hrId, status) {
         const hr = await this.prisma.hR.findUnique({
@@ -257,6 +299,7 @@ let JobService = class JobService {
 exports.JobService = JobService;
 exports.JobService = JobService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        skill_bucket_service_1.SkillBucketService])
 ], JobService);
 //# sourceMappingURL=job.service.js.map

@@ -10,11 +10,13 @@ exports.TestModule = void 0;
 const common_1 = require("@nestjs/common");
 const test_controller_1 = require("./test.controller");
 const test_service_1 = require("./test.service");
+const skill_bucket_module_1 = require("../skill-bucket/skill-bucket.module");
 let TestModule = class TestModule {
 };
 exports.TestModule = TestModule;
 exports.TestModule = TestModule = __decorate([
     (0, common_1.Module)({
+        imports: [skill_bucket_module_1.SkillBucketModule],
         controllers: [test_controller_1.TestController],
         providers: [test_service_1.TestService],
         exports: [test_service_1.TestService],

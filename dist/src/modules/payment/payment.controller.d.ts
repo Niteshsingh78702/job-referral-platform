@@ -30,9 +30,9 @@ export declare class PaymentController {
     getPaymentHistory(userId: string): Promise<({
         refund: {
             id: string;
-            status: import("@prisma/client").$Enums.RefundStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.RefundStatus;
             amount: number;
             paymentId: string;
             reason: string;
@@ -48,9 +48,9 @@ export declare class PaymentController {
             };
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             jobId: string;
             candidateId: string;
             coverLetter: string | null;
@@ -60,9 +60,9 @@ export declare class PaymentController {
         };
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.PaymentStatus;
         applicationId: string;
         razorpayOrderId: string | null;
         razorpayPaymentId: string | null;
@@ -77,9 +77,9 @@ export declare class PaymentController {
     getPayment(userId: string, paymentId: string): Promise<{
         refund: {
             id: string;
-            status: import("@prisma/client").$Enums.RefundStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.RefundStatus;
             amount: number;
             paymentId: string;
             reason: string;
@@ -112,13 +112,16 @@ export declare class PaymentController {
             };
             job: {
                 id: string;
-                status: import("@prisma/client").$Enums.JobStatus;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string;
+                skillBucketId: string | null;
+                experienceMin: number | null;
+                experienceMax: number | null;
+                testId: string | null;
+                status: import("@prisma/client").$Enums.JobStatus;
                 companyName: string;
                 title: string;
-                description: string;
-                testId: string | null;
                 slug: string;
                 requirements: string | null;
                 responsibilities: string | null;
@@ -128,8 +131,6 @@ export declare class PaymentController {
                 salaryMin: number | null;
                 salaryMax: number | null;
                 salaryCurrency: string;
-                experienceMin: number | null;
-                experienceMax: number | null;
                 educationLevel: string | null;
                 maxApplications: number;
                 applicationCount: number;
@@ -140,9 +141,9 @@ export declare class PaymentController {
             };
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
             updatedAt: Date;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             jobId: string;
             candidateId: string;
             coverLetter: string | null;
@@ -152,9 +153,9 @@ export declare class PaymentController {
         };
     } & {
         id: string;
-        status: import("@prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.PaymentStatus;
         applicationId: string;
         razorpayOrderId: string | null;
         razorpayPaymentId: string | null;
@@ -168,9 +169,9 @@ export declare class PaymentController {
     }>;
     requestRefund(userId: string, dto: RequestRefundDto): Promise<{
         id: string;
-        status: import("@prisma/client").$Enums.RefundStatus;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.RefundStatus;
         amount: number;
         paymentId: string;
         reason: string;

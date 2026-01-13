@@ -19,10 +19,16 @@ const candidate_service_1 = require("./candidate.service");
 const dto_1 = require("./dto");
 const decorators_1 = require("../../common/decorators");
 const constants_1 = require("../../common/constants");
+const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
+const resume_parser_service_1 = require("../resume-parser/resume-parser.service");
 let CandidateController = class CandidateController {
     candidateService;
-    constructor(candidateService) {
+    cloudinaryService;
+    resumeParserService;
+    constructor(candidateService, cloudinaryService, resumeParserService) {
         this.candidateService = candidateService;
+        this.cloudinaryService = cloudinaryService;
+        this.resumeParserService = resumeParserService;
     }
     async getProfile(userId) {
         return this.candidateService.getProfile(userId);
@@ -31,8 +37,22 @@ let CandidateController = class CandidateController {
         return this.candidateService.updateProfile(userId, dto);
     }
     async uploadResume(userId, file) {
-        const resumeUrl = `uploads/resumes/${userId}/${file.originalname}`;
-        return this.candidateService.updateResume(userId, resumeUrl);
+        if (!file) {
+            throw new common_1.BadRequestException('Resume file is required');
+        }
+        const { url, publicId } = await this.cloudinaryService.uploadResume(file, userId);
+        const parsedData = await this.resumeParserService.parseResume(file);
+        const candidate = await this.candidateService.updateResumeWithParsedData(userId, url, publicId, parsedData);
+        return {
+            resumeUrl: url,
+            fileName: file.originalname,
+            parsedData: {
+                skills: parsedData.skills,
+                experience: parsedData.experience,
+                education: parsedData.education,
+            },
+            candidate,
+        };
     }
     async addSkill(userId, dto) {
         return this.candidateService.addSkill(userId, dto);
@@ -80,7 +100,22 @@ __decorate([
 ], CandidateController.prototype, "updateProfile", null);
 __decorate([
     (0, common_1.Post)('resume'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('resume')),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('resume', {
+        limits: { fileSize: 5 * 1024 * 1024 },
+        fileFilter: (req, file, cb) => {
+            const allowedMimes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            if (allowedMimes.includes(file.mimetype)) {
+                cb(null, true);
+            }
+            else {
+                cb(new common_1.BadRequestException('Only PDF and DOC/DOCX files are allowed'), false);
+            }
+        }
+    })),
     __param(0, (0, decorators_1.CurrentUser)('sub')),
     __param(1, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
@@ -160,6 +195,8 @@ __decorate([
 exports.CandidateController = CandidateController = __decorate([
     (0, common_1.Controller)('candidates'),
     (0, decorators_1.Roles)(constants_1.UserRole.CANDIDATE),
-    __metadata("design:paramtypes", [candidate_service_1.CandidateService])
+    __metadata("design:paramtypes", [candidate_service_1.CandidateService,
+        cloudinary_service_1.CloudinaryService,
+        resume_parser_service_1.ResumeParserService])
 ], CandidateController);
 //# sourceMappingURL=candidate.controller.js.map

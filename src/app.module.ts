@@ -27,6 +27,8 @@ import { SkillBucketModule } from './modules/skill-bucket/skill-bucket.module';
 import { QuestionBankModule } from './modules/question-bank/question-bank.module';
 import { TestTemplateModule } from './modules/test-template/test-template.module';
 import { RapidFireModule } from './modules/rapid-fire/rapid-fire.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { ResumeParserModule } from './modules/resume-parser/resume-parser.module';
 
 @Module({
   imports: [
@@ -83,6 +85,10 @@ import { RapidFireModule } from './modules/rapid-fire/rapid-fire.module';
     QuestionBankModule,
     TestTemplateModule,
     RapidFireModule,
+
+    // File Upload & Resume Processing
+    CloudinaryModule,
+    ResumeParserModule,
   ],
 
   providers: [

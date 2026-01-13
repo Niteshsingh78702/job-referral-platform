@@ -792,27 +792,68 @@ function renderCandidatesTable() {
         return;
     }
 
+    // Get shortlisted candidates from localStorage
+    const shortlisted = JSON.parse(localStorage.getItem('shortlistedCandidates') || '[]');
+
     const table = `
         <table>
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
+                    <th>Experience</th>
+                    <th>Skills</th>
+                    <th>Resume</th>
                     <th>Applications</th>
-                    <th>Joined</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 ${adminState.candidates.map(user => {
         const candidate = user.candidate;
+        const skills = candidate?.skills || [];
+        const experiences = candidate?.experiences || [];
+        const totalExp = experiences.length > 0
+            ? Math.round((new Date() - new Date(experiences[experiences.length - 1]?.startDate || new Date())) / (365.25 * 24 * 60 * 60 * 1000))
+            : 0;
+        const isShortlisted = shortlisted.includes(candidate?.id);
+        const resumeUrl = candidate?.resumeUrl;
+
         return `
                         <tr>
-                            <td>${candidate?.firstName || ''} ${candidate?.lastName || ''}</td>
-                            <td>${user.email}</td>
-                            <td>${candidate?.phone || 'N/A'}</td>
+                            <td>
+                                <div style="font-weight: 600;">${candidate?.firstName || ''} ${candidate?.lastName || ''}</div>
+                                <div style="font-size: 12px; color: var(--text-dim);">${user.email}</div>
+                                <div style="font-size: 12px; color: var(--text-dim);">${candidate?.phone || ''}</div>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">${totalExp} years</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; flex-wrap: wrap; gap: 4px; max-width: 200px;">
+                                    ${skills.slice(0, 3).map(s => `<span class="badge badge-success" style="font-size: 11px;">${s.name}</span>`).join('')}
+                                    ${skills.length > 3 ? `<span class="badge" style="font-size: 11px;">+${skills.length - 3}</span>` : ''}
+                                </div>
+                            </td>
+                            <td>
+                                ${resumeUrl
+                ? `<div style="display: flex; gap: 4px;">
+                                        <button class="btn btn-primary btn-sm" onclick="previewResume('${resumeUrl}')" title="Preview">👁️</button>
+                                        <button class="btn btn-success btn-sm" onclick="downloadResume('${resumeUrl}', '${candidate?.firstName || 'resume'}')" title="Download">📄</button>
+                                       </div>`
+                : '<span class="badge badge-warning">No Resume</span>'
+            }
+                            </td>
                             <td>${candidate?.applications?.length || 0}</td>
-                            <td>${formatDate(user.createdAt)}</td>
+                            <td>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="btn ${isShortlisted ? 'btn-warning' : 'btn-primary'} btn-sm" 
+                                            onclick="toggleShortlist('${candidate?.id}')" 
+                                            title="${isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}">
+                                        ${isShortlisted ? '⭐' : '☆'}
+                                    </button>
+                                    <button class="btn btn-success btn-sm" onclick="viewCandidateProfile('${user.id}')" title="View Profile">👤</button>
+                                </div>
+                            </td>
                         </tr>
                     `;
     }).join('')}
@@ -821,6 +862,45 @@ function renderCandidatesTable() {
     `;
 
     container.innerHTML = table;
+}
+
+// Resume preview in new tab
+function previewResume(url) {
+    window.open(url, '_blank');
+}
+
+// Resume download
+function downloadResume(url, name) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name}_resume.pdf`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Toggle shortlist for candidate
+function toggleShortlist(candidateId) {
+    if (!candidateId) return;
+
+    let shortlisted = JSON.parse(localStorage.getItem('shortlistedCandidates') || '[]');
+
+    if (shortlisted.includes(candidateId)) {
+        shortlisted = shortlisted.filter(id => id !== candidateId);
+        showToast('Removed from shortlist', 'info');
+    } else {
+        shortlisted.push(candidateId);
+        showToast('Added to shortlist ⭐', 'success');
+    }
+
+    localStorage.setItem('shortlistedCandidates', JSON.stringify(shortlisted));
+    renderCandidatesTable();
+}
+
+// View candidate profile modal
+function viewCandidateProfile(userId) {
+    showToast('Profile view coming soon!', 'info');
 }
 
 // ==========================================

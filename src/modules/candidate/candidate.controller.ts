@@ -9,6 +9,7 @@ import {
     Query,
     UseInterceptors,
     UploadedFile,
+    BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CandidateService } from './candidate.service';
@@ -20,11 +21,17 @@ import {
 } from './dto';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { UserRole, ApplicationStatus } from '../../common/constants';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ResumeParserService } from '../resume-parser/resume-parser.service';
 
 @Controller('candidates')
 @Roles(UserRole.CANDIDATE)
 export class CandidateController {
-    constructor(private readonly candidateService: CandidateService) { }
+    constructor(
+        private readonly candidateService: CandidateService,
+        private readonly cloudinaryService: CloudinaryService,
+        private readonly resumeParserService: ResumeParserService,
+    ) { }
 
     @Get('profile')
     async getProfile(@CurrentUser('sub') userId: string) {
@@ -40,15 +47,53 @@ export class CandidateController {
     }
 
     @Post('resume')
-    @UseInterceptors(FileInterceptor('resume'))
+    @UseInterceptors(FileInterceptor('resume', {
+        limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+        fileFilter: (req, file, cb) => {
+            const allowedMimes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            if (allowedMimes.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new BadRequestException('Only PDF and DOC/DOCX files are allowed'), false);
+            }
+        }
+    }))
     async uploadResume(
         @CurrentUser('sub') userId: string,
         @UploadedFile() file: Express.Multer.File,
     ) {
-        // In production, upload to S3 and get URL
-        // For now, we'll simulate with a placeholder
-        const resumeUrl = `uploads/resumes/${userId}/${file.originalname}`;
-        return this.candidateService.updateResume(userId, resumeUrl);
+        if (!file) {
+            throw new BadRequestException('Resume file is required');
+        }
+
+        // Upload to Cloudinary
+        const { url, publicId } = await this.cloudinaryService.uploadResume(file, userId);
+
+        // Parse resume to extract skills, experience, education
+        const parsedData = await this.resumeParserService.parseResume(file);
+
+        // Update candidate with resume URL and parsed data
+        const candidate = await this.candidateService.updateResumeWithParsedData(
+            userId,
+            url,
+            publicId,
+            parsedData,
+        );
+
+        return {
+            resumeUrl: url,
+            fileName: file.originalname,
+            parsedData: {
+                skills: parsedData.skills,
+                experience: parsedData.experience,
+                education: parsedData.education,
+            },
+            candidate,
+        };
     }
 
     @Post('skills')

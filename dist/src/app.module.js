@@ -30,6 +30,8 @@ const skill_bucket_module_1 = require("./modules/skill-bucket/skill-bucket.modul
 const question_bank_module_1 = require("./modules/question-bank/question-bank.module");
 const test_template_module_1 = require("./modules/test-template/test-template.module");
 const rapid_fire_module_1 = require("./modules/rapid-fire/rapid-fire.module");
+const cloudinary_module_1 = require("./modules/cloudinary/cloudinary.module");
+const resume_parser_module_1 = require("./modules/resume-parser/resume-parser.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -78,6 +80,8 @@ exports.AppModule = AppModule = __decorate([
             question_bank_module_1.QuestionBankModule,
             test_template_module_1.TestTemplateModule,
             rapid_fire_module_1.RapidFireModule,
+            cloudinary_module_1.CloudinaryModule,
+            resume_parser_module_1.ResumeParserModule,
         ],
         providers: [
             {

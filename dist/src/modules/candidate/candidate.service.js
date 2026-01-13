@@ -66,6 +66,45 @@ let CandidateService = class CandidateService {
             data: { resumeUrl },
         });
     }
+    async updateResumeWithParsedData(userId, resumeUrl, cloudinaryPublicId, parsedData) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+        if (!candidate) {
+            throw new common_1.NotFoundException('Candidate profile not found');
+        }
+        const updatedCandidate = await this.prisma.candidate.update({
+            where: { userId },
+            data: {
+                resumeUrl,
+            },
+        });
+        for (const skillName of parsedData.skills.slice(0, 10)) {
+            const existingSkill = await this.prisma.candidateSkill.findFirst({
+                where: {
+                    candidateId: candidate.id,
+                    name: { equals: skillName, mode: 'insensitive' },
+                },
+            });
+            if (!existingSkill) {
+                await this.prisma.candidateSkill.create({
+                    data: {
+                        candidateId: candidate.id,
+                        name: skillName,
+                        level: 3,
+                    },
+                });
+            }
+        }
+        return this.prisma.candidate.findUnique({
+            where: { userId },
+            include: {
+                skills: true,
+                experiences: true,
+                educations: true,
+            },
+        });
+    }
     async addSkill(userId, dto) {
         const candidate = await this.prisma.candidate.findUnique({
             where: { userId },

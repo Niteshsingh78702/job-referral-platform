@@ -71,6 +71,65 @@ export class CandidateService {
         });
     }
 
+    // Upload resume with parsed data from Cloudinary
+    async updateResumeWithParsedData(
+        userId: string,
+        resumeUrl: string,
+        cloudinaryPublicId: string,
+        parsedData: {
+            skills: string[];
+            experience: { years: number; positions: string[] };
+            education: string[];
+        },
+    ) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            throw new NotFoundException('Candidate profile not found');
+        }
+
+        // Update candidate with resume URL
+        const updatedCandidate = await this.prisma.candidate.update({
+            where: { userId },
+            data: {
+                resumeUrl,
+                // Store Cloudinary public ID for future deletion
+                // You may want to add this field to your schema
+            },
+        });
+
+        // Auto-add parsed skills if they don't exist
+        for (const skillName of parsedData.skills.slice(0, 10)) { // Limit to 10 skills
+            const existingSkill = await this.prisma.candidateSkill.findFirst({
+                where: {
+                    candidateId: candidate.id,
+                    name: { equals: skillName, mode: 'insensitive' },
+                },
+            });
+
+            if (!existingSkill) {
+                await this.prisma.candidateSkill.create({
+                    data: {
+                        candidateId: candidate.id,
+                        name: skillName,
+                        level: 3, // Default mid-level
+                    },
+                });
+            }
+        }
+
+        return this.prisma.candidate.findUnique({
+            where: { userId },
+            include: {
+                skills: true,
+                experiences: true,
+                educations: true,
+            },
+        });
+    }
+
     // Add skill
     async addSkill(userId: string, dto: AddSkillDto) {
         const candidate = await this.prisma.candidate.findUnique({

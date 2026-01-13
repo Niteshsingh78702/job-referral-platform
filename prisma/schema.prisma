@@ -722,8 +722,9 @@ model TestQuestion {
 model TestSession {
   id String @id @default(uuid())
 
-  applicationId String
-  application   JobApplication @relation(fields: [applicationId], references: [id])
+  // Optional for rapid fire tests (which don't require job application)
+  applicationId String?
+  application   JobApplication? @relation(fields: [applicationId], references: [id])
 
   testId String?
   test   Test?   @relation(fields: [testId], references: [id])

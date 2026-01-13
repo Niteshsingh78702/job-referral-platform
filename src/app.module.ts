@@ -26,6 +26,7 @@ import { EmployeeModule } from './modules/employee/employee.module';
 import { SkillBucketModule } from './modules/skill-bucket/skill-bucket.module';
 import { QuestionBankModule } from './modules/question-bank/question-bank.module';
 import { TestTemplateModule } from './modules/test-template/test-template.module';
+import { RapidFireModule } from './modules/rapid-fire/rapid-fire.module';
 
 @Module({
   imports: [
@@ -81,7 +82,9 @@ import { TestTemplateModule } from './modules/test-template/test-template.module
     SkillBucketModule,
     QuestionBankModule,
     TestTemplateModule,
+    RapidFireModule,
   ],
+
   providers: [
     // Global Exception Filter
     {

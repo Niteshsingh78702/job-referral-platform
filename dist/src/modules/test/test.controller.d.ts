@@ -5,22 +5,22 @@ export declare class TestController {
     constructor(testService: TestService);
     createTest(dto: CreateTestDto): Promise<{
         id: string;
+        description: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
-        description: string | null;
         duration: number;
-        passingScore: number;
+        difficulty: string;
         totalQuestions: number;
+        title: string;
+        passingScore: number;
         shuffleQuestions: boolean;
         maxTabSwitches: number;
-        difficulty: string;
-        isActive: boolean;
     }>;
     addQuestion(testId: string, dto: AddQuestionDto): Promise<{
         id: string;
-        createdAt: Date;
         testId: string;
+        createdAt: Date;
         question: string;
         options: import("@prisma/client/runtime/library").JsonValue;
         correctAnswer: number;
@@ -31,8 +31,8 @@ export declare class TestController {
     getTest(testId: string): Promise<{
         questions: {
             id: string;
-            createdAt: Date;
             testId: string;
+            createdAt: Date;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
@@ -42,17 +42,17 @@ export declare class TestController {
         }[];
     } & {
         id: string;
+        description: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
-        description: string | null;
         duration: number;
-        passingScore: number;
+        difficulty: string;
         totalQuestions: number;
+        title: string;
+        passingScore: number;
         shuffleQuestions: boolean;
         maxTabSwitches: number;
-        difficulty: string;
-        isActive: boolean;
     }>;
     startTest(applicationId: string, userId: string): Promise<{
         sessionId: string;

@@ -8,6 +8,9 @@ export declare class QuestionBankController {
         message: string;
         data: {
             id: string;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
@@ -17,9 +20,6 @@ export declare class QuestionBankController {
             tags: string[];
             roleType: string | null;
             createdById: string;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
         };
     }>;
     bulkUpload(dto: BulkUploadDto, user: any): Promise<{
@@ -38,6 +38,7 @@ export declare class QuestionBankController {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
@@ -45,7 +46,6 @@ export declare class QuestionBankController {
             category: import("@prisma/client").$Enums.QuestionCategory;
             tags: string[];
             roleType: string | null;
-            createdAt: Date;
         }[];
         pagination: {
             page: number;
@@ -80,6 +80,9 @@ export declare class QuestionBankController {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
@@ -89,9 +92,6 @@ export declare class QuestionBankController {
             tags: string[];
             roleType: string | null;
             createdById: string;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
         };
     }>;
     updateQuestion(id: string, dto: UpdateQuestionDto): Promise<{
@@ -99,6 +99,9 @@ export declare class QuestionBankController {
         message: string;
         data: {
             id: string;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
@@ -108,9 +111,6 @@ export declare class QuestionBankController {
             tags: string[];
             roleType: string | null;
             createdById: string;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
         };
     }>;
     deleteQuestion(id: string): Promise<{

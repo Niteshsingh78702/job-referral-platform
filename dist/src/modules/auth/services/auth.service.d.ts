@@ -90,16 +90,16 @@ export declare class AuthService {
             badges: string[];
         } | null;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import("@prisma/client").$Enums.UserStatus;
         email: string;
         phone: string | null;
         googleId: string | null;
         role: import("@prisma/client").$Enums.UserRole;
-        status: import("@prisma/client").$Enums.UserStatus;
         emailVerified: boolean;
         phoneVerified: boolean;
         authProvider: string;
-        createdAt: Date;
-        updatedAt: Date;
         lastLoginAt: Date | null;
     }>;
     forgotPassword(dto: ForgotPasswordDto): Promise<{

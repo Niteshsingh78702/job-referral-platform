@@ -29,6 +29,7 @@ const employee_module_1 = require("./modules/employee/employee.module");
 const skill_bucket_module_1 = require("./modules/skill-bucket/skill-bucket.module");
 const question_bank_module_1 = require("./modules/question-bank/question-bank.module");
 const test_template_module_1 = require("./modules/test-template/test-template.module");
+const rapid_fire_module_1 = require("./modules/rapid-fire/rapid-fire.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -76,6 +77,7 @@ exports.AppModule = AppModule = __decorate([
             skill_bucket_module_1.SkillBucketModule,
             question_bank_module_1.QuestionBankModule,
             test_template_module_1.TestTemplateModule,
+            rapid_fire_module_1.RapidFireModule,
         ],
         providers: [
             {

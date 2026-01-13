@@ -16,21 +16,20 @@ export declare class TestService {
     private redisDel;
     createTest(dto: CreateTestDto): Promise<{
         id: string;
+        title: string;
         description: string | null;
+        duration: number;
+        passingScore: number;
+        totalQuestions: number;
+        shuffleQuestions: boolean;
+        maxTabSwitches: number;
+        difficulty: string;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        duration: number;
-        difficulty: string;
-        totalQuestions: number;
-        title: string;
-        passingScore: number;
-        shuffleQuestions: boolean;
-        maxTabSwitches: number;
     }>;
     addQuestion(testId: string, dto: AddQuestionDto): Promise<{
         id: string;
-        testId: string;
         createdAt: Date;
         question: string;
         options: import("@prisma/client/runtime/library").JsonValue;
@@ -38,11 +37,11 @@ export declare class TestService {
         explanation: string | null;
         points: number;
         orderIndex: number;
+        testId: string;
     }>;
     getTestById(testId: string): Promise<{
         questions: {
             id: string;
-            testId: string;
             createdAt: Date;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
@@ -50,20 +49,21 @@ export declare class TestService {
             explanation: string | null;
             points: number;
             orderIndex: number;
+            testId: string;
         }[];
     } & {
         id: string;
+        title: string;
         description: string | null;
+        duration: number;
+        passingScore: number;
+        totalQuestions: number;
+        shuffleQuestions: boolean;
+        maxTabSwitches: number;
+        difficulty: string;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        duration: number;
-        difficulty: string;
-        totalQuestions: number;
-        title: string;
-        passingScore: number;
-        shuffleQuestions: boolean;
-        maxTabSwitches: number;
     }>;
     startTest(applicationId: string, userId: string): Promise<{
         sessionId: string;

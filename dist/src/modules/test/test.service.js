@@ -334,7 +334,7 @@ let TestService = TestService_1 = class TestService {
         if (!session) {
             throw new common_1.NotFoundException('Session not found');
         }
-        if (session.application.candidate.userId !== userId) {
+        if (session.application && session.application.candidate.userId !== userId) {
             throw new common_1.ForbiddenException('Not authorized');
         }
         if (session.status !== constants_1.TestSessionStatus.ACTIVE) {

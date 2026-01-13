@@ -427,7 +427,8 @@ export class TestService {
             throw new NotFoundException('Session not found');
         }
 
-        if (session.application.candidate.userId !== userId) {
+        // Check authorization (application may be null for rapid fire tests)
+        if (session.application && session.application.candidate.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 

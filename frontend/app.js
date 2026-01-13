@@ -817,10 +817,10 @@ function toggleSaveJob(jobId, event) {
     const index = savedJobs.indexOf(jobId);
     if (index > -1) {
         savedJobs.splice(index, 1);
-        showToast('info', 'Job removed from saved');
+        // Heart icon change provides visual feedback - no toast needed
     } else {
         savedJobs.push(jobId);
-        showToast('success', 'Job saved!');
+        // Heart icon change provides visual feedback - no toast needed
     }
     localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
 

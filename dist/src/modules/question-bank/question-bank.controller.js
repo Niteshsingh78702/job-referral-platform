@@ -27,7 +27,7 @@ let QuestionBankController = class QuestionBankController {
         this.questionBankService = questionBankService;
     }
     async createQuestion(dto, user) {
-        const question = await this.questionBankService.createQuestion(dto, user.id);
+        const question = await this.questionBankService.createQuestion(dto, user.sub);
         return {
             success: true,
             message: 'Question created successfully',
@@ -35,7 +35,7 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     async bulkUpload(dto, user) {
-        const result = await this.questionBankService.bulkUpload(dto.questions, user.id);
+        const result = await this.questionBankService.bulkUpload(dto.questions, user.sub);
         return {
             success: true,
             message: `Uploaded ${result.success} questions, ${result.failed} failed`,

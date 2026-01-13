@@ -36,7 +36,7 @@ export class QuestionBankController {
         @Body() dto: CreateQuestionDto,
         @CurrentUser() user: any,
     ) {
-        const question = await this.questionBankService.createQuestion(dto, user.id);
+        const question = await this.questionBankService.createQuestion(dto, user.sub);
         return {
             success: true,
             message: 'Question created successfully',
@@ -52,7 +52,7 @@ export class QuestionBankController {
         @Body() dto: BulkUploadDto,
         @CurrentUser() user: any,
     ) {
-        const result = await this.questionBankService.bulkUpload(dto.questions, user.id);
+        const result = await this.questionBankService.bulkUpload(dto.questions, user.sub);
         return {
             success: true,
             message: `Uploaded ${result.success} questions, ${result.failed} failed`,

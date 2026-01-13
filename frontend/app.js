@@ -1639,11 +1639,16 @@ function handleResumeUpload(event) {
 }
 
 async function tryUploadResumeAPI(file) {
-    if (!state.token) return;
+    if (!state.token) {
+        console.log('No token - resume saved locally only');
+        return;
+    }
 
     try {
         const formData = new FormData();
         formData.append('resume', file);
+
+        console.log('📤 Uploading resume to Cloudinary...');
 
         const response = await fetch(`${API_BASE_URL}/candidates/resume`, {
             method: 'POST',
@@ -1654,10 +1659,27 @@ async function tryUploadResumeAPI(file) {
         });
 
         if (response.ok) {
-            console.log('✅ Resume uploaded to server');
+            const result = await response.json();
+            console.log('✅ Resume uploaded to Cloudinary:', result);
+
+            // Update state with server response (includes Cloudinary URL)
+            if (result.data?.resumeUrl) {
+                state.user.resumeUrl = result.data.resumeUrl;
+                localStorage.setItem('user', JSON.stringify(state.user));
+            }
+
+            // Show parsed skills if available
+            if (result.data?.parsedData?.skills?.length > 0) {
+                showToast('success', `Found ${result.data.parsedData.skills.length} skills in your resume!`);
+            }
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Resume upload failed:', errorData);
+            showToast('error', errorData.message || 'Failed to upload resume to server');
         }
     } catch (error) {
-        console.log('📦 Resume saved locally (API unavailable)');
+        console.error('❌ Resume upload error:', error);
+        showToast('warning', 'Resume saved locally. Server upload failed.');
     }
 }
 

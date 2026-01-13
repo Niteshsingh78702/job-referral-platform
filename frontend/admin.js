@@ -866,18 +866,32 @@ function renderCandidatesTable() {
 
 // Resume preview in new tab
 function previewResume(url) {
+    if (!url) {
+        showToast('No resume URL available', 'error');
+        return;
+    }
+    // Open Cloudinary URL directly - PDFs will display in browser
     window.open(url, '_blank');
 }
 
-// Resume download
+// Resume download - for Cloudinary raw files
 function downloadResume(url, name) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${name}_resume.pdf`;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!url) {
+        showToast('No resume URL available', 'error');
+        return;
+    }
+
+    // For Cloudinary URLs, add fl_attachment to force download
+    let downloadUrl = url;
+    if (url.includes('cloudinary.com')) {
+        // Insert fl_attachment flag before the file path
+        // Cloudinary URL format: .../raw/upload/v123456/folder/file.pdf
+        // We need: .../raw/upload/fl_attachment/v123456/folder/file.pdf
+        downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
+    }
+
+    // Open in new tab - browser will download due to fl_attachment
+    window.open(downloadUrl, '_blank');
 }
 
 // Toggle shortlist for candidate

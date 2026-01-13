@@ -1492,6 +1492,10 @@ function showProfileModal() {
     const overlay = document.getElementById('profileModalOverlay');
     const modal = document.getElementById('profileModal');
 
+    // Ensure display is set (in case it was set to none by closeProfileModal)
+    if (overlay) overlay.style.display = 'flex';
+    if (modal) modal.style.display = 'block';
+
     overlay.classList.add('active');
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -1542,8 +1546,14 @@ function closeProfileModal() {
     const overlay = document.getElementById('profileModalOverlay');
     const modal = document.getElementById('profileModal');
 
-    overlay.classList.remove('active');
-    modal.classList.remove('active');
+    if (overlay) {
+        overlay.classList.remove('active');
+        overlay.style.display = 'none';
+    }
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
     document.body.style.overflow = '';
 }
 

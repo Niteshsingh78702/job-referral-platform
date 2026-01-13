@@ -16,6 +16,9 @@ let state = {
     isLoading: false,
 };
 
+// Confirmation modal state
+let confirmModalResolver = null;
+
 // =============================================
 // Initialize App
 // =============================================
@@ -2631,15 +2634,24 @@ function endTest() {
     testState.tabSwitchCount = 0;
 }
 
-function confirmExitTest() {
-    if (confirm('Are you sure you want to exit? Your progress will be lost.')) {
+async function confirmExitTest() {
+    const confirmed = await showConfirmModal({
+        icon: '🚪',
+        title: 'Exit Test?',
+        message: 'Are you sure you want to exit? Your progress will be lost and you may not be able to retake this test immediately.',
+        confirmText: 'Exit Test',
+        cancelText: 'Continue Test',
+        variant: 'danger'
+    });
+
+    if (confirmed) {
         endTest();
         hideTestPage();
     }
 }
 
 async function submitTest(isAutoSubmit = false) {
-    // Clear timer
+    // Clear timer temporarily
     if (testState.timerInterval) {
         clearInterval(testState.timerInterval);
     }
@@ -2652,7 +2664,18 @@ async function submitTest(isAutoSubmit = false) {
 
     if (!isAutoSubmit && answeredCount < testState.questions.length) {
         const unanswered = testState.questions.length - answeredCount;
-        if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) {
+
+        const confirmed = await showConfirmModal({
+            icon: '📝',
+            title: 'Incomplete Test',
+            message: `You have ${unanswered} unanswered question${unanswered > 1 ? 's' : ''}. Are you sure you want to submit?`,
+            confirmText: 'Submit Anyway',
+            cancelText: 'Continue Test',
+            variant: 'warning'
+        });
+
+        if (!confirmed) {
+            // Resume timer
             testState.timerInterval = setInterval(() => {
                 testState.remainingTime--;
                 updateTimerDisplay();
@@ -2789,3 +2812,58 @@ function closeTestResult() {
     showApplications();
 }
 
+// =============================================
+// Professional Confirmation Modal
+// =============================================
+
+/**
+ * Shows a professional confirmation modal
+ * @param {object} options - Modal options
+ * @param {string} options.title - Modal title
+ * @param {string} options.message - Modal message
+ * @param {string} options.icon - Emoji icon (default: ⚠️)
+ * @param {string} options.confirmText - Confirm button text (default: Confirm)
+ * @param {string} options.cancelText - Cancel button text (default: Cancel)
+ * @param {string} options.variant - 'default', 'danger', or 'warning'
+ * @returns {Promise<boolean>} - Resolves to true if confirmed, false if cancelled
+ */
+function showConfirmModal(options = {}) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const overlay = document.getElementById('confirmModalOverlay');
+
+        // Set content
+        document.getElementById('confirmIcon').textContent = options.icon || '⚠️';
+        document.getElementById('confirmTitle').textContent = options.title || 'Confirm Action';
+        document.getElementById('confirmMessage').textContent = options.message || 'Are you sure you want to proceed?';
+        document.getElementById('confirmOkBtn').textContent = options.confirmText || 'Confirm';
+        document.getElementById('confirmCancelBtn').textContent = options.cancelText || 'Cancel';
+
+        // Set variant
+        modal.classList.remove('danger', 'warning');
+        if (options.variant) {
+            modal.classList.add(options.variant);
+        }
+
+        // Store resolver
+        confirmModalResolver = resolve;
+
+        // Show modal
+        overlay.classList.add('active');
+        modal.classList.add('active');
+    });
+}
+
+function closeConfirmModal(result) {
+    const modal = document.getElementById('confirmModal');
+    const overlay = document.getElementById('confirmModalOverlay');
+
+    overlay.classList.remove('active');
+    modal.classList.remove('active');
+
+    // Resolve promise
+    if (confirmModalResolver) {
+        confirmModalResolver(result);
+        confirmModalResolver = null;
+    }
+}

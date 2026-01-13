@@ -10,11 +10,11 @@ export declare class TestTemplateController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             name: string;
             description: string | null;
-            testType: import("@prisma/client").$Enums.TestType;
             duration: number;
+            isActive: boolean;
+            testType: import("@prisma/client").$Enums.TestType;
             passingCriteria: number;
             questionPoolSize: number;
             autoSelect: boolean;
@@ -39,11 +39,11 @@ export declare class TestTemplateController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             name: string;
             description: string | null;
-            testType: import("@prisma/client").$Enums.TestType;
             duration: number;
+            isActive: boolean;
+            testType: import("@prisma/client").$Enums.TestType;
             passingCriteria: number;
             questionPoolSize: number;
             autoSelect: boolean;
@@ -71,11 +71,11 @@ export declare class TestTemplateController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             name: string;
             description: string | null;
-            testType: import("@prisma/client").$Enums.TestType;
             duration: number;
+            isActive: boolean;
+            testType: import("@prisma/client").$Enums.TestType;
             passingCriteria: number;
             questionPoolSize: number;
             autoSelect: boolean;
@@ -89,8 +89,8 @@ export declare class TestTemplateController {
         success: boolean;
         data: {
             id: string;
-            question: string;
             difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+            question: string;
             category: import("@prisma/client").$Enums.QuestionCategory;
             tags: string[];
         }[];
@@ -102,11 +102,11 @@ export declare class TestTemplateController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             name: string;
             description: string | null;
-            testType: import("@prisma/client").$Enums.TestType;
             duration: number;
+            isActive: boolean;
+            testType: import("@prisma/client").$Enums.TestType;
             passingCriteria: number;
             questionPoolSize: number;
             autoSelect: boolean;

@@ -4,14 +4,14 @@ export declare class TestTemplateService {
     private prisma;
     constructor(prisma: PrismaService);
     createTemplate(dto: CreateTestTemplateDto): Promise<{
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        testType: import("@prisma/client").$Enums.TestType;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -31,14 +31,14 @@ export declare class TestTemplateService {
                 code: string;
             }[];
         } & {
-            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             name: string;
             description: string | null;
-            testType: import("@prisma/client").$Enums.TestType;
             duration: number;
+            isActive: boolean;
+            testType: import("@prisma/client").$Enums.TestType;
             passingCriteria: number;
             questionPoolSize: number;
             autoSelect: boolean;
@@ -61,14 +61,14 @@ export declare class TestTemplateService {
             name: string;
             code: string;
         }[];
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        testType: import("@prisma/client").$Enums.TestType;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -78,14 +78,14 @@ export declare class TestTemplateService {
         showLiveScore: boolean;
     }>;
     updateTemplate(id: string, dto: UpdateTestTemplateDto): Promise<{
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        testType: import("@prisma/client").$Enums.TestType;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -95,14 +95,14 @@ export declare class TestTemplateService {
         showLiveScore: boolean;
     }>;
     deleteTemplate(id: string): Promise<{
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        testType: import("@prisma/client").$Enums.TestType;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -121,10 +121,10 @@ export declare class TestTemplateService {
     }>;
     private getAvailableQuestionCount;
     previewQuestions(templateId: string, count?: number): Promise<{
-        question: string;
+        id: string;
         difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+        question: string;
         category: import("@prisma/client").$Enums.QuestionCategory;
         tags: string[];
-        id: string;
     }[]>;
 }

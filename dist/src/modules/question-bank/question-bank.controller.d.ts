@@ -8,18 +8,18 @@ export declare class QuestionBankController {
         message: string;
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+            isActive: boolean;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
             explanation: string | null;
-            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
             category: import("@prisma/client").$Enums.QuestionCategory;
             tags: string[];
             roleType: string | null;
             createdById: string;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
         };
     }>;
     bulkUpload(dto: BulkUploadDto, user: any): Promise<{
@@ -38,14 +38,14 @@ export declare class QuestionBankController {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
+            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
-            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
             category: import("@prisma/client").$Enums.QuestionCategory;
             tags: string[];
             roleType: string | null;
-            createdAt: Date;
         }[];
         pagination: {
             page: number;
@@ -80,18 +80,18 @@ export declare class QuestionBankController {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+            isActive: boolean;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
             explanation: string | null;
-            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
             category: import("@prisma/client").$Enums.QuestionCategory;
             tags: string[];
             roleType: string | null;
             createdById: string;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
         };
     }>;
     updateQuestion(id: string, dto: UpdateQuestionDto): Promise<{
@@ -99,18 +99,18 @@ export declare class QuestionBankController {
         message: string;
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+            isActive: boolean;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
             explanation: string | null;
-            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
             category: import("@prisma/client").$Enums.QuestionCategory;
             tags: string[];
             roleType: string | null;
             createdById: string;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
         };
     }>;
     deleteQuestion(id: string): Promise<{

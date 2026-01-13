@@ -5,18 +5,18 @@ export declare class QuestionBankService {
     constructor(prisma: PrismaService);
     createQuestion(dto: CreateQuestionDto, createdById: string): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+        isActive: boolean;
         question: string;
         options: import("@prisma/client/runtime/library").JsonValue;
         correctAnswer: number;
         explanation: string | null;
-        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
         category: import("@prisma/client").$Enums.QuestionCategory;
         tags: string[];
         roleType: string | null;
         createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        isActive: boolean;
     }>;
     bulkUpload(questions: BulkQuestionDto[], createdById: string): Promise<{
         success: number;
@@ -29,14 +29,14 @@ export declare class QuestionBankService {
     getQuestions(filters: QuestionFiltersDto): Promise<{
         questions: {
             id: string;
+            createdAt: Date;
+            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
             question: string;
             options: import("@prisma/client/runtime/library").JsonValue;
             correctAnswer: number;
-            difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
             category: import("@prisma/client").$Enums.QuestionCategory;
             tags: string[];
             roleType: string | null;
-            createdAt: Date;
         }[];
         pagination: {
             page: number;
@@ -47,48 +47,48 @@ export declare class QuestionBankService {
     }>;
     getQuestionById(id: string): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+        isActive: boolean;
         question: string;
         options: import("@prisma/client/runtime/library").JsonValue;
         correctAnswer: number;
         explanation: string | null;
-        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
         category: import("@prisma/client").$Enums.QuestionCategory;
         tags: string[];
         roleType: string | null;
         createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        isActive: boolean;
     }>;
     updateQuestion(id: string, dto: UpdateQuestionDto): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+        isActive: boolean;
         question: string;
         options: import("@prisma/client/runtime/library").JsonValue;
         correctAnswer: number;
         explanation: string | null;
-        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
         category: import("@prisma/client").$Enums.QuestionCategory;
         tags: string[];
         roleType: string | null;
         createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        isActive: boolean;
     }>;
     deleteQuestion(id: string): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+        isActive: boolean;
         question: string;
         options: import("@prisma/client/runtime/library").JsonValue;
         correctAnswer: number;
         explanation: string | null;
-        difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
         category: import("@prisma/client").$Enums.QuestionCategory;
         tags: string[];
         roleType: string | null;
         createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        isActive: boolean;
     }>;
     getRandomQuestions(params: {
         count: number;

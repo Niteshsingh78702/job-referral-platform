@@ -17,16 +17,13 @@ export declare class JobController {
             }[];
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            description: string;
-            skillBucketId: string | null;
-            experienceMin: number | null;
-            experienceMax: number | null;
-            testId: string | null;
-            status: import("@prisma/client").$Enums.JobStatus;
             companyName: string;
             title: string;
+            description: string;
+            testId: string | null;
             slug: string;
             requirements: string | null;
             responsibilities: string | null;
@@ -36,6 +33,8 @@ export declare class JobController {
             salaryMin: number | null;
             salaryMax: number | null;
             salaryCurrency: string;
+            experienceMin: number | null;
+            experienceMax: number | null;
             educationLevel: string | null;
             maxApplications: number;
             applicationCount: number;
@@ -43,6 +42,7 @@ export declare class JobController {
             hrId: string | null;
             postedAt: Date | null;
             expiresAt: Date | null;
+            skillBucketId: string | null;
         })[];
         meta: {
             page: number;
@@ -52,15 +52,15 @@ export declare class JobController {
         };
     }>;
     getJob(idOrSlug: string): Promise<{
-        test: {
-            id: string;
-            duration: number;
-            title: string;
-            totalQuestions: number;
-        } | null;
         hr: {
             companyName: string;
             companyWebsite: string | null;
+        } | null;
+        test: {
+            id: string;
+            title: string;
+            duration: number;
+            totalQuestions: number;
         } | null;
         skills: {
             id: string;
@@ -70,16 +70,13 @@ export declare class JobController {
         }[];
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        skillBucketId: string | null;
-        experienceMin: number | null;
-        experienceMax: number | null;
-        testId: string | null;
-        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
+        description: string;
+        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -89,6 +86,8 @@ export declare class JobController {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -96,17 +95,18 @@ export declare class JobController {
         hrId: string | null;
         postedAt: Date | null;
         expiresAt: Date | null;
+        skillBucketId: string | null;
     }>;
     createJob(userId: string, dto: CreateJobDto): Promise<{
-        test: {
-            id: string;
-            duration: number;
-            title: string;
-            totalQuestions: number;
-        } | null;
         hr: {
             companyName: string;
             companyWebsite: string | null;
+        } | null;
+        test: {
+            id: string;
+            title: string;
+            duration: number;
+            totalQuestions: number;
         } | null;
         skills: {
             id: string;
@@ -116,16 +116,13 @@ export declare class JobController {
         }[];
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        skillBucketId: string | null;
-        experienceMin: number | null;
-        experienceMax: number | null;
-        testId: string | null;
-        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
+        description: string;
+        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -135,6 +132,8 @@ export declare class JobController {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -142,6 +141,7 @@ export declare class JobController {
         hrId: string | null;
         postedAt: Date | null;
         expiresAt: Date | null;
+        skillBucketId: string | null;
     }>;
     updateJob(jobId: string, userId: string, dto: UpdateJobDto): Promise<{
         skills: {
@@ -152,16 +152,13 @@ export declare class JobController {
         }[];
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        skillBucketId: string | null;
-        experienceMin: number | null;
-        experienceMax: number | null;
-        testId: string | null;
-        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
+        description: string;
+        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -171,6 +168,8 @@ export declare class JobController {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -178,6 +177,7 @@ export declare class JobController {
         hrId: string | null;
         postedAt: Date | null;
         expiresAt: Date | null;
+        skillBucketId: string | null;
     }>;
     applyForJob(jobId: string, userId: string, dto: ApplyJobDto): Promise<{
         skillTestInfo: {
@@ -189,9 +189,9 @@ export declare class JobController {
             validDaysRemaining: number | undefined;
         } | null;
         id: string;
+        status: import("@prisma/client").$Enums.ApplicationStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.ApplicationStatus;
         jobId: string;
         candidateId: string;
         coverLetter: string | null;
@@ -200,27 +200,24 @@ export declare class JobController {
         contactUnlockedAt: Date | null;
     }>;
     getMyJobs(userId: string, status?: JobStatus): Promise<({
-        _count: {
-            applications: number;
-        };
         skills: {
             id: string;
             name: string;
             jobId: string;
             isRequired: boolean;
         }[];
+        _count: {
+            applications: number;
+        };
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
-        skillBucketId: string | null;
-        experienceMin: number | null;
-        experienceMax: number | null;
-        testId: string | null;
-        status: import("@prisma/client").$Enums.JobStatus;
         companyName: string;
         title: string;
+        description: string;
+        testId: string | null;
         slug: string;
         requirements: string | null;
         responsibilities: string | null;
@@ -230,6 +227,8 @@ export declare class JobController {
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
@@ -237,5 +236,6 @@ export declare class JobController {
         hrId: string | null;
         postedAt: Date | null;
         expiresAt: Date | null;
+        skillBucketId: string | null;
     })[]>;
 }

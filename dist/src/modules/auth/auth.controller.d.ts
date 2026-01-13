@@ -36,23 +36,6 @@ export declare class AuthController {
         message: string;
     }>;
     getCurrentUser(userId: string): Promise<{
-        hr: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            companyName: string;
-            companyEmail: string;
-            companyWebsite: string | null;
-            designation: string | null;
-            linkedinUrl: string | null;
-            approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
-            approvedBy: string | null;
-            approvedAt: Date | null;
-            rejectionReason: string | null;
-            totalJobsPosted: number;
-            activeJobs: number;
-        } | null;
         candidate: {
             id: string;
             createdAt: Date;
@@ -74,6 +57,23 @@ export declare class AuthController {
             country: string | null;
             willingToRelocate: boolean;
         } | null;
+        hr: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            companyName: string;
+            companyEmail: string;
+            companyWebsite: string | null;
+            designation: string | null;
+            linkedinUrl: string | null;
+            approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
+            approvedBy: string | null;
+            approvedAt: Date | null;
+            rejectionReason: string | null;
+            totalJobsPosted: number;
+            activeJobs: number;
+        } | null;
         employee: {
             id: string;
             createdAt: Date;
@@ -92,8 +92,6 @@ export declare class AuthController {
             badges: string[];
         } | null;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         phone: string | null;
         googleId: string | null;
@@ -102,6 +100,8 @@ export declare class AuthController {
         emailVerified: boolean;
         phoneVerified: boolean;
         authProvider: string;
+        createdAt: Date;
+        updatedAt: Date;
         lastLoginAt: Date | null;
     }>;
 }

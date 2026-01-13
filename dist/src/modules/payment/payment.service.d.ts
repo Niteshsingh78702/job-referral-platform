@@ -36,15 +36,15 @@ export declare class PaymentService {
     getPaymentHistory(userId: string): Promise<({
         refund: {
             id: string;
+            status: import("@prisma/client").$Enums.RefundStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.RefundStatus;
             amount: number;
             paymentId: string;
             reason: string;
+            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
-            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {
@@ -54,9 +54,9 @@ export declare class PaymentService {
             };
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             jobId: string;
             candidateId: string;
             coverLetter: string | null;
@@ -66,9 +66,9 @@ export declare class PaymentService {
         };
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.PaymentStatus;
         applicationId: string;
         razorpayOrderId: string | null;
         razorpayPaymentId: string | null;
@@ -83,15 +83,15 @@ export declare class PaymentService {
     getPaymentById(userId: string, paymentId: string): Promise<{
         refund: {
             id: string;
+            status: import("@prisma/client").$Enums.RefundStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.RefundStatus;
             amount: number;
             paymentId: string;
             reason: string;
+            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
-            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {
@@ -118,16 +118,13 @@ export declare class PaymentService {
             };
             job: {
                 id: string;
+                status: import("@prisma/client").$Enums.JobStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string;
-                skillBucketId: string | null;
-                experienceMin: number | null;
-                experienceMax: number | null;
-                testId: string | null;
-                status: import("@prisma/client").$Enums.JobStatus;
                 companyName: string;
                 title: string;
+                description: string;
+                testId: string | null;
                 slug: string;
                 requirements: string | null;
                 responsibilities: string | null;
@@ -137,6 +134,8 @@ export declare class PaymentService {
                 salaryMin: number | null;
                 salaryMax: number | null;
                 salaryCurrency: string;
+                experienceMin: number | null;
+                experienceMax: number | null;
                 educationLevel: string | null;
                 maxApplications: number;
                 applicationCount: number;
@@ -144,12 +143,13 @@ export declare class PaymentService {
                 hrId: string | null;
                 postedAt: Date | null;
                 expiresAt: Date | null;
+                skillBucketId: string | null;
             };
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             jobId: string;
             candidateId: string;
             coverLetter: string | null;
@@ -159,9 +159,9 @@ export declare class PaymentService {
         };
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.PaymentStatus;
         applicationId: string;
         razorpayOrderId: string | null;
         razorpayPaymentId: string | null;
@@ -175,15 +175,15 @@ export declare class PaymentService {
     }>;
     requestRefund(userId: string, dto: RequestRefundDto): Promise<{
         id: string;
+        status: import("@prisma/client").$Enums.RefundStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.RefundStatus;
         amount: number;
         paymentId: string;
         reason: string;
+        adminNotes: string | null;
         processedBy: string | null;
         processedAt: Date | null;
-        adminNotes: string | null;
         razorpayRefundId: string | null;
     }>;
     private verifySignature;

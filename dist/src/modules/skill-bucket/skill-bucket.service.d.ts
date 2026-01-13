@@ -6,144 +6,144 @@ export declare class SkillBucketService {
     constructor(prisma: PrismaService);
     createSkillBucket(dto: CreateSkillBucketDto): Promise<{
         test: {
-            difficulty: string;
-            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
             description: string | null;
             duration: number;
-            title: string;
             passingScore: number;
             totalQuestions: number;
             shuffleQuestions: boolean;
             maxTabSwitches: number;
+            difficulty: string;
+            isActive: boolean;
         } | null;
     } & {
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        code: string;
-        displayName: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
         testTemplateId: string | null;
+        code: string;
+        displayName: string | null;
     }>;
     updateSkillBucket(id: string, dto: UpdateSkillBucketDto): Promise<{
         test: {
-            difficulty: string;
-            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
             description: string | null;
             duration: number;
-            title: string;
             passingScore: number;
             totalQuestions: number;
             shuffleQuestions: boolean;
             maxTabSwitches: number;
+            difficulty: string;
+            isActive: boolean;
         } | null;
     } & {
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        code: string;
-        displayName: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
         testTemplateId: string | null;
+        code: string;
+        displayName: string | null;
     }>;
     getSkillBuckets(includeInactive?: boolean): Promise<({
+        test: {
+            id: string;
+            title: string;
+            duration: number;
+            totalQuestions: number;
+        } | null;
         _count: {
             jobs: number;
             attempts: number;
         };
-        test: {
-            id: string;
-            duration: number;
-            title: string;
-            totalQuestions: number;
-        } | null;
     } & {
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        code: string;
-        displayName: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
         testTemplateId: string | null;
+        code: string;
+        displayName: string | null;
     })[]>;
     getSkillBucketById(id: string): Promise<{
         test: {
-            difficulty: string;
-            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
             description: string | null;
             duration: number;
-            title: string;
             passingScore: number;
             totalQuestions: number;
             shuffleQuestions: boolean;
             maxTabSwitches: number;
+            difficulty: string;
+            isActive: boolean;
         } | null;
     } & {
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        code: string;
-        displayName: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
         testTemplateId: string | null;
+        code: string;
+        displayName: string | null;
     }>;
     getSkillBucketByCode(code: string): Promise<{
         test: {
-            difficulty: string;
-            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
             description: string | null;
             duration: number;
-            title: string;
             passingScore: number;
             totalQuestions: number;
             shuffleQuestions: boolean;
             maxTabSwitches: number;
+            difficulty: string;
+            isActive: boolean;
         } | null;
     } & {
-        isActive: boolean;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
-        code: string;
-        displayName: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
         testTemplateId: string | null;
+        code: string;
+        displayName: string | null;
     }>;
     checkCandidateSkillStatus(candidateId: string, skillBucketId: string): Promise<SkillTestStatusDto>;
     checkCandidateSkillStatusByJobId(candidateId: string, jobId: string): Promise<SkillTestStatusDto | null>;

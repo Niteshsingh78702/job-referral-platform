@@ -7,24 +7,24 @@ export declare class EmployeeService {
     getProfile(userId: string): Promise<{
         currentTier: {
             current: {
-                isActive: boolean;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                isActive: boolean;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
                 badgeIcon: string | null;
             } | null;
             next: {
-                isActive: boolean;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                isActive: boolean;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
@@ -70,24 +70,24 @@ export declare class EmployeeService {
         badges: string[];
         currentTier: {
             current: {
-                isActive: boolean;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                isActive: boolean;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
                 badgeIcon: string | null;
             } | null;
             next: {
-                isActive: boolean;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                isActive: boolean;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
@@ -100,9 +100,6 @@ export declare class EmployeeService {
         potentialEarning: number;
         candidateTestScore: number | null;
         application: {
-            testSessions: {
-                score: number | null;
-            }[];
             candidate: {
                 id: string;
                 skills: {
@@ -122,11 +119,14 @@ export declare class EmployeeService {
                 location: string;
                 referralFee: number;
             };
+            testSessions: {
+                score: number | null;
+            }[];
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             jobId: string;
             candidateId: string;
             coverLetter: string | null;
@@ -135,9 +135,9 @@ export declare class EmployeeService {
             contactUnlockedAt: Date | null;
         };
         id: string;
+        status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.ReferralStatus;
         hrId: string | null;
         expiresAt: Date | null;
         employeeId: string | null;
@@ -164,9 +164,9 @@ export declare class EmployeeService {
                 };
             } & {
                 id: string;
+                status: import("@prisma/client").$Enums.ApplicationStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
                 jobId: string;
                 candidateId: string;
                 coverLetter: string | null;
@@ -181,9 +181,9 @@ export declare class EmployeeService {
             } | null;
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.ReferralStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.ReferralStatus;
             hrId: string | null;
             expiresAt: Date | null;
             employeeId: string | null;
@@ -205,9 +205,9 @@ export declare class EmployeeService {
     confirmReferral(userId: string, applicationId: string): Promise<{
         referral: {
             id: string;
+            status: import("@prisma/client").$Enums.ReferralStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.ReferralStatus;
             hrId: string | null;
             expiresAt: Date | null;
             employeeId: string | null;
@@ -221,20 +221,20 @@ export declare class EmployeeService {
         };
         earning: {
             id: string;
+            status: import("@prisma/client").$Enums.EarningStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.EarningStatus;
             employeeId: string;
             amount: number;
             paidAt: Date | null;
             processedAt: Date | null;
+            payoutMethod: string | null;
             bonusAmount: number;
             commissionRate: number | null;
             referralId: string;
             bonusReason: string | null;
             tierName: string | null;
             payoutReference: string | null;
-            payoutMethod: string | null;
         };
     }>;
     getEarnings(userId: string, filters: EarningsFiltersDto): Promise<{
@@ -251,9 +251,9 @@ export declare class EmployeeService {
                     };
                 } & {
                     id: string;
+                    status: import("@prisma/client").$Enums.ApplicationStatus;
                     createdAt: Date;
                     updatedAt: Date;
-                    status: import("@prisma/client").$Enums.ApplicationStatus;
                     jobId: string;
                     candidateId: string;
                     coverLetter: string | null;
@@ -263,9 +263,9 @@ export declare class EmployeeService {
                 };
             } & {
                 id: string;
+                status: import("@prisma/client").$Enums.ReferralStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import("@prisma/client").$Enums.ReferralStatus;
                 hrId: string | null;
                 expiresAt: Date | null;
                 employeeId: string | null;
@@ -279,20 +279,20 @@ export declare class EmployeeService {
             };
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.EarningStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.EarningStatus;
             employeeId: string;
             amount: number;
             paidAt: Date | null;
             processedAt: Date | null;
+            payoutMethod: string | null;
             bonusAmount: number;
             commissionRate: number | null;
             referralId: string;
             bonusReason: string | null;
             tierName: string | null;
             payoutReference: string | null;
-            payoutMethod: string | null;
         })[];
         pagination: {
             page: number;
@@ -329,24 +329,24 @@ export declare class EmployeeService {
     }>;
     getCurrentTier(userId: string): Promise<{
         current: {
-            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             name: string;
             description: string | null;
+            isActive: boolean;
             minReferrals: number;
             commissionPercent: number;
             bonusPerReferral: number;
             badgeIcon: string | null;
         } | null;
         next: {
-            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             name: string;
             description: string | null;
+            isActive: boolean;
             minReferrals: number;
             commissionPercent: number;
             bonusPerReferral: number;
@@ -377,23 +377,23 @@ export declare class EmployeeService {
         success: boolean;
     }>;
     getNotifications(userId: string, limit?: number): Promise<{
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
         createdAt: Date;
         userId: string;
         title: string;
         type: import("@prisma/client").$Enums.NotificationType;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         message: string;
         isRead: boolean;
         readAt: Date | null;
     }[]>;
     markNotificationRead(userId: string, notificationId: string): Promise<{
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
         createdAt: Date;
         userId: string;
         title: string;
         type: import("@prisma/client").$Enums.NotificationType;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         message: string;
         isRead: boolean;
         readAt: Date | null;

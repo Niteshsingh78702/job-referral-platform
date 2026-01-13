@@ -2789,25 +2789,3 @@ function closeTestResult() {
     showApplications();
 }
 
-function endTest() {
-    if (testState.timerInterval) {
-        clearInterval(testState.timerInterval);
-    }
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-
-    testState = {
-        applicationId: null,
-        sessionId: null,
-        company: '',
-        position: '',
-        questions: [],
-        currentIndex: 0,
-        answers: {},
-        remainingTime: 0,
-        totalTime: 0,
-        timerInterval: null,
-        tabSwitchCount: 0,
-        maxTabSwitches: 3
-    };
-}
-

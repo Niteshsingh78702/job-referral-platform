@@ -43,6 +43,7 @@ enum ApplicationStatus {
   TEST_FAILED
   REFERRAL_PENDING
   REFERRAL_CONFIRMED
+  INTERVIEW_REQUESTED
   PAYMENT_PENDING
   CONTACT_UNLOCKED
   CLOSED
@@ -139,6 +140,20 @@ enum QuestionCategory {
 enum TestType {
   STANDARD
   RAPID_FIRE
+}
+
+enum InterviewStatus {
+  PAYMENT_PENDING       // HR requested, waiting for candidate payment
+  READY_TO_SCHEDULE     // Candidate paid, HR can now schedule
+  INTERVIEW_SCHEDULED   // HR has set date/time/link
+  COMPLETED             // Interview was conducted
+  CANCELLED             // Interview was cancelled
+}
+
+enum InterviewMode {
+  CALL
+  VIDEO
+  ONSITE
 }
 
 // ===========================================
@@ -656,6 +671,7 @@ model JobApplication {
   testSessions TestSession[]
   referral     Referral?
   payments     Payment[]
+  interview    Interview?
 
   @@unique([candidateId, jobId])
   @@index([candidateId])
@@ -1049,4 +1065,44 @@ model SystemConfig {
   updatedAt DateTime @updatedAt
 
   @@index([key])
+}
+
+// ===========================================
+// INTERVIEW MODELS
+// ===========================================
+
+model Interview {
+  id              String          @id @default(uuid())
+  
+  applicationId   String          @unique
+  application     JobApplication  @relation(fields: [applicationId], references: [id])
+  
+  // Interview request details (set by HR initially)
+  mode            InterviewMode
+  preferredTimeWindow String?     // e.g., "next 3 days"
+  hrNotes         String?
+  
+  // Status tracking
+  status          InterviewStatus @default(PAYMENT_PENDING)
+  paymentStatus   PaymentStatus   @default(ELIGIBLE)
+  
+  // Scheduling details (set by HR after payment)
+  scheduledDate   DateTime?
+  scheduledTime   String?         // e.g., "10:00 AM IST"
+  interviewLink   String?         // Video call link
+  callDetails     String?         // Phone number or onsite address
+  
+  // Timestamps
+  requestedAt     DateTime        @default(now())
+  paidAt          DateTime?
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+  
+  // Audit
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([applicationId])
+  @@index([status])
+  @@index([paymentStatus])
 }

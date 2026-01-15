@@ -32,6 +32,7 @@ const test_template_module_1 = require("./modules/test-template/test-template.mo
 const rapid_fire_module_1 = require("./modules/rapid-fire/rapid-fire.module");
 const cloudinary_module_1 = require("./modules/cloudinary/cloudinary.module");
 const resume_parser_module_1 = require("./modules/resume-parser/resume-parser.module");
+const interview_module_1 = require("./modules/interview/interview.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -82,6 +83,7 @@ exports.AppModule = AppModule = __decorate([
             rapid_fire_module_1.RapidFireModule,
             cloudinary_module_1.CloudinaryModule,
             resume_parser_module_1.ResumeParserModule,
+            interview_module_1.InterviewModule,
         ],
         providers: [
             {

@@ -36,13 +36,13 @@ export declare class RapidFireController {
             status: string;
             testTemplate: {
                 id: string;
-                name: string;
-                description: string | null;
-                isActive: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                testType: import("@prisma/client").$Enums.TestType;
+                name: string;
+                description: string | null;
                 duration: number;
+                isActive: boolean;
+                testType: import("@prisma/client").$Enums.TestType;
                 passingCriteria: number;
                 questionPoolSize: number;
                 autoSelect: boolean;
@@ -79,7 +79,7 @@ export declare class RapidFireController {
         success: boolean;
         data: {
             sessionId: string;
-            status: "ACTIVE" | "SUBMITTED" | "EXPIRED" | "EXITED";
+            status: "ACTIVE" | "EXPIRED" | "SUBMITTED" | "EXITED";
             totalQuestions: number;
             answeredCount: number;
             remainingTime: number;

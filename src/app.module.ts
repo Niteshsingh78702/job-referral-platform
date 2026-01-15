@@ -29,6 +29,7 @@ import { TestTemplateModule } from './modules/test-template/test-template.module
 import { RapidFireModule } from './modules/rapid-fire/rapid-fire.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { ResumeParserModule } from './modules/resume-parser/resume-parser.module';
+import { InterviewModule } from './modules/interview/interview.module';
 
 @Module({
   imports: [
@@ -89,6 +90,9 @@ import { ResumeParserModule } from './modules/resume-parser/resume-parser.module
     // File Upload & Resume Processing
     CloudinaryModule,
     ResumeParserModule,
+
+    // Interview System
+    InterviewModule,
   ],
 
   providers: [

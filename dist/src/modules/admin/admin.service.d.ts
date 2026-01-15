@@ -29,26 +29,26 @@ export declare class AdminService {
                 firstName: string;
                 lastName: string;
             } | null;
-            hr: {
-                companyName: string;
-                approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
-            } | null;
             employee: {
                 companyName: string;
                 referralCount: number;
             } | null;
+            hr: {
+                companyName: string;
+                approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
+            } | null;
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.UserStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.UserStatus;
             email: string;
             phone: string | null;
-            googleId: string | null;
             passwordHash: string | null;
             role: import("@prisma/client").$Enums.UserRole;
             emailVerified: boolean;
             phoneVerified: boolean;
+            googleId: string | null;
             authProvider: string;
             lastLoginAt: Date | null;
         })[];
@@ -76,8 +76,8 @@ export declare class AdminService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         companyName: string;
+        userId: string;
         companyEmail: string;
         companyWebsite: string | null;
         designation: string | null;
@@ -99,40 +99,40 @@ export declare class AdminService {
     }>;
     getAllJobs(page?: number, limit?: number, status?: JobStatus): Promise<{
         data: ({
-            _count: {
-                applications: number;
-            };
             hr: {
                 companyName: string;
             } | null;
+            _count: {
+                applications: number;
+            };
         } & {
             id: string;
-            skillBucketId: string | null;
-            testId: string | null;
-            description: string;
-            experienceMin: number | null;
-            experienceMax: number | null;
+            status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.JobStatus;
-            companyName: string;
-            title: string;
+            hrId: string | null;
+            expiresAt: Date | null;
             slug: string;
+            title: string;
+            description: string;
             requirements: string | null;
             responsibilities: string | null;
+            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
             salaryMin: number | null;
             salaryMax: number | null;
             salaryCurrency: string;
+            experienceMin: number | null;
+            experienceMax: number | null;
             educationLevel: string | null;
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            hrId: string | null;
+            testId: string | null;
             postedAt: Date | null;
-            expiresAt: Date | null;
+            skillBucketId: string | null;
         })[];
         meta: {
             page: number;
@@ -154,32 +154,32 @@ export declare class AdminService {
         message: string;
         data: {
             id: string;
-            skillBucketId: string | null;
-            testId: string | null;
-            description: string;
-            experienceMin: number | null;
-            experienceMax: number | null;
+            status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.JobStatus;
-            companyName: string;
-            title: string;
+            hrId: string | null;
+            expiresAt: Date | null;
             slug: string;
+            title: string;
+            description: string;
             requirements: string | null;
             responsibilities: string | null;
+            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
             salaryMin: number | null;
             salaryMax: number | null;
             salaryCurrency: string;
+            experienceMin: number | null;
+            experienceMax: number | null;
             educationLevel: string | null;
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            hrId: string | null;
+            testId: string | null;
             postedAt: Date | null;
-            expiresAt: Date | null;
+            skillBucketId: string | null;
         };
     }>;
     updateJob(jobId: string, jobData: any, adminId: string): Promise<{
@@ -187,32 +187,32 @@ export declare class AdminService {
         message: string;
         data: {
             id: string;
-            skillBucketId: string | null;
-            testId: string | null;
-            description: string;
-            experienceMin: number | null;
-            experienceMax: number | null;
+            status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.JobStatus;
-            companyName: string;
-            title: string;
+            hrId: string | null;
+            expiresAt: Date | null;
             slug: string;
+            title: string;
+            description: string;
             requirements: string | null;
             responsibilities: string | null;
+            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
             salaryMin: number | null;
             salaryMax: number | null;
             salaryCurrency: string;
+            experienceMin: number | null;
+            experienceMax: number | null;
             educationLevel: string | null;
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            hrId: string | null;
+            testId: string | null;
             postedAt: Date | null;
-            expiresAt: Date | null;
+            skillBucketId: string | null;
         };
     }>;
     deleteJob(jobId: string, adminId: string): Promise<{
@@ -224,20 +224,20 @@ export declare class AdminService {
             candidate: ({
                 applications: ({
                     job: {
-                        companyName: string;
                         title: string;
+                        companyName: string;
                     };
                 } & {
                     id: string;
                     candidateId: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    status: import("@prisma/client").$Enums.ApplicationStatus;
                     jobId: string;
+                    status: import("@prisma/client").$Enums.ApplicationStatus;
                     coverLetter: string | null;
                     testScore: number | null;
                     testPassedAt: Date | null;
                     contactUnlockedAt: Date | null;
+                    createdAt: Date;
+                    updatedAt: Date;
                 })[];
             } & {
                 id: string;
@@ -262,16 +262,16 @@ export declare class AdminService {
             }) | null;
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.UserStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.UserStatus;
             email: string;
             phone: string | null;
-            googleId: string | null;
             passwordHash: string | null;
             role: import("@prisma/client").$Enums.UserRole;
             emailVerified: boolean;
             phoneVerified: boolean;
+            googleId: string | null;
             authProvider: string;
             lastLoginAt: Date | null;
         })[];
@@ -294,26 +294,26 @@ export declare class AdminService {
                     lastName: string;
                 };
                 job: {
-                    companyName: string;
                     title: string;
+                    companyName: string;
                 };
             } & {
                 id: string;
                 candidateId: string;
-                createdAt: Date;
-                updatedAt: Date;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
                 jobId: string;
+                status: import("@prisma/client").$Enums.ApplicationStatus;
                 coverLetter: string | null;
                 testScore: number | null;
                 testPassedAt: Date | null;
                 contactUnlockedAt: Date | null;
+                createdAt: Date;
+                updatedAt: Date;
             };
             refund: {
                 id: string;
+                status: import("@prisma/client").$Enums.RefundStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import("@prisma/client").$Enums.RefundStatus;
                 amount: number;
                 paymentId: string;
                 reason: string;
@@ -324,9 +324,9 @@ export declare class AdminService {
             } | null;
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.PaymentStatus;
             applicationId: string;
             razorpayOrderId: string | null;
             razorpayPaymentId: string | null;
@@ -353,26 +353,26 @@ export declare class AdminService {
                     lastName: string;
                 };
                 job: {
-                    companyName: string;
                     title: string;
+                    companyName: string;
                 };
             } & {
                 id: string;
                 candidateId: string;
-                createdAt: Date;
-                updatedAt: Date;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
                 jobId: string;
+                status: import("@prisma/client").$Enums.ApplicationStatus;
                 coverLetter: string | null;
                 testScore: number | null;
                 testPassedAt: Date | null;
                 contactUnlockedAt: Date | null;
+                createdAt: Date;
+                updatedAt: Date;
             };
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.PaymentStatus;
             applicationId: string;
             razorpayOrderId: string | null;
             razorpayPaymentId: string | null;
@@ -386,9 +386,9 @@ export declare class AdminService {
         };
     } & {
         id: string;
+        status: import("@prisma/client").$Enums.RefundStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.RefundStatus;
         amount: number;
         paymentId: string;
         reason: string;

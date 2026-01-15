@@ -24,6 +24,7 @@ export declare enum ApplicationStatus {
     TEST_FAILED = "TEST_FAILED",
     REFERRAL_PENDING = "REFERRAL_PENDING",
     REFERRAL_CONFIRMED = "REFERRAL_CONFIRMED",
+    INTERVIEW_REQUESTED = "INTERVIEW_REQUESTED",
     PAYMENT_PENDING = "PAYMENT_PENDING",
     CONTACT_UNLOCKED = "CONTACT_UNLOCKED",
     CLOSED = "CLOSED",
@@ -93,6 +94,18 @@ export declare enum EarningStatus {
     PROCESSING = "PROCESSING",
     PAID = "PAID",
     CANCELLED = "CANCELLED"
+}
+export declare enum InterviewStatus {
+    PAYMENT_PENDING = "PAYMENT_PENDING",
+    READY_TO_SCHEDULE = "READY_TO_SCHEDULE",
+    INTERVIEW_SCHEDULED = "INTERVIEW_SCHEDULED",
+    COMPLETED = "COMPLETED",
+    CANCELLED = "CANCELLED"
+}
+export declare enum InterviewMode {
+    CALL = "CALL",
+    VIDEO = "VIDEO",
+    ONSITE = "ONSITE"
 }
 export declare const JWT_CONSTANTS: {
     ACCESS_TOKEN_COOKIE: string;

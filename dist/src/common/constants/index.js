@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PAGINATION = exports.REDIS_KEYS = exports.JWT_CONSTANTS = exports.EarningStatus = exports.AuditAction = exports.NotificationType = exports.HRApprovalStatus = exports.RefundStatus = exports.PaymentStatus = exports.ReferralType = exports.ReferralStatus = exports.TestSessionStatus = exports.ApplicationStatus = exports.JobStatus = exports.UserStatus = exports.UserRole = void 0;
+exports.PAGINATION = exports.REDIS_KEYS = exports.JWT_CONSTANTS = exports.InterviewMode = exports.InterviewStatus = exports.EarningStatus = exports.AuditAction = exports.NotificationType = exports.HRApprovalStatus = exports.RefundStatus = exports.PaymentStatus = exports.ReferralType = exports.ReferralStatus = exports.TestSessionStatus = exports.ApplicationStatus = exports.JobStatus = exports.UserStatus = exports.UserRole = void 0;
 var UserRole;
 (function (UserRole) {
     UserRole["CANDIDATE"] = "CANDIDATE";
@@ -31,6 +31,7 @@ var ApplicationStatus;
     ApplicationStatus["TEST_FAILED"] = "TEST_FAILED";
     ApplicationStatus["REFERRAL_PENDING"] = "REFERRAL_PENDING";
     ApplicationStatus["REFERRAL_CONFIRMED"] = "REFERRAL_CONFIRMED";
+    ApplicationStatus["INTERVIEW_REQUESTED"] = "INTERVIEW_REQUESTED";
     ApplicationStatus["PAYMENT_PENDING"] = "PAYMENT_PENDING";
     ApplicationStatus["CONTACT_UNLOCKED"] = "CONTACT_UNLOCKED";
     ApplicationStatus["CLOSED"] = "CLOSED";
@@ -110,6 +111,20 @@ var EarningStatus;
     EarningStatus["PAID"] = "PAID";
     EarningStatus["CANCELLED"] = "CANCELLED";
 })(EarningStatus || (exports.EarningStatus = EarningStatus = {}));
+var InterviewStatus;
+(function (InterviewStatus) {
+    InterviewStatus["PAYMENT_PENDING"] = "PAYMENT_PENDING";
+    InterviewStatus["READY_TO_SCHEDULE"] = "READY_TO_SCHEDULE";
+    InterviewStatus["INTERVIEW_SCHEDULED"] = "INTERVIEW_SCHEDULED";
+    InterviewStatus["COMPLETED"] = "COMPLETED";
+    InterviewStatus["CANCELLED"] = "CANCELLED";
+})(InterviewStatus || (exports.InterviewStatus = InterviewStatus = {}));
+var InterviewMode;
+(function (InterviewMode) {
+    InterviewMode["CALL"] = "CALL";
+    InterviewMode["VIDEO"] = "VIDEO";
+    InterviewMode["ONSITE"] = "ONSITE";
+})(InterviewMode || (exports.InterviewMode = InterviewMode = {}));
 exports.JWT_CONSTANTS = {
     ACCESS_TOKEN_COOKIE: 'access_token',
     REFRESH_TOKEN_COOKIE: 'refresh_token',

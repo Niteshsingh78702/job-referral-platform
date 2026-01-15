@@ -7,50 +7,50 @@ export declare class JobService {
     private skillBucketService;
     constructor(prisma: PrismaService, skillBucketService: SkillBucketService);
     createJob(hrId: string, dto: CreateJobDto): Promise<{
-        test: {
-            id: string;
-            duration: number;
-            totalQuestions: number;
-            title: string;
-        } | null;
         hr: {
             companyName: string;
             companyWebsite: string | null;
         } | null;
+        test: {
+            id: string;
+            title: string;
+            duration: number;
+            totalQuestions: number;
+        } | null;
         skills: {
             id: string;
-            name: string;
             jobId: string;
+            name: string;
             isRequired: boolean;
         }[];
     } & {
         id: string;
-        skillBucketId: string | null;
-        testId: string | null;
-        description: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.JobStatus;
-        companyName: string;
-        title: string;
+        hrId: string | null;
+        expiresAt: Date | null;
         slug: string;
+        title: string;
+        description: string;
         requirements: string | null;
         responsibilities: string | null;
+        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        hrId: string | null;
+        testId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
+        skillBucketId: string | null;
     }>;
     getActiveJobs(query: JobQueryDto): Promise<{
         data: ({
@@ -59,38 +59,38 @@ export declare class JobService {
             } | null;
             skills: {
                 id: string;
-                name: string;
                 jobId: string;
+                name: string;
                 isRequired: boolean;
             }[];
         } & {
             id: string;
-            skillBucketId: string | null;
-            testId: string | null;
-            description: string;
-            experienceMin: number | null;
-            experienceMax: number | null;
+            status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.JobStatus;
-            companyName: string;
-            title: string;
+            hrId: string | null;
+            expiresAt: Date | null;
             slug: string;
+            title: string;
+            description: string;
             requirements: string | null;
             responsibilities: string | null;
+            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
             salaryMin: number | null;
             salaryMax: number | null;
             salaryCurrency: string;
+            experienceMin: number | null;
+            experienceMax: number | null;
             educationLevel: string | null;
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            hrId: string | null;
+            testId: string | null;
             postedAt: Date | null;
-            expiresAt: Date | null;
+            skillBucketId: string | null;
         })[];
         meta: {
             page: number;
@@ -100,86 +100,86 @@ export declare class JobService {
         };
     }>;
     getJobById(idOrSlug: string): Promise<{
-        test: {
-            id: string;
-            duration: number;
-            totalQuestions: number;
-            title: string;
-        } | null;
         hr: {
             companyName: string;
             companyWebsite: string | null;
         } | null;
+        test: {
+            id: string;
+            title: string;
+            duration: number;
+            totalQuestions: number;
+        } | null;
         skills: {
             id: string;
-            name: string;
             jobId: string;
+            name: string;
             isRequired: boolean;
         }[];
     } & {
         id: string;
-        skillBucketId: string | null;
-        testId: string | null;
-        description: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.JobStatus;
-        companyName: string;
-        title: string;
+        hrId: string | null;
+        expiresAt: Date | null;
         slug: string;
+        title: string;
+        description: string;
         requirements: string | null;
         responsibilities: string | null;
+        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        hrId: string | null;
+        testId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
+        skillBucketId: string | null;
     }>;
     updateJob(jobId: string, hrId: string, dto: UpdateJobDto): Promise<{
         skills: {
             id: string;
-            name: string;
             jobId: string;
+            name: string;
             isRequired: boolean;
         }[];
     } & {
         id: string;
-        skillBucketId: string | null;
-        testId: string | null;
-        description: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.JobStatus;
-        companyName: string;
-        title: string;
+        hrId: string | null;
+        expiresAt: Date | null;
         slug: string;
+        title: string;
+        description: string;
         requirements: string | null;
         responsibilities: string | null;
+        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        hrId: string | null;
+        testId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
+        skillBucketId: string | null;
     }>;
     applyForJob(jobId: string, userId: string, dto: ApplyJobDto): Promise<{
         skillTestInfo: {
@@ -192,53 +192,53 @@ export declare class JobService {
         } | null;
         id: string;
         candidateId: string;
-        createdAt: Date;
-        updatedAt: Date;
-        status: import("@prisma/client").$Enums.ApplicationStatus;
         jobId: string;
+        status: import("@prisma/client").$Enums.ApplicationStatus;
         coverLetter: string | null;
         testScore: number | null;
         testPassedAt: Date | null;
         contactUnlockedAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     getHRJobs(hrId: string, status?: JobStatus): Promise<({
+        skills: {
+            id: string;
+            jobId: string;
+            name: string;
+            isRequired: boolean;
+        }[];
         _count: {
             applications: number;
         };
-        skills: {
-            id: string;
-            name: string;
-            jobId: string;
-            isRequired: boolean;
-        }[];
     } & {
         id: string;
-        skillBucketId: string | null;
-        testId: string | null;
-        description: string;
-        experienceMin: number | null;
-        experienceMax: number | null;
+        status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.JobStatus;
-        companyName: string;
-        title: string;
+        hrId: string | null;
+        expiresAt: Date | null;
         slug: string;
+        title: string;
+        description: string;
         requirements: string | null;
         responsibilities: string | null;
+        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
         salaryMin: number | null;
         salaryMax: number | null;
         salaryCurrency: string;
+        experienceMin: number | null;
+        experienceMax: number | null;
         educationLevel: string | null;
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        hrId: string | null;
+        testId: string | null;
         postedAt: Date | null;
-        expiresAt: Date | null;
+        skillBucketId: string | null;
     })[]>;
     private generateSlug;
 }

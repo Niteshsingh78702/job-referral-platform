@@ -7,11 +7,11 @@ export declare class EmployeeController {
         currentTier: {
             current: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 name: string;
                 description: string | null;
                 isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
@@ -19,11 +19,11 @@ export declare class EmployeeController {
             } | null;
             next: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 name: string;
                 description: string | null;
                 isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
@@ -42,13 +42,13 @@ export declare class EmployeeController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
+        employeeId: string | null;
         companyName: string;
+        userId: string;
         companyEmail: string;
         designation: string | null;
         linkedinUrl: string | null;
         points: number;
-        employeeId: string | null;
         isVerified: boolean;
         verifiedAt: Date | null;
         referralCount: number;
@@ -59,13 +59,13 @@ export declare class EmployeeController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
+        employeeId: string | null;
         companyName: string;
+        userId: string;
         companyEmail: string;
         designation: string | null;
         linkedinUrl: string | null;
         points: number;
-        employeeId: string | null;
         isVerified: boolean;
         verifiedAt: Date | null;
         referralCount: number;
@@ -87,11 +87,11 @@ export declare class EmployeeController {
         currentTier: {
             current: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 name: string;
                 description: string | null;
                 isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
@@ -99,11 +99,11 @@ export declare class EmployeeController {
             } | null;
             next: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 name: string;
                 description: string | null;
                 isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
                 minReferrals: number;
                 commissionPercent: number;
                 bonusPerReferral: number;
@@ -128,40 +128,40 @@ export declare class EmployeeController {
                 totalExperience: number | null;
                 currentCompany: string | null;
             };
-            testSessions: {
-                score: number | null;
-            }[];
             job: {
                 id: string;
-                companyName: string;
                 title: string;
+                companyName: string;
                 location: string;
                 referralFee: number;
             };
+            testSessions: {
+                score: number | null;
+            }[];
         } & {
             id: string;
             candidateId: string;
-            createdAt: Date;
-            updatedAt: Date;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
             jobId: string;
+            status: import("@prisma/client").$Enums.ApplicationStatus;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
             contactUnlockedAt: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
         id: string;
+        status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import("@prisma/client").$Enums.ReferralStatus;
         applicationId: string;
-        hrId: string | null;
-        expiresAt: Date | null;
-        employeeId: string | null;
         type: import("@prisma/client").$Enums.ReferralType;
+        employeeId: string | null;
+        hrId: string | null;
         confirmedAt: Date | null;
         contactedAt: Date | null;
         closedAt: Date | null;
+        expiresAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
     }[]>;
@@ -174,21 +174,21 @@ export declare class EmployeeController {
                     headline: string | null;
                 };
                 job: {
-                    companyName: string;
                     title: string;
+                    companyName: string;
                     referralFee: number;
                 };
             } & {
                 id: string;
                 candidateId: string;
-                createdAt: Date;
-                updatedAt: Date;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
                 jobId: string;
+                status: import("@prisma/client").$Enums.ApplicationStatus;
                 coverLetter: string | null;
                 testScore: number | null;
                 testPassedAt: Date | null;
                 contactUnlockedAt: Date | null;
+                createdAt: Date;
+                updatedAt: Date;
             };
             earning: {
                 status: import("@prisma/client").$Enums.EarningStatus;
@@ -197,17 +197,17 @@ export declare class EmployeeController {
             } | null;
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.ReferralStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.ReferralStatus;
             applicationId: string;
-            hrId: string | null;
-            expiresAt: Date | null;
-            employeeId: string | null;
             type: import("@prisma/client").$Enums.ReferralType;
+            employeeId: string | null;
+            hrId: string | null;
             confirmedAt: Date | null;
             contactedAt: Date | null;
             closedAt: Date | null;
+            expiresAt: Date | null;
             hrFeedback: string | null;
             candidateFeedback: string | null;
         })[];
@@ -221,25 +221,25 @@ export declare class EmployeeController {
     confirmReferral(userId: string, applicationId: string): Promise<{
         referral: {
             id: string;
+            status: import("@prisma/client").$Enums.ReferralStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.ReferralStatus;
             applicationId: string;
-            hrId: string | null;
-            expiresAt: Date | null;
-            employeeId: string | null;
             type: import("@prisma/client").$Enums.ReferralType;
+            employeeId: string | null;
+            hrId: string | null;
             confirmedAt: Date | null;
             contactedAt: Date | null;
             closedAt: Date | null;
+            expiresAt: Date | null;
             hrFeedback: string | null;
             candidateFeedback: string | null;
         };
         earning: {
             id: string;
+            status: import("@prisma/client").$Enums.EarningStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.EarningStatus;
             employeeId: string;
             amount: number;
             paidAt: Date | null;
@@ -262,42 +262,42 @@ export declare class EmployeeController {
                         lastName: string;
                     };
                     job: {
-                        companyName: string;
                         title: string;
+                        companyName: string;
                     };
                 } & {
                     id: string;
                     candidateId: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    status: import("@prisma/client").$Enums.ApplicationStatus;
                     jobId: string;
+                    status: import("@prisma/client").$Enums.ApplicationStatus;
                     coverLetter: string | null;
                     testScore: number | null;
                     testPassedAt: Date | null;
                     contactUnlockedAt: Date | null;
+                    createdAt: Date;
+                    updatedAt: Date;
                 };
             } & {
                 id: string;
+                status: import("@prisma/client").$Enums.ReferralStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import("@prisma/client").$Enums.ReferralStatus;
                 applicationId: string;
-                hrId: string | null;
-                expiresAt: Date | null;
-                employeeId: string | null;
                 type: import("@prisma/client").$Enums.ReferralType;
+                employeeId: string | null;
+                hrId: string | null;
                 confirmedAt: Date | null;
                 contactedAt: Date | null;
                 closedAt: Date | null;
+                expiresAt: Date | null;
                 hrFeedback: string | null;
                 candidateFeedback: string | null;
             };
         } & {
             id: string;
+            status: import("@prisma/client").$Enums.EarningStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.EarningStatus;
             employeeId: string;
             amount: number;
             paidAt: Date | null;
@@ -327,11 +327,11 @@ export declare class EmployeeController {
     getCurrentTier(userId: string): Promise<{
         current: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             description: string | null;
             isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             minReferrals: number;
             commissionPercent: number;
             bonusPerReferral: number;
@@ -339,11 +339,11 @@ export declare class EmployeeController {
         } | null;
         next: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             description: string | null;
             isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             minReferrals: number;
             commissionPercent: number;
             bonusPerReferral: number;
@@ -373,22 +373,22 @@ export declare class EmployeeController {
     getNotifications(userId: string, limit?: number): Promise<{
         id: string;
         createdAt: Date;
-        userId: string;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
-        title: string;
         type: import("@prisma/client").$Enums.NotificationType;
+        title: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         message: string;
+        userId: string;
         isRead: boolean;
         readAt: Date | null;
     }[]>;
     markNotificationRead(userId: string, notificationId: string): Promise<{
         id: string;
         createdAt: Date;
-        userId: string;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
-        title: string;
         type: import("@prisma/client").$Enums.NotificationType;
+        title: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         message: string;
+        userId: string;
         isRead: boolean;
         readAt: Date | null;
     }>;

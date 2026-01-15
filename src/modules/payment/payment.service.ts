@@ -268,20 +268,39 @@ export class PaymentService {
                 },
             });
 
-            // Update application - unlock contact
-            await tx.jobApplication.update({
-                where: { id: payment.applicationId },
-                data: {
-                    status: ApplicationStatus.CONTACT_UNLOCKED,
-                    contactUnlockedAt: new Date(),
-                },
+            // Check if this payment is for an interview
+            const interview = await tx.interview.findUnique({
+                where: { applicationId: payment.applicationId },
             });
 
-            // Update referral
-            await tx.referral.update({
-                where: { applicationId: payment.applicationId },
-                data: { status: ReferralStatus.CONTACTED },
-            });
+            if (interview && interview.status === 'PAYMENT_PENDING') {
+                // This is an interview payment - update interview status
+                await tx.interview.update({
+                    where: { id: interview.id },
+                    data: {
+                        status: 'READY_TO_SCHEDULE' as any,
+                        paymentStatus: PaymentStatus.SUCCESS as any,
+                        paidAt: new Date(),
+                    },
+                });
+
+                // Note: Interview payment confirmation email will be sent separately
+            } else {
+                // This is a referral payment - existing logic
+                await tx.jobApplication.update({
+                    where: { id: payment.applicationId },
+                    data: {
+                        status: ApplicationStatus.CONTACT_UNLOCKED,
+                        contactUnlockedAt: new Date(),
+                    },
+                });
+
+                // Update referral
+                await tx.referral.update({
+                    where: { applicationId: payment.applicationId },
+                    data: { status: ReferralStatus.CONTACTED },
+                });
+            }
 
             // Audit log
             await tx.auditLog.create({

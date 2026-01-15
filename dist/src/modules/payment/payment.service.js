@@ -231,17 +231,32 @@ let PaymentService = class PaymentService {
                     webhookPayload: paymentData,
                 },
             });
-            await tx.jobApplication.update({
-                where: { id: payment.applicationId },
-                data: {
-                    status: constants_1.ApplicationStatus.CONTACT_UNLOCKED,
-                    contactUnlockedAt: new Date(),
-                },
-            });
-            await tx.referral.update({
+            const interview = await tx.interview.findUnique({
                 where: { applicationId: payment.applicationId },
-                data: { status: constants_1.ReferralStatus.CONTACTED },
             });
+            if (interview && interview.status === 'PAYMENT_PENDING') {
+                await tx.interview.update({
+                    where: { id: interview.id },
+                    data: {
+                        status: 'READY_TO_SCHEDULE',
+                        paymentStatus: constants_1.PaymentStatus.SUCCESS,
+                        paidAt: new Date(),
+                    },
+                });
+            }
+            else {
+                await tx.jobApplication.update({
+                    where: { id: payment.applicationId },
+                    data: {
+                        status: constants_1.ApplicationStatus.CONTACT_UNLOCKED,
+                        contactUnlockedAt: new Date(),
+                    },
+                });
+                await tx.referral.update({
+                    where: { applicationId: payment.applicationId },
+                    data: { status: constants_1.ReferralStatus.CONTACTED },
+                });
+            }
             await tx.auditLog.create({
                 data: {
                     action: constants_1.AuditAction.PAYMENT_SUCCESS,

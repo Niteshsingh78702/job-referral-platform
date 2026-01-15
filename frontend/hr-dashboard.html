@@ -667,6 +667,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" data-section="interviews">
+                            <span>🎯</span> Interviews
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" data-section="referrals">
                             <span>🤝</span> Referrals
                         </a>
@@ -862,6 +867,7 @@
                                     <th>Test Score</th>
                                     <th>Status</th>
                                     <th>Applied</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="applicationsTableBody">
@@ -871,7 +877,118 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Interviews Section -->
+            <section id="interviewsSection" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Interviews Pipeline</h3>
+                        <div style="display: flex; gap: 12px;">
+                            <select id="interviewFilterStatus" class="btn btn-outline btn-sm"
+                                style="padding: 8px 12px;">
+                                <option value="">All Status</option>
+                                <option value="PAYMENT_PENDING">Awaiting Payment</option>
+                                <option value="READY_TO_SCHEDULE">Ready to Schedule</option>
+                                <option value="INTERVIEW_SCHEDULED">Scheduled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <table class="jobs-table">
+                            <thead>
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Job</th>
+                                    <th>Mode</th>
+                                    <th>Status</th>
+                                    <th>Requested</th>
+                                    <th>Scheduled</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="interviewsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                        <div class="empty-state hidden" id="emptyInterviews">
+                            <div class="empty-state-icon">🎯</div>
+                            <div class="empty-state-title">No interviews yet</div>
+                            <p>Request interviews from qualified candidates in the Applications section</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <!-- Interview Request Modal -->
+    <div class="modal-overlay" id="interviewRequestModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📅 Request Interview</h3>
+                <button class="modal-close" onclick="closeInterviewRequestModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="interviewApplicationId">
+                <div class="form-group">
+                    <label for="interviewMode">Interview Mode *</label>
+                    <select id="interviewMode" required>
+                        <option value="">Select Mode</option>
+                        <option value="VIDEO">📹 Video Call</option>
+                        <option value="CALL">📞 Phone Call</option>
+                        <option value="ONSITE">🏢 On-site</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="interviewTimeWindow">Preferred Time Window</label>
+                    <input type="text" id="interviewTimeWindow" placeholder="e.g. Next 3 days, Mon-Wed">
+                </div>
+                <div class="form-group">
+                    <label for="interviewNotes">Notes for Candidate</label>
+                    <textarea id="interviewNotes" placeholder="Any additional info..."></textarea>
+                </div>
+                <p style="font-size: 13px; color: var(--text-dim); margin-top: 16px;">
+                    💡 Candidate will pay ₹99 to confirm. You'll be notified when payment is complete.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeInterviewRequestModal()">Cancel</button>
+                <button class="btn btn-primary" id="submitInterviewRequestBtn">Send Request</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Interview Modal -->
+    <div class="modal-overlay" id="scheduleInterviewModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📆 Schedule Interview</h3>
+                <button class="modal-close" onclick="closeScheduleModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="scheduleInterviewId">
+                <div class="form-group">
+                    <label for="scheduleDate">Date *</label>
+                    <input type="date" id="scheduleDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="scheduleTime">Time *</label>
+                    <input type="text" id="scheduleTime" placeholder="e.g. 10:00 AM IST" required>
+                </div>
+                <div class="form-group" id="interviewLinkGroup">
+                    <label for="interviewLink">Meeting Link</label>
+                    <input type="url" id="interviewLink" placeholder="https://meet.google.com/...">
+                </div>
+                <div class="form-group">
+                    <label for="callDetails">Additional Details</label>
+                    <input type="text" id="callDetails" placeholder="Phone number or office address">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeScheduleModal()">Cancel</button>
+                <button class="btn btn-primary" id="submitScheduleBtn">Schedule Interview</button>
+            </div>
+        </div>
     </div>
 
     <!-- New Job Modal -->
@@ -1229,6 +1346,7 @@
                 // Load section data
                 if (section === 'jobs') loadAllJobs();
                 if (section === 'applications') loadApplications();
+                if (section === 'interviews') loadInterviews();
             });
         });
 
@@ -1246,19 +1364,37 @@
                 const data = await api('/hr/applications');
                 const tbody = document.getElementById('applicationsTableBody');
 
-                tbody.innerHTML = data.applications.map(app => `
-                    <tr>
-                        <td>
-                            <div class="job-title">${app.candidate.firstName} ${app.candidate.lastName}</div>
-                            <div class="job-company">${app.candidate.headline || app.candidate.currentCompany || '-'}</div>
-                        </td>
-                        <td>${app.job.title}</td>
-                        <td>${app.candidate.totalExperience || 0} years</td>
-                        <td>${app.testScore ? app.testScore + '%' : '-'}</td>
-                        <td><span class="badge badge-active">${app.status}</span></td>
-                        <td>${new Date(app.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = data.applications.map(app => {
+                    // Determine if interview can be requested
+                    const canRequestInterview = ['TEST_PASSED', 'REFERRAL_CONFIRMED'].includes(app.status) && !app.interview;
+                    const hasInterview = !!app.interview;
+
+                    let actionBtn = '';
+                    if (canRequestInterview) {
+                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openInterviewRequestModal('${app.id}')">📅 Request Interview</button>`;
+                    } else if (hasInterview && app.interview.status === 'PAYMENT_PENDING') {
+                        actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
+                    } else if (hasInterview && app.interview.status === 'READY_TO_SCHEDULE') {
+                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openScheduleModal('${app.interview.id}')">📆 Schedule</button>`;
+                    } else if (hasInterview && app.interview.status === 'INTERVIEW_SCHEDULED') {
+                        actionBtn = `<span class="badge badge-active">✅ Scheduled</span>`;
+                    }
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="job-title">${app.candidate.firstName} ${app.candidate.lastName}</div>
+                                <div class="job-company">${app.candidate.headline || app.candidate.currentCompany || '-'}</div>
+                            </td>
+                            <td>${app.job.title}</td>
+                            <td>${app.candidate.totalExperience || 0} years</td>
+                            <td>${app.testScore ? app.testScore + '%' : '-'}</td>
+                            <td><span class="badge badge-active">${app.status}</span></td>
+                            <td>${new Date(app.createdAt).toLocaleDateString()}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (error) {
                 showToast(error.message, 'error');
             }
@@ -1532,6 +1668,168 @@
                 btn.innerHTML = 'Delete Job';
             }
         });
+
+        // ============================================
+        // INTERVIEW FUNCTIONALITY
+        // ============================================
+
+        // Load Interviews for Interviews section
+        async function loadInterviews() {
+            try {
+                const status = document.getElementById('interviewFilterStatus')?.value || '';
+                const data = await api(`/interviews/hr${status ? '?status=' + status : ''}`);
+                const tbody = document.getElementById('interviewsTableBody');
+                const emptyState = document.getElementById('emptyInterviews');
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyState?.classList.remove('hidden');
+                    return;
+                }
+
+                emptyState?.classList.add('hidden');
+
+                tbody.innerHTML = data.map(interview => {
+                    const candidate = interview.application.candidate;
+                    const job = interview.application.job;
+                    const statusColors = {
+                        'PAYMENT_PENDING': 'pending',
+                        'READY_TO_SCHEDULE': 'draft',
+                        'INTERVIEW_SCHEDULED': 'active',
+                        'COMPLETED': 'active'
+                    };
+
+                    let actionBtn = '';
+                    if (interview.status === 'READY_TO_SCHEDULE') {
+                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openScheduleModal('${interview.id}')">📆 Schedule</button>`;
+                    } else if (interview.status === 'INTERVIEW_SCHEDULED') {
+                        actionBtn = `<span class="badge badge-active">✅ Scheduled</span>`;
+                    } else {
+                        actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
+                    }
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="job-title">${candidate.firstName} ${candidate.lastName}</div>
+                                <div class="job-company">${candidate.user?.email || '-'}</div>
+                            </td>
+                            <td>${job.title}</td>
+                            <td>
+                                <span class="badge">${interview.mode === 'VIDEO' ? '📹' : interview.mode === 'CALL' ? '📞' : '🏢'} ${interview.mode}</span>
+                            </td>
+                            <td><span class="badge badge-${statusColors[interview.status] || ''}">${interview.status.replace(/_/g, ' ')}</span></td>
+                            <td>${new Date(interview.requestedAt).toLocaleDateString()}</td>
+                            <td>${interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString() + ' ' + interview.scheduledTime : '-'}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Interview Request Modal Functions
+        function openInterviewRequestModal(applicationId) {
+            document.getElementById('interviewApplicationId').value = applicationId;
+            document.getElementById('interviewRequestModal').classList.add('show');
+        }
+
+        function closeInterviewRequestModal() {
+            document.getElementById('interviewRequestModal').classList.remove('show');
+            document.getElementById('interviewMode').value = '';
+            document.getElementById('interviewTimeWindow').value = '';
+            document.getElementById('interviewNotes').value = '';
+        }
+
+        document.getElementById('submitInterviewRequestBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('submitInterviewRequestBtn');
+            const applicationId = document.getElementById('interviewApplicationId').value;
+            const mode = document.getElementById('interviewMode').value;
+
+            if (!mode) {
+                showToast('Please select interview mode', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Sending...';
+
+            try {
+                await api(`/interviews/request/${applicationId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        mode,
+                        preferredTimeWindow: document.getElementById('interviewTimeWindow').value,
+                        hrNotes: document.getElementById('interviewNotes').value,
+                    }),
+                });
+
+                showToast('Interview request sent! Candidate will be notified.', 'success');
+                closeInterviewRequestModal();
+                loadApplications(); // Refresh applications table
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Send Request';
+            }
+        });
+
+        // Schedule Interview Modal Functions
+        function openScheduleModal(interviewId) {
+            document.getElementById('scheduleInterviewId').value = interviewId;
+            document.getElementById('scheduleInterviewModal').classList.add('show');
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('scheduleInterviewModal').classList.remove('show');
+            document.getElementById('scheduleDate').value = '';
+            document.getElementById('scheduleTime').value = '';
+            document.getElementById('interviewLink').value = '';
+            document.getElementById('callDetails').value = '';
+        }
+
+        document.getElementById('submitScheduleBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('submitScheduleBtn');
+            const interviewId = document.getElementById('scheduleInterviewId').value;
+            const date = document.getElementById('scheduleDate').value;
+            const time = document.getElementById('scheduleTime').value;
+
+            if (!date || !time) {
+                showToast('Please fill in date and time', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Scheduling...';
+
+            try {
+                await api(`/interviews/schedule/${interviewId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        scheduledDate: date,
+                        scheduledTime: time,
+                        interviewLink: document.getElementById('interviewLink').value,
+                        callDetails: document.getElementById('callDetails').value,
+                    }),
+                });
+
+                showToast('Interview scheduled! Candidate will be notified.', 'success');
+                closeScheduleModal();
+                loadInterviews(); // Refresh interviews table
+                loadApplications(); // Also refresh applications
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Schedule Interview';
+            }
+        });
+
+        // Filter change handler for interviews
+        document.getElementById('interviewFilterStatus')?.addEventListener('change', loadInterviews);
 
         // Initialize
         document.addEventListener('DOMContentLoaded', initDashboard);

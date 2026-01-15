@@ -5,13 +5,13 @@ export declare class TestTemplateService {
     constructor(prisma: PrismaService);
     createTemplate(dto: CreateTestTemplateDto): Promise<{
         id: string;
-        name: string;
-        description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        testType: import("@prisma/client").$Enums.TestType;
+        name: string;
+        description: string | null;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -22,23 +22,23 @@ export declare class TestTemplateService {
     }>;
     getTemplates(filters: TemplateFiltersDto): Promise<{
         templates: ({
+            _count: {
+                testSessions: number;
+            };
             skillBuckets: {
                 id: string;
                 name: string;
                 code: string;
             }[];
-            _count: {
-                testSessions: number;
-            };
         } & {
             id: string;
-            name: string;
-            description: string | null;
-            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            testType: import("@prisma/client").$Enums.TestType;
+            name: string;
+            description: string | null;
             duration: number;
+            isActive: boolean;
+            testType: import("@prisma/client").$Enums.TestType;
             passingCriteria: number;
             questionPoolSize: number;
             autoSelect: boolean;
@@ -62,13 +62,13 @@ export declare class TestTemplateService {
             code: string;
         }[];
         id: string;
-        name: string;
-        description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        testType: import("@prisma/client").$Enums.TestType;
+        name: string;
+        description: string | null;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -79,13 +79,13 @@ export declare class TestTemplateService {
     }>;
     updateTemplate(id: string, dto: UpdateTestTemplateDto): Promise<{
         id: string;
-        name: string;
-        description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        testType: import("@prisma/client").$Enums.TestType;
+        name: string;
+        description: string | null;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -96,13 +96,13 @@ export declare class TestTemplateService {
     }>;
     deleteTemplate(id: string): Promise<{
         id: string;
-        name: string;
-        description: string | null;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        testType: import("@prisma/client").$Enums.TestType;
+        name: string;
+        description: string | null;
         duration: number;
+        isActive: boolean;
+        testType: import("@prisma/client").$Enums.TestType;
         passingCriteria: number;
         questionPoolSize: number;
         autoSelect: boolean;
@@ -122,8 +122,8 @@ export declare class TestTemplateService {
     private getAvailableQuestionCount;
     previewQuestions(templateId: string, count?: number): Promise<{
         id: string;
-        question: string;
         difficulty: import("@prisma/client").$Enums.QuestionDifficulty;
+        question: string;
         category: import("@prisma/client").$Enums.QuestionCategory;
         tags: string[];
     }[]>;

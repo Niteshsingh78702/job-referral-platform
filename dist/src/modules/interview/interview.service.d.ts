@@ -19,9 +19,9 @@ export declare class InterviewService {
         status: import("@prisma/client").$Enums.InterviewStatus;
         createdAt: Date;
         updatedAt: Date;
+        mode: import("@prisma/client").$Enums.InterviewMode;
         applicationId: string;
         paidAt: Date | null;
-        mode: import("@prisma/client").$Enums.InterviewMode;
         preferredTimeWindow: string | null;
         hrNotes: string | null;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
@@ -40,9 +40,9 @@ export declare class InterviewService {
             status: import("@prisma/client").$Enums.InterviewStatus;
             createdAt: Date;
             updatedAt: Date;
+            mode: import("@prisma/client").$Enums.InterviewMode;
             applicationId: string;
             paidAt: Date | null;
-            mode: import("@prisma/client").$Enums.InterviewMode;
             preferredTimeWindow: string | null;
             hrNotes: string | null;
             paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
@@ -62,8 +62,8 @@ export declare class InterviewService {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         job: {
             id: string;
-            title: string;
             companyName: string;
+            title: string;
         };
         requestedAt: Date;
     } | {
@@ -74,8 +74,8 @@ export declare class InterviewService {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         job: {
             id: string;
-            title: string;
             companyName: string;
+            title: string;
         };
         requestedAt: Date;
     } | {
@@ -87,8 +87,8 @@ export declare class InterviewService {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         job: {
             id: string;
-            title: string;
             companyName: string;
+            title: string;
         };
         requestedAt: Date;
     } | {
@@ -104,8 +104,8 @@ export declare class InterviewService {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         job: {
             id: string;
-            title: string;
             companyName: string;
+            title: string;
         };
         requestedAt: Date;
     } | {
@@ -119,8 +119,8 @@ export declare class InterviewService {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         job: {
             id: string;
-            title: string;
             companyName: string;
+            title: string;
         };
         requestedAt: Date;
     }>;
@@ -131,8 +131,8 @@ export declare class InterviewService {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         job: {
             id: string;
-            title: string;
             companyName: string;
+            title: string;
         };
         requestedAt: Date;
         paidAt: Date | null;
@@ -147,8 +147,8 @@ export declare class InterviewService {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         job: {
             id: string;
-            title: string;
             companyName: string;
+            title: string;
         };
         requestedAt: Date;
         paidAt: Date | null;
@@ -160,11 +160,11 @@ export declare class InterviewService {
         application: {
             candidate: {
                 id: string;
-                firstName: string;
-                lastName: string;
                 user: {
                     email: string;
                 };
+                firstName: string;
+                lastName: string;
             };
             job: {
                 id: string;
@@ -172,24 +172,24 @@ export declare class InterviewService {
             };
         } & {
             id: string;
-            candidateId: string;
-            jobId: string;
             status: import("@prisma/client").$Enums.ApplicationStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            jobId: string;
+            candidateId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
             contactUnlockedAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
         status: import("@prisma/client").$Enums.InterviewStatus;
         createdAt: Date;
         updatedAt: Date;
+        mode: import("@prisma/client").$Enums.InterviewMode;
         applicationId: string;
         paidAt: Date | null;
-        mode: import("@prisma/client").$Enums.InterviewMode;
         preferredTimeWindow: string | null;
         hrNotes: string | null;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
@@ -222,29 +222,29 @@ export declare class InterviewService {
                     hr: {
                         companyName: string;
                     } | null;
-                    title: string;
                     companyName: string;
+                    title: string;
                 };
             } & {
                 id: string;
-                candidateId: string;
-                jobId: string;
                 status: import("@prisma/client").$Enums.ApplicationStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                jobId: string;
+                candidateId: string;
                 coverLetter: string | null;
                 testScore: number | null;
                 testPassedAt: Date | null;
                 contactUnlockedAt: Date | null;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
             id: string;
             status: import("@prisma/client").$Enums.InterviewStatus;
             createdAt: Date;
             updatedAt: Date;
+            mode: import("@prisma/client").$Enums.InterviewMode;
             applicationId: string;
             paidAt: Date | null;
-            mode: import("@prisma/client").$Enums.InterviewMode;
             preferredTimeWindow: string | null;
             hrNotes: string | null;
             paymentStatus: import("@prisma/client").$Enums.PaymentStatus;

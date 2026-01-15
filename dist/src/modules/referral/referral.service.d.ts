@@ -8,10 +8,10 @@ export declare class ReferralService {
             candidate: {
                 skills: {
                     id: string;
-                    candidateId: string;
                     name: string;
                     level: number;
                     yearsOfExp: number | null;
+                    candidateId: string;
                 }[];
                 firstName: string;
                 lastName: string;
@@ -20,34 +20,34 @@ export declare class ReferralService {
                 currentCompany: string | null;
             };
             job: {
-                title: string;
                 companyName: string;
+                title: string;
             };
         } & {
             id: string;
-            candidateId: string;
-            jobId: string;
             status: import("@prisma/client").$Enums.ApplicationStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            jobId: string;
+            candidateId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
             contactUnlockedAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
         updatedAt: Date;
-        applicationId: string;
-        type: import("@prisma/client").$Enums.ReferralType;
-        employeeId: string | null;
         hrId: string | null;
+        expiresAt: Date | null;
+        employeeId: string | null;
+        type: import("@prisma/client").$Enums.ReferralType;
+        applicationId: string;
         confirmedAt: Date | null;
         contactedAt: Date | null;
         closedAt: Date | null;
-        expiresAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
     })[]>;
@@ -56,10 +56,10 @@ export declare class ReferralService {
             candidate: {
                 skills: {
                     id: string;
-                    candidateId: string;
                     name: string;
                     level: number;
                     yearsOfExp: number | null;
+                    candidateId: string;
                 }[];
                 firstName: string;
                 lastName: string;
@@ -67,35 +67,35 @@ export declare class ReferralService {
                 totalExperience: number | null;
             };
             job: {
-                title: string;
                 companyName: string;
+                title: string;
                 location: string;
             };
         } & {
             id: string;
-            candidateId: string;
-            jobId: string;
             status: import("@prisma/client").$Enums.ApplicationStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            jobId: string;
+            candidateId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
             contactUnlockedAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
         updatedAt: Date;
-        applicationId: string;
-        type: import("@prisma/client").$Enums.ReferralType;
-        employeeId: string | null;
         hrId: string | null;
+        expiresAt: Date | null;
+        employeeId: string | null;
+        type: import("@prisma/client").$Enums.ReferralType;
+        applicationId: string;
         confirmedAt: Date | null;
         contactedAt: Date | null;
         closedAt: Date | null;
-        expiresAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
     })[]>;
@@ -104,14 +104,14 @@ export declare class ReferralService {
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
         updatedAt: Date;
-        applicationId: string;
-        type: import("@prisma/client").$Enums.ReferralType;
-        employeeId: string | null;
         hrId: string | null;
+        expiresAt: Date | null;
+        employeeId: string | null;
+        type: import("@prisma/client").$Enums.ReferralType;
+        applicationId: string;
         confirmedAt: Date | null;
         contactedAt: Date | null;
         closedAt: Date | null;
-        expiresAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
     }>;
@@ -120,14 +120,14 @@ export declare class ReferralService {
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
         updatedAt: Date;
-        applicationId: string;
-        type: import("@prisma/client").$Enums.ReferralType;
-        employeeId: string | null;
         hrId: string | null;
+        expiresAt: Date | null;
+        employeeId: string | null;
+        type: import("@prisma/client").$Enums.ReferralType;
+        applicationId: string;
         confirmedAt: Date | null;
         contactedAt: Date | null;
         closedAt: Date | null;
-        expiresAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
     }>;
@@ -145,29 +145,29 @@ export declare class ReferralService {
             };
         } & {
             id: string;
-            candidateId: string;
-            jobId: string;
             status: import("@prisma/client").$Enums.ApplicationStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            jobId: string;
+            candidateId: string;
             coverLetter: string | null;
             testScore: number | null;
             testPassedAt: Date | null;
             contactUnlockedAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
         updatedAt: Date;
-        applicationId: string;
-        type: import("@prisma/client").$Enums.ReferralType;
-        employeeId: string | null;
         hrId: string | null;
+        expiresAt: Date | null;
+        employeeId: string | null;
+        type: import("@prisma/client").$Enums.ReferralType;
+        applicationId: string;
         confirmedAt: Date | null;
         contactedAt: Date | null;
         closedAt: Date | null;
-        expiresAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
     })[]>;

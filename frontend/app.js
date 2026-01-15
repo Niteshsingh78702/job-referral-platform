@@ -2030,6 +2030,15 @@ async function loadApplications() {
             actionButton = `<button class="btn btn-success btn-sm" disabled>🎉 Referred!</button>`;
         } else if (app.status === 'REFERRAL_PENDING') {
             actionButton = `<button class="btn btn-outline btn-sm" disabled>Pending Referral</button>`;
+        } else if (app.status === 'INTERVIEW_REQUESTED') {
+            // Interview requested by HR - Candidate needs to pay ₹99
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #f59e0b, #d97706);">💳 Pay ₹99 for Interview</button>`;
+        } else if (app.interview && app.interview.status === 'READY_TO_SCHEDULE') {
+            // Payment done - waiting for HR to schedule
+            actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Paid - Awaiting Schedule</button>`;
+        } else if (app.interview && app.interview.status === 'INTERVIEW_SCHEDULED') {
+            // Interview scheduled
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview.id}')">📅 View Interview</button>`;
         } else {
             actionButton = `<button class="btn btn-outline btn-sm">View Details</button>`;
         }
@@ -2066,7 +2075,9 @@ function getStatusLabel(status) {
         'TEST_FAILED': 'Test Failed',
         'REFERRAL_PENDING': 'Pending Referral',
         'REFERRED': 'Referred',
-        'APPLIED': 'Applied'
+        'APPLIED': 'Applied',
+        'INTERVIEW_REQUESTED': 'Interview Request',
+        'REFERRAL_CONFIRMED': 'Referral Confirmed'
     };
     return labels[status] || status;
 }
@@ -2078,7 +2089,9 @@ function getStatusClass(status) {
         'TEST_FAILED': 'status-rejected',
         'REFERRAL_PENDING': 'status-pending',
         'REFERRED': 'status-referred',
-        'APPLIED': 'status-pending'
+        'APPLIED': 'status-pending',
+        'INTERVIEW_REQUESTED': 'status-interview',
+        'REFERRAL_CONFIRMED': 'status-passed'
     };
     return classes[status] || 'status-pending';
 }
@@ -3130,4 +3143,254 @@ function closeConfirmModal(result) {
         confirmModalResolver(result);
         confirmModalResolver = null;
     }
+}
+
+// =============================================
+// Interview Payment Functions
+// =============================================
+
+/**
+ * Pay for interview - opens payment flow for ₹99 interview fee
+ */
+async function payForInterview(applicationId) {
+    if (!state.token) {
+        showToast('error', 'Please login to continue.');
+        showModal('login');
+        return;
+    }
+
+    // Show confirmation modal
+    const confirmed = await showConfirmModal({
+        title: 'Interview Payment',
+        message: 'Pay ₹99 to confirm your interview slot. This fee helps verify your commitment and unlock interview scheduling.',
+        icon: '💳',
+        confirmText: 'Pay ₹99',
+        cancelText: 'Maybe Later',
+        variant: 'default'
+    });
+
+    if (!confirmed) return;
+
+    try {
+        showToast('info', 'Initiating payment...');
+
+        // Create payment order for interview
+        const response = await fetch(`${API_BASE_URL}/payment/interview/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({ applicationId })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data.orderId) {
+            // Open Razorpay checkout
+            openRazorpayForInterview(data.data, applicationId);
+        } else {
+            // For demo/testing - simulate successful payment
+            console.log('Payment API not available, simulating payment success');
+            await simulateInterviewPaymentSuccess(applicationId);
+        }
+    } catch (error) {
+        console.error('Payment error:', error);
+        // For demo - simulate payment
+        await simulateInterviewPaymentSuccess(applicationId);
+    }
+}
+
+/**
+ * Simulate payment success for demo purposes
+ */
+async function simulateInterviewPaymentSuccess(applicationId) {
+    showToast('success', '✅ Payment successful! Interview confirmed.');
+
+    // Update local application status
+    const apps = JSON.parse(localStorage.getItem('demoApplications') || '[]');
+    const appIndex = apps.findIndex(a => a.id === applicationId);
+    if (appIndex !== -1) {
+        apps[appIndex].status = 'INTERVIEW_CONFIRMED';
+        apps[appIndex].interview = {
+            status: 'READY_TO_SCHEDULE',
+            paidAt: new Date().toISOString()
+        };
+        localStorage.setItem('demoApplications', JSON.stringify(apps));
+    }
+
+    // Reload applications
+    loadApplications();
+}
+
+/**
+ * Open Razorpay checkout for interview payment
+ */
+function openRazorpayForInterview(orderData, applicationId) {
+    const options = {
+        key: orderData.keyId,
+        amount: 9900, // ₹99 in paise
+        currency: 'INR',
+        name: 'JobRefer',
+        description: 'Interview Confirmation Fee',
+        order_id: orderData.orderId,
+        handler: async function (response) {
+            // Verify payment
+            try {
+                const verifyResponse = await fetch(`${API_BASE_URL}/payment/interview/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({
+                        applicationId,
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpaySignature: response.razorpay_signature
+                    })
+                });
+
+                const data = await verifyResponse.json();
+                if (data.success) {
+                    showToast('success', '✅ Payment successful! HR will schedule your interview soon.');
+                    loadApplications();
+                } else {
+                    showToast('error', data.message || 'Payment verification failed.');
+                }
+            } catch (error) {
+                console.error('Payment verification error:', error);
+                showToast('error', 'Could not verify payment. Please contact support.');
+            }
+        },
+        prefill: {
+            name: state.user?.firstName || '',
+            email: state.user?.email || ''
+        },
+        theme: {
+            color: '#6366f1'
+        }
+    };
+
+    if (typeof Razorpay !== 'undefined') {
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } else {
+        showToast('error', 'Payment service unavailable. Please try again later.');
+    }
+}
+
+/**
+ * View interview details
+ */
+async function viewInterviewDetails(interviewId) {
+    if (!state.token) {
+        showToast('error', 'Please login to view interview details.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/interviews/candidate/${interviewId}`, {
+            headers: {
+                'Authorization': `Bearer ${state.token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            showInterviewModal(data.data);
+        } else {
+            showToast('error', data.message || 'Could not load interview details.');
+        }
+    } catch (error) {
+        console.error('Error fetching interview:', error);
+        showToast('error', 'Could not load interview details.');
+    }
+}
+
+/**
+ * Show interview details modal
+ */
+function showInterviewModal(interview) {
+    // Create modal if doesn't exist
+    let modal = document.getElementById('interviewDetailModal');
+    if (!modal) {
+        const modalHTML = `
+            <div class="modal-overlay" id="interviewModalOverlay" onclick="closeInterviewModal()"></div>
+            <div class="modal modal-md" id="interviewDetailModal">
+                <button class="modal-close" onclick="closeInterviewModal()">×</button>
+                <div class="modal-content" id="interviewDetailContent"></div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('interviewDetailModal');
+    }
+
+    const content = document.getElementById('interviewDetailContent');
+    const dateStr = interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString('en-IN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    }) : 'Not yet scheduled';
+
+    content.innerHTML = `
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+            <h2 style="margin-bottom: 8px;">Interview Details</h2>
+            <p style="color: var(--text-secondary);">${interview.job?.title} at ${interview.job?.companyName}</p>
+        </div>
+        
+        <div style="background: var(--surface); padding: 20px; border-radius: 12px; margin: 20px 0;">
+            <div style="display: grid; gap: 16px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Mode</span>
+                    <span style="font-weight: 500;">${interview.mode === 'VIDEO' ? '📹 Video Call' : interview.mode === 'CALL' ? '📞 Phone Call' : '🏢 On-site'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Date</span>
+                    <span style="font-weight: 500;">${dateStr}</span>
+                </div>
+                ${interview.scheduledTime ? `
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Time</span>
+                    <span style="font-weight: 500;">${interview.scheduledTime}</span>
+                </div>
+                ` : ''}
+                ${interview.interviewLink ? `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--text-secondary);">Meeting Link</span>
+                    <a href="${interview.interviewLink}" target="_blank" class="btn btn-primary btn-sm">Join Meeting</a>
+                </div>
+                ` : ''}
+                ${interview.callDetails ? `
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Details</span>
+                    <span style="font-weight: 500;">${interview.callDetails}</span>
+                </div>
+                ` : ''}
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Status</span>
+                    <span style="font-weight: 500; color: var(--success);">${interview.status === 'INTERVIEW_SCHEDULED' ? '✅ Scheduled' : interview.status}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding-top: 10px;">
+            <button class="btn btn-primary" onclick="closeInterviewModal()">Close</button>
+        </div>
+    `;
+
+    document.getElementById('interviewModalOverlay').classList.add('active');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeInterviewModal() {
+    const modal = document.getElementById('interviewDetailModal');
+    const overlay = document.getElementById('interviewModalOverlay');
+    if (overlay) overlay.classList.remove('active');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
 }

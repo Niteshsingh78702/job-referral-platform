@@ -19,8 +19,8 @@ export declare class JobService {
         } | null;
         skills: {
             id: string;
-            jobId: string;
             name: string;
+            jobId: string;
             isRequired: boolean;
         }[];
     } & {
@@ -28,14 +28,13 @@ export declare class JobService {
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        hrId: string | null;
-        expiresAt: Date | null;
-        slug: string;
+        companyName: string;
         title: string;
         description: string;
+        testId: string | null;
+        slug: string;
         requirements: string | null;
         responsibilities: string | null;
-        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
@@ -48,8 +47,9 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        testId: string | null;
+        hrId: string | null;
         postedAt: Date | null;
+        expiresAt: Date | null;
         skillBucketId: string | null;
     }>;
     getActiveJobs(query: JobQueryDto): Promise<{
@@ -59,8 +59,8 @@ export declare class JobService {
             } | null;
             skills: {
                 id: string;
-                jobId: string;
                 name: string;
+                jobId: string;
                 isRequired: boolean;
             }[];
         } & {
@@ -68,14 +68,13 @@ export declare class JobService {
             status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            hrId: string | null;
-            expiresAt: Date | null;
-            slug: string;
+            companyName: string;
             title: string;
             description: string;
+            testId: string | null;
+            slug: string;
             requirements: string | null;
             responsibilities: string | null;
-            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
@@ -88,8 +87,9 @@ export declare class JobService {
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            testId: string | null;
+            hrId: string | null;
             postedAt: Date | null;
+            expiresAt: Date | null;
             skillBucketId: string | null;
         })[];
         meta: {
@@ -112,8 +112,8 @@ export declare class JobService {
         } | null;
         skills: {
             id: string;
-            jobId: string;
             name: string;
+            jobId: string;
             isRequired: boolean;
         }[];
     } & {
@@ -121,14 +121,13 @@ export declare class JobService {
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        hrId: string | null;
-        expiresAt: Date | null;
-        slug: string;
+        companyName: string;
         title: string;
         description: string;
+        testId: string | null;
+        slug: string;
         requirements: string | null;
         responsibilities: string | null;
-        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
@@ -141,15 +140,16 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        testId: string | null;
+        hrId: string | null;
         postedAt: Date | null;
+        expiresAt: Date | null;
         skillBucketId: string | null;
     }>;
     updateJob(jobId: string, hrId: string, dto: UpdateJobDto): Promise<{
         skills: {
             id: string;
-            jobId: string;
             name: string;
+            jobId: string;
             isRequired: boolean;
         }[];
     } & {
@@ -157,14 +157,13 @@ export declare class JobService {
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        hrId: string | null;
-        expiresAt: Date | null;
-        slug: string;
+        companyName: string;
         title: string;
         description: string;
+        testId: string | null;
+        slug: string;
         requirements: string | null;
         responsibilities: string | null;
-        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
@@ -177,8 +176,9 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        testId: string | null;
+        hrId: string | null;
         postedAt: Date | null;
+        expiresAt: Date | null;
         skillBucketId: string | null;
     }>;
     applyForJob(jobId: string, userId: string, dto: ApplyJobDto): Promise<{
@@ -191,21 +191,21 @@ export declare class JobService {
             validDaysRemaining: number | undefined;
         } | null;
         id: string;
-        candidateId: string;
-        jobId: string;
         status: import("@prisma/client").$Enums.ApplicationStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        jobId: string;
+        candidateId: string;
         coverLetter: string | null;
         testScore: number | null;
         testPassedAt: Date | null;
         contactUnlockedAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     getHRJobs(hrId: string, status?: JobStatus): Promise<({
         skills: {
             id: string;
-            jobId: string;
             name: string;
+            jobId: string;
             isRequired: boolean;
         }[];
         _count: {
@@ -216,14 +216,13 @@ export declare class JobService {
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
         updatedAt: Date;
-        hrId: string | null;
-        expiresAt: Date | null;
-        slug: string;
+        companyName: string;
         title: string;
         description: string;
+        testId: string | null;
+        slug: string;
         requirements: string | null;
         responsibilities: string | null;
-        companyName: string;
         companyLogo: string | null;
         location: string;
         isRemote: boolean;
@@ -236,8 +235,9 @@ export declare class JobService {
         maxApplications: number;
         applicationCount: number;
         referralFee: number;
-        testId: string | null;
+        hrId: string | null;
         postedAt: Date | null;
+        expiresAt: Date | null;
         skillBucketId: string | null;
     })[]>;
     private generateSlug;

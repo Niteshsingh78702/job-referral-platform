@@ -25,10 +25,10 @@ export declare class SkillBucketService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
-        isActive: boolean;
         testTemplateId: string | null;
         code: string;
         displayName: string | null;
@@ -54,10 +54,10 @@ export declare class SkillBucketService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
-        isActive: boolean;
         testTemplateId: string | null;
         code: string;
         displayName: string | null;
@@ -79,10 +79,10 @@ export declare class SkillBucketService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
-        isActive: boolean;
         testTemplateId: string | null;
         code: string;
         displayName: string | null;
@@ -108,10 +108,10 @@ export declare class SkillBucketService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
-        isActive: boolean;
         testTemplateId: string | null;
         code: string;
         displayName: string | null;
@@ -137,10 +137,10 @@ export declare class SkillBucketService {
         updatedAt: Date;
         name: string;
         description: string | null;
+        isActive: boolean;
+        testId: string | null;
         experienceMin: number;
         experienceMax: number;
-        testId: string | null;
-        isActive: boolean;
         testTemplateId: string | null;
         code: string;
         displayName: string | null;
@@ -149,8 +149,8 @@ export declare class SkillBucketService {
     checkCandidateSkillStatusByJobId(candidateId: string, jobId: string): Promise<SkillTestStatusDto | null>;
     recordSkillTestAttempt(candidateId: string, skillBucketId: string, isPassed: boolean, score: number, testSessionId?: string): Promise<{
         id: string;
-        candidateId: string;
         skillBucketId: string;
+        candidateId: string;
         score: number;
         isPassed: boolean;
         attemptedAt: Date;

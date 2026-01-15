@@ -29,27 +29,27 @@ export declare class AdminService {
                 firstName: string;
                 lastName: string;
             } | null;
-            employee: {
-                companyName: string;
-                referralCount: number;
-            } | null;
             hr: {
                 companyName: string;
                 approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
             } | null;
+            employee: {
+                companyName: string;
+                referralCount: number;
+            } | null;
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.UserStatus;
-            createdAt: Date;
-            updatedAt: Date;
             email: string;
             phone: string | null;
+            googleId: string | null;
             passwordHash: string | null;
             role: import("@prisma/client").$Enums.UserRole;
+            status: import("@prisma/client").$Enums.UserStatus;
             emailVerified: boolean;
             phoneVerified: boolean;
-            googleId: string | null;
             authProvider: string;
+            createdAt: Date;
+            updatedAt: Date;
             lastLoginAt: Date | null;
         })[];
         meta: {
@@ -69,15 +69,15 @@ export declare class AdminService {
     }>;
     getPendingHRApprovals(): Promise<({
         user: {
-            createdAt: Date;
             email: string;
+            createdAt: Date;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        companyName: string;
         userId: string;
+        companyName: string;
         companyEmail: string;
         companyWebsite: string | null;
         designation: string | null;
@@ -110,14 +110,13 @@ export declare class AdminService {
             status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            hrId: string | null;
-            expiresAt: Date | null;
-            slug: string;
+            companyName: string;
             title: string;
             description: string;
+            testId: string | null;
+            slug: string;
             requirements: string | null;
             responsibilities: string | null;
-            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
@@ -130,8 +129,9 @@ export declare class AdminService {
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            testId: string | null;
+            hrId: string | null;
             postedAt: Date | null;
+            expiresAt: Date | null;
             skillBucketId: string | null;
         })[];
         meta: {
@@ -157,14 +157,13 @@ export declare class AdminService {
             status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            hrId: string | null;
-            expiresAt: Date | null;
-            slug: string;
+            companyName: string;
             title: string;
             description: string;
+            testId: string | null;
+            slug: string;
             requirements: string | null;
             responsibilities: string | null;
-            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
@@ -177,8 +176,9 @@ export declare class AdminService {
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            testId: string | null;
+            hrId: string | null;
             postedAt: Date | null;
+            expiresAt: Date | null;
             skillBucketId: string | null;
         };
     }>;
@@ -190,14 +190,13 @@ export declare class AdminService {
             status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
             updatedAt: Date;
-            hrId: string | null;
-            expiresAt: Date | null;
-            slug: string;
+            companyName: string;
             title: string;
             description: string;
+            testId: string | null;
+            slug: string;
             requirements: string | null;
             responsibilities: string | null;
-            companyName: string;
             companyLogo: string | null;
             location: string;
             isRemote: boolean;
@@ -210,8 +209,9 @@ export declare class AdminService {
             maxApplications: number;
             applicationCount: number;
             referralFee: number;
-            testId: string | null;
+            hrId: string | null;
             postedAt: Date | null;
+            expiresAt: Date | null;
             skillBucketId: string | null;
         };
     }>;
@@ -224,20 +224,20 @@ export declare class AdminService {
             candidate: ({
                 applications: ({
                     job: {
-                        title: string;
                         companyName: string;
+                        title: string;
                     };
                 } & {
                     id: string;
-                    candidateId: string;
-                    jobId: string;
                     status: import("@prisma/client").$Enums.ApplicationStatus;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    jobId: string;
+                    candidateId: string;
                     coverLetter: string | null;
                     testScore: number | null;
                     testPassedAt: Date | null;
                     contactUnlockedAt: Date | null;
-                    createdAt: Date;
-                    updatedAt: Date;
                 })[];
             } & {
                 id: string;
@@ -262,17 +262,17 @@ export declare class AdminService {
             }) | null;
         } & {
             id: string;
-            status: import("@prisma/client").$Enums.UserStatus;
-            createdAt: Date;
-            updatedAt: Date;
             email: string;
             phone: string | null;
+            googleId: string | null;
             passwordHash: string | null;
             role: import("@prisma/client").$Enums.UserRole;
+            status: import("@prisma/client").$Enums.UserStatus;
             emailVerified: boolean;
             phoneVerified: boolean;
-            googleId: string | null;
             authProvider: string;
+            createdAt: Date;
+            updatedAt: Date;
             lastLoginAt: Date | null;
         })[];
         meta: {
@@ -288,27 +288,6 @@ export declare class AdminService {
     }>;
     getAllPayments(page?: number, limit?: number, status?: PaymentStatus): Promise<{
         data: ({
-            application: {
-                candidate: {
-                    firstName: string;
-                    lastName: string;
-                };
-                job: {
-                    title: string;
-                    companyName: string;
-                };
-            } & {
-                id: string;
-                candidateId: string;
-                jobId: string;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
-                coverLetter: string | null;
-                testScore: number | null;
-                testPassedAt: Date | null;
-                contactUnlockedAt: Date | null;
-                createdAt: Date;
-                updatedAt: Date;
-            };
             refund: {
                 id: string;
                 status: import("@prisma/client").$Enums.RefundStatus;
@@ -317,11 +296,32 @@ export declare class AdminService {
                 amount: number;
                 paymentId: string;
                 reason: string;
+                adminNotes: string | null;
                 processedBy: string | null;
                 processedAt: Date | null;
-                adminNotes: string | null;
                 razorpayRefundId: string | null;
             } | null;
+            application: {
+                candidate: {
+                    firstName: string;
+                    lastName: string;
+                };
+                job: {
+                    companyName: string;
+                    title: string;
+                };
+            } & {
+                id: string;
+                status: import("@prisma/client").$Enums.ApplicationStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                jobId: string;
+                candidateId: string;
+                coverLetter: string | null;
+                testScore: number | null;
+                testPassedAt: Date | null;
+                contactUnlockedAt: Date | null;
+            };
         } & {
             id: string;
             status: import("@prisma/client").$Enums.PaymentStatus;
@@ -353,20 +353,20 @@ export declare class AdminService {
                     lastName: string;
                 };
                 job: {
-                    title: string;
                     companyName: string;
+                    title: string;
                 };
             } & {
                 id: string;
-                candidateId: string;
-                jobId: string;
                 status: import("@prisma/client").$Enums.ApplicationStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                jobId: string;
+                candidateId: string;
                 coverLetter: string | null;
                 testScore: number | null;
                 testPassedAt: Date | null;
                 contactUnlockedAt: Date | null;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
             id: string;
@@ -392,9 +392,9 @@ export declare class AdminService {
         amount: number;
         paymentId: string;
         reason: string;
+        adminNotes: string | null;
         processedBy: string | null;
         processedAt: Date | null;
-        adminNotes: string | null;
         razorpayRefundId: string | null;
     })[]>;
     approveRefund(refundId: string, adminId: string, notes?: string): Promise<{

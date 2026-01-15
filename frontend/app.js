@@ -3175,7 +3175,7 @@ async function payForInterview(applicationId) {
         showToast('info', 'Initiating payment...');
 
         // Create payment order for interview
-        const response = await fetch(`${API_BASE_URL}/payment/interview/create`, {
+        const response = await fetch(`${API_BASE_URL}/payments/interview/create-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -3237,7 +3237,7 @@ function openRazorpayForInterview(orderData, applicationId) {
         handler: async function (response) {
             // Verify payment
             try {
-                const verifyResponse = await fetch(`${API_BASE_URL}/payment/interview/verify`, {
+                const verifyResponse = await fetch(`${API_BASE_URL}/payments/interview/verify`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

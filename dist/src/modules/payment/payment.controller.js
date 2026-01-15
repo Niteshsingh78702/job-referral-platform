@@ -41,6 +41,14 @@ let PaymentController = class PaymentController {
     async requestRefund(userId, dto) {
         return this.paymentService.requestRefund(userId, dto);
     }
+    async createInterviewOrder(userId, dto) {
+        const result = await this.paymentService.createInterviewOrder(userId, dto.applicationId);
+        return { success: true, data: result };
+    }
+    async verifyInterviewPayment(userId, dto) {
+        const result = await this.paymentService.verifyInterviewPayment(userId, dto);
+        return { success: true, data: result };
+    }
 };
 exports.PaymentController = PaymentController;
 __decorate([
@@ -97,6 +105,24 @@ __decorate([
     __metadata("design:paramtypes", [String, dto_1.RequestRefundDto]),
     __metadata("design:returntype", Promise)
 ], PaymentController.prototype, "requestRefund", null);
+__decorate([
+    (0, common_1.Post)('interview/create-order'),
+    (0, decorators_1.Roles)(constants_1.UserRole.CANDIDATE),
+    __param(0, (0, decorators_1.CurrentUser)('sub')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PaymentController.prototype, "createInterviewOrder", null);
+__decorate([
+    (0, common_1.Post)('interview/verify'),
+    (0, decorators_1.Roles)(constants_1.UserRole.CANDIDATE),
+    __param(0, (0, decorators_1.CurrentUser)('sub')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, dto_1.VerifyPaymentDto]),
+    __metadata("design:returntype", Promise)
+], PaymentController.prototype, "verifyInterviewPayment", null);
 exports.PaymentController = PaymentController = __decorate([
     (0, common_1.Controller)('payments'),
     __metadata("design:paramtypes", [payment_service_1.PaymentService])

@@ -74,4 +74,28 @@ export class PaymentController {
     ) {
         return this.paymentService.requestRefund(userId, dto);
     }
+
+    // =============================================
+    // INTERVIEW PAYMENT ENDPOINTS (₹99)
+    // =============================================
+
+    @Post('interview/create-order')
+    @Roles(UserRole.CANDIDATE)
+    async createInterviewOrder(
+        @CurrentUser('sub') userId: string,
+        @Body() dto: { applicationId: string },
+    ) {
+        const result = await this.paymentService.createInterviewOrder(userId, dto.applicationId);
+        return { success: true, data: result };
+    }
+
+    @Post('interview/verify')
+    @Roles(UserRole.CANDIDATE)
+    async verifyInterviewPayment(
+        @CurrentUser('sub') userId: string,
+        @Body() dto: VerifyPaymentDto,
+    ) {
+        const result = await this.paymentService.verifyInterviewPayment(userId, dto);
+        return { success: true, data: result };
+    }
 }

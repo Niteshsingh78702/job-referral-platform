@@ -459,6 +459,215 @@ export class PaymentService {
         return refund;
     }
 
+    // =============================================
+    // INTERVIEW PAYMENT METHODS (₹99)
+    // =============================================
+
+    /**
+     * Create payment order for interview (₹99)
+     */
+    async createInterviewOrder(userId: string, applicationId: string) {
+        // Get application with interview
+        const application = await this.prisma.jobApplication.findUnique({
+            where: { id: applicationId },
+            include: {
+                candidate: true,
+                job: true,
+                interview: true,
+            },
+        });
+
+        if (!application) {
+            throw new NotFoundException('Application not found');
+        }
+
+        if (application.candidate.userId !== userId) {
+            throw new ForbiddenException('Not authorized');
+        }
+
+        // Verify interview exists and is pending payment
+        if (!application.interview) {
+            throw new BadRequestException('No interview request found for this application');
+        }
+
+        if (application.interview.status !== 'PAYMENT_PENDING') {
+            throw new BadRequestException(
+                `Interview is in ${application.interview.status} status. Payment not required.`,
+            );
+        }
+
+        // Check for existing successful payment for this interview
+        const existingPayment = await this.prisma.payment.findFirst({
+            where: {
+                applicationId,
+                status: PaymentStatus.SUCCESS,
+                amount: 99, // Interview fee
+            },
+        });
+
+        if (existingPayment) {
+            throw new BadRequestException('Interview payment already completed');
+        }
+
+        // Check for pending order
+        const pendingPayment = await this.prisma.payment.findFirst({
+            where: {
+                applicationId,
+                status: { in: [PaymentStatus.ORDER_CREATED, PaymentStatus.PENDING] },
+                amount: 99,
+            },
+        });
+
+        if (pendingPayment && pendingPayment.razorpayOrderId) {
+            return {
+                orderId: pendingPayment.razorpayOrderId,
+                amount: 99,
+                currency: 'INR',
+                paymentId: pendingPayment.id,
+                keyId: this.configService.get('RAZORPAY_KEY_ID'),
+            };
+        }
+
+        const amount = 9900; // ₹99 in paise
+
+        // Create Razorpay order
+        const razorpay = this.ensureRazorpay();
+        const order = await razorpay.orders.create({
+            amount,
+            currency: 'INR',
+            receipt: `int_${application.id.slice(0, 18)}`,
+            notes: {
+                applicationId: application.id,
+                interviewId: application.interview.id,
+                candidateId: application.candidateId,
+                type: 'INTERVIEW',
+            },
+        });
+
+        // Create payment record
+        const payment = await this.prisma.payment.create({
+            data: {
+                applicationId: application.id,
+                razorpayOrderId: order.id,
+                amount: 99,
+                currency: 'INR',
+                status: PaymentStatus.ORDER_CREATED,
+                orderCreatedAt: new Date(),
+            },
+        });
+
+        // Audit log
+        await this.prisma.auditLog.create({
+            data: {
+                userId,
+                action: AuditAction.PAYMENT_INITIATED,
+                entityType: 'InterviewPayment',
+                entityId: payment.id,
+                metadata: { orderId: order.id, amount: 99, interviewId: application.interview.id },
+            },
+        });
+
+        return {
+            orderId: order.id,
+            amount: 99,
+            currency: 'INR',
+            paymentId: payment.id,
+            keyId: this.configService.get('RAZORPAY_KEY_ID'),
+        };
+    }
+
+    /**
+     * Verify interview payment and update interview status
+     */
+    async verifyInterviewPayment(userId: string, dto: VerifyPaymentDto) {
+        // Verify signature
+        const isValid = this.verifySignature(
+            dto.razorpayOrderId,
+            dto.razorpayPaymentId,
+            dto.razorpaySignature,
+        );
+
+        if (!isValid) {
+            throw new BadRequestException('Invalid payment signature');
+        }
+
+        // Get payment
+        const payment = await this.prisma.payment.findUnique({
+            where: { razorpayOrderId: dto.razorpayOrderId },
+            include: {
+                application: {
+                    include: {
+                        candidate: { include: { user: true } },
+                        interview: true,
+                        job: { include: { hr: { include: { user: true } } } },
+                    },
+                },
+            },
+        });
+
+        if (!payment) {
+            throw new NotFoundException('Payment not found');
+        }
+
+        if (payment.application.candidate.userId !== userId) {
+            throw new ForbiddenException('Not authorized');
+        }
+
+        if (payment.status === PaymentStatus.SUCCESS) {
+            return { success: true, message: 'Payment already verified' };
+        }
+
+        const interview = payment.application.interview;
+        if (!interview) {
+            throw new BadRequestException('Interview not found');
+        }
+
+        // Update payment and interview in transaction
+        await this.prisma.$transaction(async (tx) => {
+            // Update payment status
+            await tx.payment.update({
+                where: { id: payment.id },
+                data: {
+                    razorpayPaymentId: dto.razorpayPaymentId,
+                    status: PaymentStatus.SUCCESS,
+                    paidAt: new Date(),
+                },
+            });
+
+            // Update interview status to READY_TO_SCHEDULE
+            await tx.interview.update({
+                where: { id: interview.id },
+                data: {
+                    status: 'READY_TO_SCHEDULE' as any,
+                    paymentStatus: PaymentStatus.SUCCESS as any,
+                    paidAt: new Date(),
+                },
+            });
+
+            // Audit log
+            await tx.auditLog.create({
+                data: {
+                    userId,
+                    action: AuditAction.PAYMENT_SUCCESS,
+                    entityType: 'InterviewPayment',
+                    entityId: payment.id,
+                    metadata: {
+                        razorpayPaymentId: dto.razorpayPaymentId,
+                        interviewId: interview.id,
+                    },
+                },
+            });
+        });
+
+        // TODO: Send email notification to HR that payment is complete
+        // this.emailService.sendInterviewPaymentConfirmation(...)
+
+        return {
+            success: true,
+            message: 'Interview payment verified. HR will schedule your interview soon.',
+        };
+    }
+
     // Signature verification helpers
     private verifySignature(
         orderId: string,

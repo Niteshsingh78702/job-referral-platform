@@ -383,6 +383,158 @@ let PaymentService = class PaymentService {
         });
         return refund;
     }
+    async createInterviewOrder(userId, applicationId) {
+        const application = await this.prisma.jobApplication.findUnique({
+            where: { id: applicationId },
+            include: {
+                candidate: true,
+                job: true,
+                interview: true,
+            },
+        });
+        if (!application) {
+            throw new common_1.NotFoundException('Application not found');
+        }
+        if (application.candidate.userId !== userId) {
+            throw new common_1.ForbiddenException('Not authorized');
+        }
+        if (!application.interview) {
+            throw new common_1.BadRequestException('No interview request found for this application');
+        }
+        if (application.interview.status !== 'PAYMENT_PENDING') {
+            throw new common_1.BadRequestException(`Interview is in ${application.interview.status} status. Payment not required.`);
+        }
+        const existingPayment = await this.prisma.payment.findFirst({
+            where: {
+                applicationId,
+                status: constants_1.PaymentStatus.SUCCESS,
+                amount: 99,
+            },
+        });
+        if (existingPayment) {
+            throw new common_1.BadRequestException('Interview payment already completed');
+        }
+        const pendingPayment = await this.prisma.payment.findFirst({
+            where: {
+                applicationId,
+                status: { in: [constants_1.PaymentStatus.ORDER_CREATED, constants_1.PaymentStatus.PENDING] },
+                amount: 99,
+            },
+        });
+        if (pendingPayment && pendingPayment.razorpayOrderId) {
+            return {
+                orderId: pendingPayment.razorpayOrderId,
+                amount: 99,
+                currency: 'INR',
+                paymentId: pendingPayment.id,
+                keyId: this.configService.get('RAZORPAY_KEY_ID'),
+            };
+        }
+        const amount = 9900;
+        const razorpay = this.ensureRazorpay();
+        const order = await razorpay.orders.create({
+            amount,
+            currency: 'INR',
+            receipt: `int_${application.id.slice(0, 18)}`,
+            notes: {
+                applicationId: application.id,
+                interviewId: application.interview.id,
+                candidateId: application.candidateId,
+                type: 'INTERVIEW',
+            },
+        });
+        const payment = await this.prisma.payment.create({
+            data: {
+                applicationId: application.id,
+                razorpayOrderId: order.id,
+                amount: 99,
+                currency: 'INR',
+                status: constants_1.PaymentStatus.ORDER_CREATED,
+                orderCreatedAt: new Date(),
+            },
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                userId,
+                action: constants_1.AuditAction.PAYMENT_INITIATED,
+                entityType: 'InterviewPayment',
+                entityId: payment.id,
+                metadata: { orderId: order.id, amount: 99, interviewId: application.interview.id },
+            },
+        });
+        return {
+            orderId: order.id,
+            amount: 99,
+            currency: 'INR',
+            paymentId: payment.id,
+            keyId: this.configService.get('RAZORPAY_KEY_ID'),
+        };
+    }
+    async verifyInterviewPayment(userId, dto) {
+        const isValid = this.verifySignature(dto.razorpayOrderId, dto.razorpayPaymentId, dto.razorpaySignature);
+        if (!isValid) {
+            throw new common_1.BadRequestException('Invalid payment signature');
+        }
+        const payment = await this.prisma.payment.findUnique({
+            where: { razorpayOrderId: dto.razorpayOrderId },
+            include: {
+                application: {
+                    include: {
+                        candidate: { include: { user: true } },
+                        interview: true,
+                        job: { include: { hr: { include: { user: true } } } },
+                    },
+                },
+            },
+        });
+        if (!payment) {
+            throw new common_1.NotFoundException('Payment not found');
+        }
+        if (payment.application.candidate.userId !== userId) {
+            throw new common_1.ForbiddenException('Not authorized');
+        }
+        if (payment.status === constants_1.PaymentStatus.SUCCESS) {
+            return { success: true, message: 'Payment already verified' };
+        }
+        const interview = payment.application.interview;
+        if (!interview) {
+            throw new common_1.BadRequestException('Interview not found');
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.payment.update({
+                where: { id: payment.id },
+                data: {
+                    razorpayPaymentId: dto.razorpayPaymentId,
+                    status: constants_1.PaymentStatus.SUCCESS,
+                    paidAt: new Date(),
+                },
+            });
+            await tx.interview.update({
+                where: { id: interview.id },
+                data: {
+                    status: 'READY_TO_SCHEDULE',
+                    paymentStatus: constants_1.PaymentStatus.SUCCESS,
+                    paidAt: new Date(),
+                },
+            });
+            await tx.auditLog.create({
+                data: {
+                    userId,
+                    action: constants_1.AuditAction.PAYMENT_SUCCESS,
+                    entityType: 'InterviewPayment',
+                    entityId: payment.id,
+                    metadata: {
+                        razorpayPaymentId: dto.razorpayPaymentId,
+                        interviewId: interview.id,
+                    },
+                },
+            });
+        });
+        return {
+            success: true,
+            message: 'Interview payment verified. HR will schedule your interview soon.',
+        };
+    }
     verifySignature(orderId, paymentId, signature) {
         const secret = this.configService.get('RAZORPAY_KEY_SECRET');
         const body = `${orderId}|${paymentId}`;

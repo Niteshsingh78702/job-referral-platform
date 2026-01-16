@@ -6,12 +6,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
-import { RequestInterviewDto, ScheduleInterviewDto } from './dto';
+import { ConfirmInterviewDto } from './dto';
 import {
     InterviewStatus,
     InterviewMode,
     PaymentStatus,
     AuditAction,
+    ApplicationStatus,
 } from '../../common/constants';
 
 @Injectable()
@@ -22,11 +23,12 @@ export class InterviewService {
     ) { }
 
     /**
-     * HR requests an interview for an application
-     * Creates Interview record with PAYMENT_PENDING status
-     * Updates application status to INTERVIEW_REQUESTED
+     * HR confirms an interview with scheduling details.
+     * NEW FLOW: HR sets date/time/mode upfront, then candidate pays to unlock.
+     * Creates Interview record with INTERVIEW_CONFIRMED status.
+     * Updates application status to INTERVIEW_CONFIRMED.
      */
-    async requestInterview(userId: string, applicationId: string, dto: RequestInterviewDto) {
+    async confirmInterview(userId: string, applicationId: string, dto: ConfirmInterviewDto) {
         // Verify HR owns the job for this application
         const application = await this.prisma.jobApplication.findUnique({
             where: { id: applicationId },
@@ -40,13 +42,20 @@ export class InterviewService {
             throw new NotFoundException('Application not found');
         }
 
+        // Verify application is in APPLIED status (test passed)
+        if (application.status !== ApplicationStatus.APPLIED) {
+            throw new BadRequestException(
+                `Cannot confirm interview. Application status is ${application.status}. Expected APPLIED (test passed).`
+            );
+        }
+
         // Check if HR owns this job
         const hr = await this.prisma.hR.findUnique({
             where: { userId },
         });
 
         if (!hr || application.job.hrId !== hr.id) {
-            throw new ForbiddenException('You can only request interviews for your own job applications');
+            throw new ForbiddenException('You can only confirm interviews for your own job applications');
         }
 
         // Check if interview already exists
@@ -55,27 +64,29 @@ export class InterviewService {
         });
 
         if (existingInterview) {
-            throw new BadRequestException('Interview already requested for this application');
+            throw new BadRequestException('Interview already confirmed for this application. Contact admin to modify.');
         }
 
-        // Create interview and update application status in transaction
+        // Create interview with scheduling details and update application status
         const interview = await this.prisma.$transaction(async (tx) => {
-            // Create interview record
+            // Create interview record with interview details already set
             const newInterview = await tx.interview.create({
                 data: {
                     applicationId,
                     mode: dto.mode as any,
-                    preferredTimeWindow: dto.preferredTimeWindow,
-                    hrNotes: dto.hrNotes,
-                    status: InterviewStatus.PAYMENT_PENDING as any,
+                    scheduledDate: new Date(dto.scheduledDate),
+                    scheduledTime: dto.scheduledTime,
+                    hrNotes: dto.hrNote,
+                    status: InterviewStatus.INTERVIEW_CONFIRMED as any,
                     paymentStatus: PaymentStatus.ELIGIBLE as any,
+                    scheduledAt: new Date(), // HR confirmed at this time
                 },
             });
 
-            // Update application status
+            // Update application status to INTERVIEW_CONFIRMED
             await tx.jobApplication.update({
                 where: { id: applicationId },
-                data: { status: 'INTERVIEW_REQUESTED' as any },
+                data: { status: ApplicationStatus.INTERVIEW_CONFIRMED as any },
             });
 
             // Create audit log
@@ -87,8 +98,10 @@ export class InterviewService {
                     entityId: newInterview.id,
                     newValue: {
                         mode: dto.mode,
+                        scheduledDate: dto.scheduledDate,
+                        scheduledTime: dto.scheduledTime,
                         applicationId,
-                        status: 'PAYMENT_PENDING',
+                        status: InterviewStatus.INTERVIEW_CONFIRMED,
                     },
                 },
             });
@@ -96,23 +109,25 @@ export class InterviewService {
             return newInterview;
         });
 
-        // Send notification email to candidate
-        await this.sendInterviewRequestEmail(application);
+        // Send notification email to candidate - "Pay ₹99 to unlock details"
+        await this.sendInterviewConfirmedEmail(application, dto);
 
         return {
-            message: 'Interview request created successfully',
+            message: 'Interview confirmed successfully. Candidate will be notified to make payment.',
             interview: {
                 id: interview.id,
                 mode: interview.mode,
                 status: interview.status,
-                preferredTimeWindow: interview.preferredTimeWindow,
+                scheduledDate: interview.scheduledDate,
+                scheduledTime: interview.scheduledTime,
             },
         };
     }
 
     /**
-     * Process successful payment - called by payment service
-     * Transitions interview from PAYMENT_PENDING to READY_TO_SCHEDULE
+     * Process successful payment - called by payment service.
+     * Transitions interview from INTERVIEW_CONFIRMED to PAYMENT_SUCCESS.
+     * Now candidate can see interview details.
      */
     async processPaymentSuccess(applicationId: string, paymentId: string) {
         const interview = await this.prisma.interview.findUnique({
@@ -131,111 +146,44 @@ export class InterviewService {
             throw new NotFoundException('Interview not found for this application');
         }
 
-        if (interview.status !== InterviewStatus.PAYMENT_PENDING) {
-            throw new BadRequestException('Interview is not in PAYMENT_PENDING status');
+        if (interview.status !== InterviewStatus.INTERVIEW_CONFIRMED) {
+            throw new BadRequestException(
+                `Interview is in ${interview.status} status. Expected INTERVIEW_CONFIRMED.`
+            );
         }
 
-        // Update interview status
-        const updatedInterview = await this.prisma.interview.update({
-            where: { id: interview.id },
-            data: {
-                status: InterviewStatus.READY_TO_SCHEDULE as any,
-                paymentStatus: PaymentStatus.SUCCESS as any,
-                paidAt: new Date(),
-            },
-        });
-
-        // Send notification to HR that payment received and scheduling is unlocked
-        await this.sendPaymentConfirmationToHR(interview);
-
-        return updatedInterview;
-    }
-
-    /**
-     * HR schedules the interview (only after payment is confirmed)
-     * Sets date, time, and meeting details
-     */
-    async scheduleInterview(userId: string, interviewId: string, dto: ScheduleInterviewDto) {
-        // Verify interview exists and HR owns the related job
-        const interview = await this.prisma.interview.findUnique({
-            where: { id: interviewId },
-            include: {
-                application: {
-                    include: {
-                        job: true,
-                        candidate: { include: { user: true } },
-                    },
-                },
-            },
-        });
-
-        if (!interview) {
-            throw new NotFoundException('Interview not found');
-        }
-
-        // Check HR ownership
-        const hr = await this.prisma.hR.findUnique({
-            where: { userId },
-        });
-
-        if (!hr || interview.application.job.hrId !== hr.id) {
-            throw new ForbiddenException('You can only schedule interviews for your own job applications');
-        }
-
-        // CRITICAL: Ensure payment is confirmed before scheduling
-        if (interview.paymentStatus !== PaymentStatus.SUCCESS) {
-            throw new ForbiddenException('Cannot schedule interview until candidate payment is confirmed');
-        }
-
-        if (interview.status !== InterviewStatus.READY_TO_SCHEDULE) {
-            throw new BadRequestException(`Interview is in ${interview.status} status. Expected READY_TO_SCHEDULE.`);
-        }
-
-        // Update interview with scheduling details
+        // Update interview and application status
         const updatedInterview = await this.prisma.$transaction(async (tx) => {
             const updated = await tx.interview.update({
-                where: { id: interviewId },
+                where: { id: interview.id },
                 data: {
-                    scheduledDate: new Date(dto.scheduledDate),
-                    scheduledTime: dto.scheduledTime,
-                    interviewLink: dto.interviewLink,
-                    callDetails: dto.callDetails,
-                    status: InterviewStatus.INTERVIEW_SCHEDULED as any,
-                    scheduledAt: new Date(),
+                    status: InterviewStatus.PAYMENT_SUCCESS as any,
+                    paymentStatus: PaymentStatus.SUCCESS as any,
+                    paidAt: new Date(),
                 },
             });
 
-            // Create audit log
-            await tx.auditLog.create({
-                data: {
-                    userId,
-                    action: AuditAction.UPDATE,
-                    entityType: 'Interview',
-                    entityId: interviewId,
-                    oldValue: { status: interview.status },
-                    newValue: {
-                        status: 'INTERVIEW_SCHEDULED',
-                        scheduledDate: dto.scheduledDate,
-                        scheduledTime: dto.scheduledTime,
-                    },
-                },
+            // Update application status
+            await tx.jobApplication.update({
+                where: { id: applicationId },
+                data: { status: ApplicationStatus.PAYMENT_SUCCESS as any },
             });
 
             return updated;
         });
 
-        // Send interview details to candidate
-        await this.sendInterviewScheduledEmail(interview, dto);
+        // Send confirmation email to candidate with interview details
+        await this.sendPaymentSuccessEmail(interview);
 
-        return {
-            message: 'Interview scheduled successfully',
-            interview: updatedInterview,
-        };
+        // Notify HR that candidate has paid
+        await this.sendPaymentNotificationToHR(interview);
+
+        return updatedInterview;
     }
 
     /**
-     * Get interview details for candidate
-     * Returns filtered data based on interview status
+     * Get interview details for candidate.
+     * CRITICAL: Only return interview details if payment is successful.
      */
     async getInterviewForCandidate(userId: string, interviewId: string) {
         const candidate = await this.prisma.candidate.findUnique({
@@ -272,49 +220,56 @@ export class InterviewService {
             throw new ForbiddenException('You can only view your own interviews');
         }
 
-        // Return filtered data based on status
-        // CRITICAL: Only return interview link/details if INTERVIEW_SCHEDULED
+        // Base response (always visible)
         const baseResponse = {
             id: interview.id,
             mode: interview.mode,
             status: interview.status,
             paymentStatus: interview.paymentStatus,
             job: interview.application.job,
-            requestedAt: interview.requestedAt,
+            createdAt: interview.createdAt,
         };
 
+        // Return filtered data based on status
         switch (interview.status) {
-            case InterviewStatus.PAYMENT_PENDING:
+            case InterviewStatus.INTERVIEW_CONFIRMED:
+                // Interview confirmed but not paid - show payment CTA
                 return {
                     ...baseResponse,
-                    message: 'Please complete payment to confirm your interview',
+                    message: 'HR has scheduled your interview. Pay ₹99 to unlock details.',
+                    requiresPayment: true,
                 };
 
-            case InterviewStatus.READY_TO_SCHEDULE:
-                return {
-                    ...baseResponse,
-                    message: 'Payment confirmed! HR will schedule your interview soon.',
-                    paidAt: interview.paidAt,
-                };
-
-            case InterviewStatus.INTERVIEW_SCHEDULED:
+            case InterviewStatus.PAYMENT_SUCCESS:
+            case InterviewStatus.INTERVIEW_COMPLETED:
+                // Payment done - show full details
                 return {
                     ...baseResponse,
                     scheduledDate: interview.scheduledDate,
                     scheduledTime: interview.scheduledTime,
-                    interviewLink: interview.interviewLink,
-                    callDetails: interview.callDetails,
+                    hrNote: interview.hrNotes,
                     paidAt: interview.paidAt,
-                    scheduledAt: interview.scheduledAt,
+                    message: interview.status === InterviewStatus.PAYMENT_SUCCESS
+                        ? 'Interview details unlocked. Best of luck!'
+                        : 'Interview completed.',
                 };
 
-            case InterviewStatus.COMPLETED:
+            case InterviewStatus.CANDIDATE_NO_SHOW:
                 return {
                     ...baseResponse,
-                    scheduledDate: interview.scheduledDate,
-                    scheduledTime: interview.scheduledTime,
-                    completedAt: interview.completedAt,
-                    message: 'Interview completed',
+                    message: 'You missed this interview. Contact support for assistance.',
+                };
+
+            case InterviewStatus.HR_NO_SHOW:
+                return {
+                    ...baseResponse,
+                    message: 'HR did not conduct this interview. A refund has been initiated.',
+                };
+
+            case InterviewStatus.CANCELLED:
+                return {
+                    ...baseResponse,
+                    message: 'This interview was cancelled.',
                 };
 
             default:
@@ -356,7 +311,7 @@ export class InterviewService {
             orderBy: { createdAt: 'desc' },
         });
 
-        // Filter sensitive data based on status
+        // Filter sensitive data based on payment status
         return interviews.map((interview) => {
             const base = {
                 id: interview.id,
@@ -364,27 +319,30 @@ export class InterviewService {
                 status: interview.status,
                 paymentStatus: interview.paymentStatus,
                 job: interview.application.job,
-                requestedAt: interview.requestedAt,
+                createdAt: interview.createdAt,
                 paidAt: interview.paidAt,
             };
 
-            if (interview.status === InterviewStatus.INTERVIEW_SCHEDULED ||
-                interview.status === InterviewStatus.COMPLETED) {
+            // Only show interview details if payment successful
+            if (interview.status === InterviewStatus.PAYMENT_SUCCESS ||
+                interview.status === InterviewStatus.INTERVIEW_COMPLETED) {
                 return {
                     ...base,
                     scheduledDate: interview.scheduledDate,
                     scheduledTime: interview.scheduledTime,
-                    interviewLink: interview.interviewLink,
-                    callDetails: interview.callDetails,
+                    hrNote: interview.hrNotes,
                 };
             }
 
-            return base;
+            return {
+                ...base,
+                requiresPayment: interview.status === InterviewStatus.INTERVIEW_CONFIRMED,
+            };
         });
     }
 
     /**
-     * Get interviews for HR's jobs
+     * Get interviews for HR's jobs (shows all details to HR)
      */
     async getHRInterviews(userId: string, filters?: { status?: string; jobId?: string }) {
         const hr = await this.prisma.hR.findUnique({
@@ -446,27 +404,32 @@ export class InterviewService {
         return interviews;
     }
 
+    // ===========================================
+    // ADMIN METHODS
+    // ===========================================
+
     /**
      * Get interview statistics for admin
      */
     async getAdminInterviewStats() {
-        const [total, paymentPending, readyToSchedule, scheduled, completed] = await Promise.all([
+        const [total, confirmed, paymentSuccess, completed, candidateNoShow, hrNoShow] = await Promise.all([
             this.prisma.interview.count(),
-            this.prisma.interview.count({ where: { status: InterviewStatus.PAYMENT_PENDING as any } }),
-            this.prisma.interview.count({ where: { status: InterviewStatus.READY_TO_SCHEDULE as any } }),
-            this.prisma.interview.count({ where: { status: InterviewStatus.INTERVIEW_SCHEDULED as any } }),
-            this.prisma.interview.count({ where: { status: InterviewStatus.COMPLETED as any } }),
+            this.prisma.interview.count({ where: { status: InterviewStatus.INTERVIEW_CONFIRMED as any } }),
+            this.prisma.interview.count({ where: { status: InterviewStatus.PAYMENT_SUCCESS as any } }),
+            this.prisma.interview.count({ where: { status: InterviewStatus.INTERVIEW_COMPLETED as any } }),
+            this.prisma.interview.count({ where: { status: InterviewStatus.CANDIDATE_NO_SHOW as any } }),
+            this.prisma.interview.count({ where: { status: InterviewStatus.HR_NO_SHOW as any } }),
         ]);
 
-        // Get HRs with repeated requests without scheduling (potential flag)
+        // Get HRs with repeated confirmations without candidate payments (potential flag)
         const flaggedHRs = await this.prisma.$queryRaw`
             SELECT h."companyName", h."userId", COUNT(*) as pending_count
             FROM "Interview" i
             JOIN "JobApplication" ja ON ja.id = i."applicationId"
             JOIN "Job" j ON j.id = ja."jobId"
             JOIN "HR" h ON h.id = j."hrId"
-            WHERE i.status = 'READY_TO_SCHEDULE'
-            AND i."paidAt" < NOW() - INTERVAL '48 hours'
+            WHERE i.status = 'INTERVIEW_CONFIRMED'
+            AND i."scheduledAt" < NOW() - INTERVAL '48 hours'
             GROUP BY h.id
             HAVING COUNT(*) > 2
         `;
@@ -474,10 +437,11 @@ export class InterviewService {
         return {
             total,
             byStatus: {
-                paymentPending,
-                readyToSchedule,
-                scheduled,
+                confirmed,
+                paymentSuccess,
                 completed,
+                candidateNoShow,
+                hrNoShow,
             },
             flaggedHRs,
         };
@@ -538,11 +502,119 @@ export class InterviewService {
         };
     }
 
+    /**
+     * Admin marks an interview as no-show
+     */
+    async markNoShow(interviewId: string, type: 'CANDIDATE' | 'HR', adminUserId: string) {
+        const interview = await this.prisma.interview.findUnique({
+            where: { id: interviewId },
+        });
+
+        if (!interview) {
+            throw new NotFoundException('Interview not found');
+        }
+
+        const newStatus = type === 'CANDIDATE'
+            ? InterviewStatus.CANDIDATE_NO_SHOW
+            : InterviewStatus.HR_NO_SHOW;
+
+        const updatedInterview = await this.prisma.$transaction(async (tx) => {
+            const updated = await tx.interview.update({
+                where: { id: interviewId },
+                data: {
+                    status: newStatus as any,
+                    completedAt: new Date(),
+                },
+            });
+
+            // Update application status
+            await tx.jobApplication.update({
+                where: { id: interview.applicationId },
+                data: {
+                    status: (type === 'CANDIDATE'
+                        ? ApplicationStatus.CANDIDATE_NO_SHOW
+                        : ApplicationStatus.HR_NO_SHOW) as any
+                },
+            });
+
+            // Create audit log
+            await tx.auditLog.create({
+                data: {
+                    userId: adminUserId,
+                    action: AuditAction.ADMIN_OVERRIDE,
+                    entityType: 'Interview',
+                    entityId: interviewId,
+                    oldValue: { status: interview.status },
+                    newValue: { status: newStatus, reason: `${type}_NO_SHOW` },
+                },
+            });
+
+            return updated;
+        });
+
+        return {
+            message: `Interview marked as ${type} no-show`,
+            interview: updatedInterview,
+        };
+    }
+
+    /**
+     * Admin marks interview as completed
+     */
+    async markCompleted(interviewId: string, adminUserId: string) {
+        const interview = await this.prisma.interview.findUnique({
+            where: { id: interviewId },
+        });
+
+        if (!interview) {
+            throw new NotFoundException('Interview not found');
+        }
+
+        if (interview.status !== InterviewStatus.PAYMENT_SUCCESS) {
+            throw new BadRequestException('Can only mark PAYMENT_SUCCESS interviews as completed');
+        }
+
+        const updatedInterview = await this.prisma.$transaction(async (tx) => {
+            const updated = await tx.interview.update({
+                where: { id: interviewId },
+                data: {
+                    status: InterviewStatus.INTERVIEW_COMPLETED as any,
+                    completedAt: new Date(),
+                },
+            });
+
+            // Update application status
+            await tx.jobApplication.update({
+                where: { id: interview.applicationId },
+                data: { status: ApplicationStatus.INTERVIEW_COMPLETED as any },
+            });
+
+            // Create audit log
+            await tx.auditLog.create({
+                data: {
+                    userId: adminUserId,
+                    action: AuditAction.UPDATE,
+                    entityType: 'Interview',
+                    entityId: interviewId,
+                    oldValue: { status: interview.status },
+                    newValue: { status: InterviewStatus.INTERVIEW_COMPLETED },
+                },
+            });
+
+            return updated;
+        });
+
+        return {
+            message: 'Interview marked as completed',
+            interview: updatedInterview,
+        };
+    }
+
     // ===========================================
     // Email Helper Methods
     // ===========================================
 
-    private async sendInterviewRequestEmail(application: any) {
+    private async sendInterviewConfirmedEmail(application: any, dto: ConfirmInterviewDto) {
         const candidateEmail = application.candidate.user.email;
         const candidateName = `${application.candidate.firstName} ${application.candidate.lastName}`;
         const companyName = application.job.companyName;
@@ -551,91 +623,93 @@ export class InterviewService {
         const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #2563eb;">🎉 Great News, ${candidateName}!</h2>
-                <p>The HR team at <strong>${companyName}</strong> wants to interview you for the position:</p>
+                <p>The HR team at <strong>${companyName}</strong> has scheduled an interview for you!</p>
                 <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
                     <h3 style="margin: 0 0 8px 0;">${jobTitle}</h3>
                     <p style="margin: 0; color: #6b7280;">${companyName}</p>
                 </div>
-                <p><strong>Next Step:</strong> Pay ₹99 to confirm your interview slot and unlock scheduling.</p>
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f59e0b;">
+                    <p style="margin: 0; font-weight: 500;">
+                        <strong>Next Step:</strong> Pay ₹99 to unlock your interview details.
+                    </p>
+                </div>
                 <p style="color: #6b7280; font-size: 14px;">
-                    This small fee helps us maintain quality connections and shows your commitment to the opportunity.
+                    This small fee ensures quality connections and shows your commitment to the opportunity.
+                    Your interview details will be revealed immediately after payment.
                 </p>
                 <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}#my-applications" 
                    style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; 
                           border-radius: 6px; text-decoration: none; margin-top: 16px;">
-                    Pay & Confirm Interview
+                    Pay ₹99 & Unlock Details
                 </a>
             </div>
         `;
 
         await this.emailService.sendEmail({
             to: candidateEmail,
-            subject: `🎉 Interview Request from ${companyName} - Pay ₹99 to Confirm`,
+            subject: `🎉 Interview Scheduled by ${companyName} - Pay ₹99 to Unlock Details`,
             html,
         });
     }
 
-    private async sendPaymentConfirmationToHR(interview: any) {
+    private async sendPaymentSuccessEmail(interview: any) {
+        const candidateEmail = interview.application.candidate.user.email;
+        const candidateName = `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`;
+        const companyName = interview.application.job.companyName;
+        const jobTitle = interview.application.job.title;
+
+        const modeText = {
+            CALL: '📞 Phone Call',
+            VIDEO: '💻 Video Call',
+            ONSITE: '🏢 On-site',
+        }[interview.mode] || interview.mode;
+
+        const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #059669;">✅ Interview Details Unlocked!</h2>
+                <p>Hi ${candidateName},</p>
+                <p>Your payment is confirmed. Here are your interview details:</p>
+                <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 16px 0;">
+                    <h3 style="margin: 0 0 12px 0;">${jobTitle}</h3>
+                    <p style="margin: 4px 0;"><strong>Company:</strong> ${companyName}</p>
+                    <p style="margin: 4px 0;"><strong>Date:</strong> ${new Date(interview.scheduledDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p style="margin: 4px 0;"><strong>Time:</strong> ${interview.scheduledTime}</p>
+                    <p style="margin: 4px 0;"><strong>Mode:</strong> ${modeText}</p>
+                    ${interview.hrNotes ? `<p style="margin: 12px 0 0 0; padding-top: 12px; border-top: 1px solid #ddd;"><strong>Note from HR:</strong> ${interview.hrNotes}</p>` : ''}
+                </div>
+                <p style="color: #059669; font-weight: 500;">Best of luck with your interview! 🍀</p>
+            </div>
+        `;
+
+        await this.emailService.sendEmail({
+            to: candidateEmail,
+            subject: `✅ Interview Details Unlocked - ${jobTitle} at ${companyName}`,
+            html,
+        });
+    }
+
+    private async sendPaymentNotificationToHR(interview: any) {
         const hrEmail = interview.application.job.hr.user.email;
         const candidateName = `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`;
         const jobTitle = interview.application.job.title;
 
         const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #059669;">✅ Payment Confirmed - Schedule Interview</h2>
+                <h2 style="color: #059669;">✅ Candidate Has Confirmed</h2>
                 <p><strong>${candidateName}</strong> has paid and confirmed their interview for:</p>
                 <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
                     <h3 style="margin: 0 0 8px 0;">${jobTitle}</h3>
+                    <p style="margin: 4px 0;"><strong>Date:</strong> ${new Date(interview.scheduledDate).toLocaleDateString()}</p>
+                    <p style="margin: 4px 0;"><strong>Time:</strong> ${interview.scheduledTime}</p>
+                    <p style="margin: 4px 0;"><strong>Mode:</strong> ${interview.mode}</p>
                 </div>
-                <p><strong>Action Required:</strong> Please schedule the interview with date, time, and meeting link.</p>
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/hr-dashboard.html#interviews" 
-                   style="display: inline-block; background: #059669; color: white; padding: 12px 24px; 
-                          border-radius: 6px; text-decoration: none; margin-top: 16px;">
-                    Schedule Interview Now
-                </a>
+                <p>The candidate has been sent the interview details. Please be prepared for the interview.</p>
             </div>
         `;
 
         await this.emailService.sendEmail({
             to: hrEmail,
-            subject: `✅ ${candidateName} Confirmed Interview - Schedule Now`,
-            html,
-        });
-    }
-
-    private async sendInterviewScheduledEmail(interview: any, schedule: ScheduleInterviewDto) {
-        const candidateEmail = interview.application.candidate.user.email;
-        const candidateName = `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`;
-        const companyName = interview.application.job.companyName;
-        const jobTitle = interview.application.job.title;
-
-        const meetingDetails = interview.mode === 'VIDEO' && schedule.interviewLink
-            ? `<p><strong>Meeting Link:</strong> <a href="${schedule.interviewLink}">${schedule.interviewLink}</a></p>`
-            : interview.mode === 'CALL' && schedule.callDetails
-                ? `<p><strong>Call Details:</strong> ${schedule.callDetails}</p>`
-                : interview.mode === 'ONSITE' && schedule.callDetails
-                    ? `<p><strong>Location:</strong> ${schedule.callDetails}</p>`
-                    : '';
-
-        const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #7c3aed;">📅 Your Interview is Scheduled!</h2>
-                <p>Hi ${candidateName},</p>
-                <p>Your interview with <strong>${companyName}</strong> has been scheduled:</p>
-                <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
-                    <h3 style="margin: 0 0 8px 0;">${jobTitle}</h3>
-                    <p style="margin: 4px 0;"><strong>Date:</strong> ${new Date(schedule.scheduledDate).toLocaleDateString()}</p>
-                    <p style="margin: 4px 0;"><strong>Time:</strong> ${schedule.scheduledTime}</p>
-                    <p style="margin: 4px 0;"><strong>Mode:</strong> ${interview.mode}</p>
-                    ${meetingDetails}
-                </div>
-                <p style="color: #6b7280;">Good luck with your interview! 🍀</p>
-            </div>
-        `;
-
-        await this.emailService.sendEmail({
-            to: candidateEmail,
-            subject: `📅 Interview Scheduled: ${jobTitle} at ${companyName}`,
+            subject: `✅ ${candidateName} Confirmed Interview for ${jobTitle}`,
             html,
         });
     }

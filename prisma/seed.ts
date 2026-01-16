@@ -322,6 +322,37 @@ async function main() {
     });
     console.log('✅ Test candidate created:', candidateUser.email);
 
+    // Get the candidate profile
+    const candidateProfile = await prisma.candidate.findUnique({
+        where: { userId: candidateUser.id },
+    });
+
+    // Get all jobs to create applications
+    const allJobs = await prisma.job.findMany({
+        take: 3, // Create applications for first 3 jobs
+    });
+
+    // Create sample job applications for testing interview flow
+    for (let i = 0; i < allJobs.length; i++) {
+        const job = allJobs[i];
+        await prisma.jobApplication.upsert({
+            where: {
+                candidateId_jobId: {
+                    candidateId: candidateProfile!.id,
+                    jobId: job.id,
+                },
+            },
+            update: {},
+            create: {
+                candidateId: candidateProfile!.id,
+                jobId: job.id,
+                status: 'APPLIED',
+                coverLetter: `I am very interested in the ${job.title} position at ${job.companyName}. My skills and experience make me a strong candidate for this role.`,
+            },
+        });
+    }
+    console.log('✅ Created', allJobs.length, 'sample job applications');
+
     // 6. Create a test employee
     const employeePassword = await bcrypt.hash('emp123456', 10);
     const employeeUser = await prisma.user.upsert({

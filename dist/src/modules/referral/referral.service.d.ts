@@ -9,9 +9,9 @@ export declare class ReferralService {
                 skills: {
                     id: string;
                     name: string;
+                    candidateId: string;
                     level: number;
                     yearsOfExp: number | null;
-                    candidateId: string;
                 }[];
                 firstName: string;
                 lastName: string;
@@ -57,9 +57,9 @@ export declare class ReferralService {
                 skills: {
                     id: string;
                     name: string;
+                    candidateId: string;
                     level: number;
                     yearsOfExp: number | null;
-                    candidateId: string;
                 }[];
                 firstName: string;
                 lastName: string;

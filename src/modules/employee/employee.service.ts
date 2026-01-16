@@ -435,10 +435,10 @@ export class EmployeeService {
                 },
             });
 
-            // Update application status
+            // Update application status - keep as APPLIED (waiting for HR interview confirmation)
             await tx.jobApplication.update({
                 where: { id: referral.applicationId },
-                data: { status: ApplicationStatus.REFERRAL_CONFIRMED },
+                data: { status: ApplicationStatus.APPLIED },
             });
 
             // Create earning record

@@ -180,10 +180,10 @@ export class ReferralService {
                 },
             });
 
-            // Update application status
+            // Update application status - keep as APPLIED (test passed, waiting for HR interview confirmation)
             await tx.jobApplication.update({
                 where: { id: referral.applicationId },
-                data: { status: ApplicationStatus.REFERRAL_CONFIRMED },
+                data: { status: ApplicationStatus.APPLIED },
             });
 
             return ref;
@@ -261,7 +261,7 @@ export class ReferralService {
 
             await tx.jobApplication.update({
                 where: { id: referral.applicationId },
-                data: { status: ApplicationStatus.CLOSED },
+                data: { status: ApplicationStatus.REJECTED },
             });
 
             return { success: true };

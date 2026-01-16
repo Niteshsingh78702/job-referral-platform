@@ -166,4 +166,91 @@ export declare class SkillBucketService {
         validTill: Date | null;
         daysRemaining: number;
     }[]>;
+    checkAllRequiredSkillsForJob(candidateId: string, jobId: string): Promise<{
+        canApply: boolean;
+        missingTests: SkillTestStatusDto[];
+        passedTests: SkillTestStatusDto[];
+        hasRequirements: boolean;
+    }>;
+    deleteSkillBucket(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        description: string | null;
+        isActive: boolean;
+        testId: string | null;
+        experienceMin: number;
+        experienceMax: number;
+        testTemplateId: string | null;
+        code: string;
+        displayName: string | null;
+    }>;
+    addSkillRequirementToJob(jobId: string, skillBucketId: string, displayOrder?: number): Promise<{
+        skillBucket: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            isActive: boolean;
+            testId: string | null;
+            experienceMin: number;
+            experienceMax: number;
+            testTemplateId: string | null;
+            code: string;
+            displayName: string | null;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        skillBucketId: string;
+        jobId: string;
+        displayOrder: number;
+    }>;
+    removeSkillRequirementFromJob(jobId: string, skillBucketId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        skillBucketId: string;
+        jobId: string;
+        displayOrder: number;
+    }>;
+    getJobSkillRequirements(jobId: string): Promise<{
+        legacySkillBucket: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            isActive: boolean;
+            testId: string | null;
+            experienceMin: number;
+            experienceMax: number;
+            testTemplateId: string | null;
+            code: string;
+            displayName: string | null;
+        } | null;
+        compositeRequirements: ({
+            skillBucket: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                isActive: boolean;
+                testId: string | null;
+                experienceMin: number;
+                experienceMax: number;
+                testTemplateId: string | null;
+                code: string;
+                displayName: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            skillBucketId: string;
+            jobId: string;
+            displayOrder: number;
+        })[];
+    }>;
 }

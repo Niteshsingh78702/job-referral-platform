@@ -24,11 +24,8 @@ let InterviewController = class InterviewController {
     constructor(interviewService) {
         this.interviewService = interviewService;
     }
-    async requestInterview(userId, applicationId, dto) {
-        return this.interviewService.requestInterview(userId, applicationId, dto);
-    }
-    async scheduleInterview(userId, interviewId, dto) {
-        return this.interviewService.scheduleInterview(userId, interviewId, dto);
+    async confirmInterview(userId, applicationId, dto) {
+        return this.interviewService.confirmInterview(userId, applicationId, dto);
     }
     async getHRInterviews(userId, status, jobId) {
         return this.interviewService.getHRInterviews(userId, { status, jobId });
@@ -45,10 +42,16 @@ let InterviewController = class InterviewController {
     async getAdminInterviews(page, limit, status) {
         return this.interviewService.getAdminInterviews(page || 1, limit || 20, status);
     }
+    async markNoShow(adminUserId, interviewId, type) {
+        return this.interviewService.markNoShow(interviewId, type, adminUserId);
+    }
+    async markCompleted(adminUserId, interviewId) {
+        return this.interviewService.markCompleted(interviewId, adminUserId);
+    }
 };
 exports.InterviewController = InterviewController;
 __decorate([
-    (0, common_1.Post)('request/:applicationId'),
+    (0, common_1.Post)('confirm/:applicationId'),
     (0, common_1.UseGuards)(guards_1.RolesGuard),
     (0, decorators_1.Roles)(constants_1.UserRole.HR),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
@@ -56,20 +59,9 @@ __decorate([
     __param(1, (0, common_1.Param)('applicationId')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, dto_1.RequestInterviewDto]),
+    __metadata("design:paramtypes", [String, String, dto_1.ConfirmInterviewDto]),
     __metadata("design:returntype", Promise)
-], InterviewController.prototype, "requestInterview", null);
-__decorate([
-    (0, common_1.Post)('schedule/:interviewId'),
-    (0, common_1.UseGuards)(guards_1.RolesGuard),
-    (0, decorators_1.Roles)(constants_1.UserRole.HR),
-    __param(0, (0, decorators_1.CurrentUser)('sub')),
-    __param(1, (0, common_1.Param)('interviewId')),
-    __param(2, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, dto_1.ScheduleInterviewDto]),
-    __metadata("design:returntype", Promise)
-], InterviewController.prototype, "scheduleInterview", null);
+], InterviewController.prototype, "confirmInterview", null);
 __decorate([
     (0, common_1.Get)('hr'),
     (0, common_1.UseGuards)(guards_1.RolesGuard),
@@ -119,6 +111,27 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", Promise)
 ], InterviewController.prototype, "getAdminInterviews", null);
+__decorate([
+    (0, common_1.Post)('admin/:interviewId/no-show'),
+    (0, common_1.UseGuards)(guards_1.RolesGuard),
+    (0, decorators_1.Roles)(constants_1.UserRole.ADMIN),
+    __param(0, (0, decorators_1.CurrentUser)('sub')),
+    __param(1, (0, common_1.Param)('interviewId')),
+    __param(2, (0, common_1.Body)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], InterviewController.prototype, "markNoShow", null);
+__decorate([
+    (0, common_1.Post)('admin/:interviewId/complete'),
+    (0, common_1.UseGuards)(guards_1.RolesGuard),
+    (0, decorators_1.Roles)(constants_1.UserRole.ADMIN),
+    __param(0, (0, decorators_1.CurrentUser)('sub')),
+    __param(1, (0, common_1.Param)('interviewId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], InterviewController.prototype, "markCompleted", null);
 exports.InterviewController = InterviewController = __decorate([
     (0, common_1.Controller)('interviews'),
     __metadata("design:paramtypes", [interview_service_1.InterviewService])

@@ -93,8 +93,9 @@ let PaymentService = class PaymentService {
         if (application.candidate.userId !== userId) {
             throw new common_1.ForbiddenException('Not authorized');
         }
-        if (application.status !== constants_1.ApplicationStatus.REFERRAL_CONFIRMED) {
-            throw new common_1.BadRequestException('Payment not available. Referral must be confirmed first.');
+        if (application.status !== constants_1.ApplicationStatus.APPLIED &&
+            application.status !== constants_1.ApplicationStatus.INTERVIEW_CONFIRMED) {
+            throw new common_1.BadRequestException('Payment not available for this application status.');
         }
         if (!application.referral || application.referral.status !== constants_1.ReferralStatus.CONFIRMED) {
             throw new common_1.BadRequestException('Referral not confirmed');
@@ -234,11 +235,11 @@ let PaymentService = class PaymentService {
             const interview = await tx.interview.findUnique({
                 where: { applicationId: payment.applicationId },
             });
-            if (interview && interview.status === 'PAYMENT_PENDING') {
+            if (interview && interview.status === 'INTERVIEW_CONFIRMED') {
                 await tx.interview.update({
                     where: { id: interview.id },
                     data: {
-                        status: 'READY_TO_SCHEDULE',
+                        status: 'PAYMENT_SUCCESS',
                         paymentStatus: constants_1.PaymentStatus.SUCCESS,
                         paidAt: new Date(),
                     },
@@ -248,7 +249,7 @@ let PaymentService = class PaymentService {
                 await tx.jobApplication.update({
                     where: { id: payment.applicationId },
                     data: {
-                        status: constants_1.ApplicationStatus.CONTACT_UNLOCKED,
+                        status: constants_1.ApplicationStatus.PAYMENT_SUCCESS,
                         contactUnlockedAt: new Date(),
                     },
                 });
@@ -360,9 +361,9 @@ let PaymentService = class PaymentService {
         if (payment.refund) {
             throw new common_1.BadRequestException('Refund already requested');
         }
-        if (payment.application.status === constants_1.ApplicationStatus.CONTACT_UNLOCKED ||
+        if (payment.application.status === constants_1.ApplicationStatus.PAYMENT_SUCCESS ||
             payment.application.referral?.status === constants_1.ReferralStatus.CONTACTED) {
-            throw new common_1.BadRequestException('Refund not available after contact has been shared');
+            throw new common_1.BadRequestException('Refund not available after details have been shared');
         }
         const refund = await this.prisma.refund.create({
             data: {

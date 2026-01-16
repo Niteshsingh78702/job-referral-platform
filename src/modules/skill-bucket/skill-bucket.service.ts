@@ -337,4 +337,211 @@ export class SkillBucketService {
             ),
         }));
     }
+
+    // ==========================================
+    // COMPOSITE SKILL REQUIREMENTS (Full Stack etc.)
+    // ==========================================
+
+    /**
+     * Check ALL required skills for a job (supports composite skill requirements)
+     * For Full Stack jobs that require both Java Backend AND React Frontend
+     * 
+     * Returns:
+     * - canApply: true if ALL required skills are passed and valid
+     * - missingTests: array of skills that need to be taken/retaken
+     * - passedTests: array of skills already passed and valid
+     */
+    async checkAllRequiredSkillsForJob(
+        candidateId: string,
+        jobId: string,
+    ): Promise<{
+        canApply: boolean;
+        missingTests: SkillTestStatusDto[];
+        passedTests: SkillTestStatusDto[];
+        hasRequirements: boolean;
+    }> {
+        // Get job with both legacy single skill bucket and new composite requirements
+        const job = await this.prisma.job.findUnique({
+            where: { id: jobId },
+            include: {
+                requiredSkillBuckets: {
+                    include: {
+                        skillBucket: true,
+                    },
+                    orderBy: { displayOrder: 'asc' },
+                },
+            },
+        });
+
+        if (!job) {
+            throw new NotFoundException('Job not found');
+        }
+
+        // Collect all required skill bucket IDs
+        const requiredSkillBucketIds: string[] = [];
+
+        // 1. Check legacy single skill bucket (backward compatibility)
+        if (job.skillBucketId) {
+            requiredSkillBucketIds.push(job.skillBucketId);
+        }
+
+        // 2. Check new composite skill requirements
+        for (const req of job.requiredSkillBuckets) {
+            if (!requiredSkillBucketIds.includes(req.skillBucketId)) {
+                requiredSkillBucketIds.push(req.skillBucketId);
+            }
+        }
+
+        // No skill requirements - can apply freely
+        if (requiredSkillBucketIds.length === 0) {
+            return {
+                canApply: true,
+                missingTests: [],
+                passedTests: [],
+                hasRequirements: false,
+            };
+        }
+
+        // Check each required skill
+        const passedTests: SkillTestStatusDto[] = [];
+        const missingTests: SkillTestStatusDto[] = [];
+
+        for (const skillBucketId of requiredSkillBucketIds) {
+            const status = await this.checkCandidateSkillStatus(candidateId, skillBucketId);
+
+            if (status.isPassed && status.isValid) {
+                passedTests.push(status);
+            } else {
+                missingTests.push(status);
+            }
+        }
+
+        return {
+            canApply: missingTests.length === 0,
+            missingTests,
+            passedTests,
+            hasRequirements: true,
+        };
+    }
+
+    // ==========================================
+    // ADMIN: Delete Skill Bucket
+    // ==========================================
+
+    async deleteSkillBucket(id: string) {
+        const bucket = await this.prisma.skillBucket.findUnique({
+            where: { id },
+            include: {
+                _count: {
+                    select: {
+                        jobs: true,
+                        attempts: true,
+                        jobRequirements: true,
+                    },
+                },
+            },
+        });
+
+        if (!bucket) {
+            throw new NotFoundException('Skill bucket not found');
+        }
+
+        // Check if skill bucket is in use
+        if (bucket._count.jobs > 0 || bucket._count.jobRequirements > 0) {
+            throw new BadRequestException(
+                `Cannot delete skill bucket: it is assigned to ${bucket._count.jobs + bucket._count.jobRequirements} job(s). Deactivate it instead.`
+            );
+        }
+
+        // If there are attempts, just deactivate instead of hard delete
+        if (bucket._count.attempts > 0) {
+            return this.prisma.skillBucket.update({
+                where: { id },
+                data: { isActive: false },
+            });
+        }
+
+        // Safe to hard delete
+        return this.prisma.skillBucket.delete({
+            where: { id },
+        });
+    }
+
+    // ==========================================
+    // ADMIN: Add/Remove Skill Requirements from Job
+    // ==========================================
+
+    async addSkillRequirementToJob(jobId: string, skillBucketId: string, displayOrder = 0) {
+        // Verify job exists
+        const job = await this.prisma.job.findUnique({ where: { id: jobId } });
+        if (!job) {
+            throw new NotFoundException('Job not found');
+        }
+
+        // Verify skill bucket exists
+        const bucket = await this.prisma.skillBucket.findUnique({ where: { id: skillBucketId } });
+        if (!bucket) {
+            throw new NotFoundException('Skill bucket not found');
+        }
+
+        // Create the requirement (upsert to avoid duplicates)
+        return this.prisma.jobRequiredSkillBucket.upsert({
+            where: {
+                jobId_skillBucketId: { jobId, skillBucketId },
+            },
+            create: {
+                jobId,
+                skillBucketId,
+                displayOrder,
+            },
+            update: {
+                displayOrder,
+            },
+            include: {
+                skillBucket: true,
+            },
+        });
+    }
+
+    async removeSkillRequirementFromJob(jobId: string, skillBucketId: string) {
+        const requirement = await this.prisma.jobRequiredSkillBucket.findUnique({
+            where: {
+                jobId_skillBucketId: { jobId, skillBucketId },
+            },
+        });
+
+        if (!requirement) {
+            throw new NotFoundException('Skill requirement not found for this job');
+        }
+
+        return this.prisma.jobRequiredSkillBucket.delete({
+            where: {
+                jobId_skillBucketId: { jobId, skillBucketId },
+            },
+        });
+    }
+
+    async getJobSkillRequirements(jobId: string) {
+        const job = await this.prisma.job.findUnique({
+            where: { id: jobId },
+            include: {
+                skillBucket: true, // Legacy single bucket
+                requiredSkillBuckets: {
+                    include: {
+                        skillBucket: true,
+                    },
+                    orderBy: { displayOrder: 'asc' },
+                },
+            },
+        });
+
+        if (!job) {
+            throw new NotFoundException('Job not found');
+        }
+
+        return {
+            legacySkillBucket: job.skillBucket,
+            compositeRequirements: job.requiredSkillBuckets,
+        };
+    }
 }

@@ -18,8 +18,15 @@ const adminState = {
     auditLogs: [],
     questions: [],
     questionStats: {},
+    skillBuckets: [],
+    interviews: [],
+    interviewStats: {},
+    analytics: {},
+    revenueReport: {},
     currentJobId: null,
     currentQuestionId: null,
+    currentSkillBucketId: null,
+    currentInterviewId: null,
 };
 
 // Initialize on page load
@@ -188,19 +195,37 @@ function navigateToPage(page) {
     const pageMap = {
         'dashboard': 'dashboardPage',
         'jobs': 'jobsPage',
+        'skillBuckets': 'skillBucketsPage',
+        'interviews': 'interviewsPage',
         'questions': 'questionsPage',
         'users': 'usersPage',
         'candidates': 'candidatesPage',
         'hr': 'hrPage',
         'payments': 'paymentsPage',
         'refunds': 'refundsPage',
+        'analytics': 'analyticsPage',
         'audit': 'auditPage',
+    };
+
+    const pageTitles = {
+        'dashboard': 'Dashboard',
+        'jobs': 'Jobs',
+        'skillBuckets': 'Skill Clusters',
+        'interviews': 'Interviews',
+        'questions': 'Question Bank',
+        'users': 'Users',
+        'candidates': 'Candidates',
+        'hr': 'HR Approvals',
+        'payments': 'Payments',
+        'refunds': 'Refunds',
+        'analytics': 'Analytics',
+        'audit': 'Audit Logs',
     };
 
     const pageId = pageMap[page];
     if (pageId) {
         document.getElementById(pageId).classList.remove('hidden');
-        document.getElementById('pageTitle').textContent = page.charAt(0).toUpperCase() + page.slice(1);
+        document.getElementById('pageTitle').textContent = pageTitles[page] || page.charAt(0).toUpperCase() + page.slice(1);
     }
 
     adminState.currentPage = page;
@@ -216,6 +241,12 @@ async function loadPageData(page) {
             break;
         case 'jobs':
             await loadJobs();
+            break;
+        case 'skillBuckets':
+            await loadSkillBuckets();
+            break;
+        case 'interviews':
+            await loadInterviews();
             break;
         case 'questions':
             await loadQuestions();
@@ -234,6 +265,9 @@ async function loadPageData(page) {
             break;
         case 'refunds':
             await loadRefunds();
+            break;
+        case 'analytics':
+            await loadAnalytics();
             break;
         case 'audit':
             await loadAuditLogs();
@@ -1760,3 +1794,486 @@ async function deleteQuestion(questionId) {
 document.getElementById('questionDifficultyFilter')?.addEventListener('change', () => loadQuestions());
 document.getElementById('questionCategoryFilter')?.addEventListener('change', () => loadQuestions());
 document.getElementById('questionSearch')?.addEventListener('input', debounce(() => loadQuestions(), 500));
+
+// ==========================================
+// SKILL BUCKETS MANAGEMENT
+// ==========================================
+
+async function loadSkillBuckets() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/skill-buckets?includeInactive=true`);
+        const data = await response.json();
+
+        if (data) {
+            adminState.skillBuckets = Array.isArray(data) ? data : (data.data || []);
+            renderSkillBucketsTable();
+        }
+    } catch (error) {
+        console.error('Error loading skill buckets:', error);
+        showToast('Failed to load skill clusters', 'error');
+    }
+}
+
+function renderSkillBucketsTable() {
+    const container = document.getElementById('skillBucketsTableContainer');
+
+    if (!adminState.skillBuckets || adminState.skillBuckets.length === 0) {
+        container.innerHTML = '<p class="loading">No skill clusters found</p>';
+        return;
+    }
+
+    const table = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Experience</th>
+                    <th>Jobs Using</th>
+                    <th>Test Attempts</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${adminState.skillBuckets.map(bucket => `
+                    <tr>
+                        <td><code>${bucket.code}</code></td>
+                        <td>${bucket.displayName || bucket.name}</td>
+                        <td>${bucket.experienceMin}-${bucket.experienceMax} yrs</td>
+                        <td>${(bucket._count?.jobs || 0) + (bucket._count?.jobRequirements || 0)}</td>
+                        <td>${bucket._count?.attempts || 0}</td>
+                        <td><span class="badge badge-${bucket.isActive ? 'success' : 'danger'}">${bucket.isActive ? 'Active' : 'Inactive'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="editSkillBucket('${bucket.id}')">Edit</button>
+                            ${bucket.isActive ? `<button class="btn btn-sm btn-warning" onclick="toggleSkillBucketStatus('${bucket.id}', false)">Deactivate</button>` :
+            `<button class="btn btn-sm btn-success" onclick="toggleSkillBucketStatus('${bucket.id}', true)">Activate</button>`}
+                            <button class="btn btn-sm btn-danger" onclick="deleteSkillBucket('${bucket.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = table;
+}
+
+function showCreateSkillBucketModal() {
+    adminState.currentSkillBucketId = null;
+    document.getElementById('skillBucketModalTitle').textContent = 'Create Skill Cluster';
+    document.getElementById('skillBucketForm').reset();
+    document.getElementById('skillBucketId').value = '';
+    document.getElementById('skillBucketModal').classList.add('active');
+}
+
+function closeSkillBucketModal() {
+    document.getElementById('skillBucketModal').classList.remove('active');
+}
+
+function editSkillBucket(bucketId) {
+    const bucket = adminState.skillBuckets.find(b => b.id === bucketId);
+    if (!bucket) return;
+
+    adminState.currentSkillBucketId = bucketId;
+    document.getElementById('skillBucketModalTitle').textContent = 'Edit Skill Cluster';
+    document.getElementById('skillBucketId').value = bucket.id;
+    document.getElementById('skillBucketCode').value = bucket.code;
+    document.getElementById('skillBucketName').value = bucket.name;
+    document.getElementById('skillBucketDisplayName').value = bucket.displayName || '';
+    document.getElementById('skillBucketDescription').value = bucket.description || '';
+    document.getElementById('skillBucketExpMin').value = bucket.experienceMin;
+    document.getElementById('skillBucketExpMax').value = bucket.experienceMax;
+
+    document.getElementById('skillBucketModal').classList.add('active');
+}
+
+document.getElementById('skillBucketForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const data = {
+        code: document.getElementById('skillBucketCode').value,
+        name: document.getElementById('skillBucketName').value,
+        displayName: document.getElementById('skillBucketDisplayName').value || undefined,
+        description: document.getElementById('skillBucketDescription').value || undefined,
+        experienceMin: parseInt(document.getElementById('skillBucketExpMin').value) || 0,
+        experienceMax: parseInt(document.getElementById('skillBucketExpMax').value) || 3,
+    };
+
+    try {
+        let url = `${API_BASE_URL}/admin/skill-buckets`;
+        let method = 'POST';
+
+        if (adminState.currentSkillBucketId) {
+            url = `${API_BASE_URL}/admin/skill-buckets/${adminState.currentSkillBucketId}`;
+            method = 'PATCH';
+        }
+
+        const response = await apiCall(url, {
+            method,
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast(result.message || 'Skill cluster saved!', 'success');
+            closeSkillBucketModal();
+            loadSkillBuckets();
+        } else {
+            showToast(result.message || 'Failed to save skill cluster', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving skill bucket:', error);
+        showToast('Failed to save skill cluster', 'error');
+    }
+});
+
+async function toggleSkillBucketStatus(bucketId, activate) {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/skill-buckets/${bucketId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ isActive: activate }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(`Skill cluster ${activate ? 'activated' : 'deactivated'}`, 'success');
+            loadSkillBuckets();
+        } else {
+            showToast(data.message || 'Operation failed', 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling skill bucket status:', error);
+        showToast('Failed to update status', 'error');
+    }
+}
+
+async function deleteSkillBucket(bucketId) {
+    const confirmed = await showConfirmModal({
+        icon: '🗑️',
+        title: 'Delete Skill Cluster',
+        message: 'This action cannot be undone. Are you sure?',
+        confirmText: 'Yes, Delete',
+        confirmClass: 'btn-danger'
+    });
+
+    if (!confirmed) return;
+
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/skill-buckets/${bucketId}`, {
+            method: 'DELETE',
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message || 'Skill cluster deleted', 'success');
+            loadSkillBuckets();
+        } else {
+            showToast(data.message || 'Failed to delete skill cluster', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting skill bucket:', error);
+        showToast('Failed to delete skill cluster', 'error');
+    }
+}
+
+// ==========================================
+// INTERVIEWS MANAGEMENT
+// ==========================================
+
+async function loadInterviews(page = 1, status = '') {
+    try {
+        // Load both interviews and stats
+        await Promise.all([
+            loadInterviewsList(page, status),
+            loadInterviewStats(),
+        ]);
+    } catch (error) {
+        console.error('Error loading interviews:', error);
+    }
+}
+
+async function loadInterviewStats() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/interviews/stats`);
+        const data = await response.json();
+
+        if (data) {
+            adminState.interviewStats = data;
+            updateInterviewStatsUI();
+        }
+    } catch (error) {
+        console.error('Error loading interview stats:', error);
+    }
+}
+
+function updateInterviewStatsUI() {
+    const stats = adminState.interviewStats;
+    document.getElementById('statTotalInterviews').textContent = stats.total || 0;
+    document.getElementById('statScheduledInterviews').textContent = stats.byStatus?.scheduled || 0;
+    document.getElementById('statCompletedInterviews').textContent = stats.byStatus?.completed || 0;
+    document.getElementById('statNoShowRate').textContent = stats.noShowRate || '0%';
+}
+
+async function loadInterviewsList(page = 1, status = '') {
+    try {
+        let url = `${API_BASE_URL}/admin/interviews?page=${page}&limit=10`;
+        if (status) url += `&status=${status}`;
+
+        const response = await apiCall(url);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            adminState.interviews = data.data.data || data.data;
+            renderInterviewsTable();
+            if (data.data.meta) {
+                renderPagination('interviewsPagination', data.data.meta, (p) => loadInterviewsList(p, status));
+            }
+        }
+    } catch (error) {
+        console.error('Error loading interviews list:', error);
+        showToast('Failed to load interviews', 'error');
+    }
+}
+
+function renderInterviewsTable() {
+    const container = document.getElementById('interviewsTableContainer');
+
+    if (!adminState.interviews || adminState.interviews.length === 0) {
+        container.innerHTML = '<p class="loading">No interviews found</p>';
+        return;
+    }
+
+    const table = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Job</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Scheduled</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${adminState.interviews.map(interview => {
+        const candidate = interview.application?.candidate;
+        const job = interview.application?.job;
+        return `
+                        <tr>
+                            <td>${candidate?.firstName || ''} ${candidate?.lastName || 'N/A'}</td>
+                            <td>${job?.title || 'N/A'}</td>
+                            <td>${job?.companyName || 'N/A'}</td>
+                            <td><span class="badge badge-${getInterviewStatusBadge(interview.status)}">${formatInterviewStatus(interview.status)}</span></td>
+                            <td>${interview.scheduledDate ? formatDateTime(interview.scheduledDate) : '-'}</td>
+                            <td>${formatDate(interview.createdAt)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="showInterviewActionModal('${interview.id}')">Actions</button>
+                            </td>
+                        </tr>
+                    `;
+    }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = table;
+}
+
+function getInterviewStatusBadge(status) {
+    const badges = {
+        'PAYMENT_PENDING': 'warning',
+        'READY_TO_SCHEDULE': 'info',
+        'INTERVIEW_SCHEDULED': 'primary',
+        'COMPLETED': 'success',
+        'CANCELLED': 'danger',
+    };
+    return badges[status] || 'info';
+}
+
+function formatInterviewStatus(status) {
+    const labels = {
+        'PAYMENT_PENDING': 'Payment Pending',
+        'READY_TO_SCHEDULE': 'Ready to Schedule',
+        'INTERVIEW_SCHEDULED': 'Scheduled',
+        'COMPLETED': 'Completed',
+        'CANCELLED': 'Cancelled',
+    };
+    return labels[status] || status;
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
+function showInterviewActionModal(interviewId) {
+    const interview = adminState.interviews.find(i => i.id === interviewId);
+    if (!interview) return;
+
+    adminState.currentInterviewId = interviewId;
+
+    const candidate = interview.application?.candidate;
+    const job = interview.application?.job;
+
+    document.getElementById('interviewDetails').innerHTML = `
+        <p><strong>Candidate:</strong> ${candidate?.firstName || ''} ${candidate?.lastName || 'N/A'}</p>
+        <p><strong>Job:</strong> ${job?.title || 'N/A'}</p>
+        <p><strong>Company:</strong> ${job?.companyName || 'N/A'}</p>
+        <p><strong>Current Status:</strong> <span class="badge badge-${getInterviewStatusBadge(interview.status)}">${formatInterviewStatus(interview.status)}</span></p>
+        ${interview.scheduledDate ? `<p><strong>Scheduled:</strong> ${formatDateTime(interview.scheduledDate)}</p>` : ''}
+    `;
+
+    document.getElementById('interviewAction').value = '';
+    document.getElementById('interviewActionNotes').value = '';
+    document.getElementById('interviewActionModal').classList.add('active');
+}
+
+function closeInterviewActionModal() {
+    document.getElementById('interviewActionModal').classList.remove('active');
+    adminState.currentInterviewId = null;
+}
+
+async function submitInterviewAction() {
+    const action = document.getElementById('interviewAction').value;
+    const notes = document.getElementById('interviewActionNotes').value;
+
+    if (!action) {
+        showToast('Please select an action', 'error');
+        return;
+    }
+
+    if (!adminState.currentInterviewId) {
+        showToast('No interview selected', 'error');
+        return;
+    }
+
+    try {
+        let endpoint, body;
+
+        if (action === 'COMPLETED') {
+            endpoint = `${API_BASE_URL}/admin/interviews/${adminState.currentInterviewId}/mark-completed`;
+            body = { notes };
+        } else if (action === 'NO_SHOW_CANDIDATE') {
+            endpoint = `${API_BASE_URL}/admin/interviews/${adminState.currentInterviewId}/mark-no-show`;
+            body = { noShowType: 'CANDIDATE', notes };
+        } else if (action === 'NO_SHOW_HR') {
+            endpoint = `${API_BASE_URL}/admin/interviews/${adminState.currentInterviewId}/mark-no-show`;
+            body = { noShowType: 'HR', notes };
+        } else {
+            endpoint = `${API_BASE_URL}/admin/interviews/${adminState.currentInterviewId}/status`;
+            body = { status: action, reason: notes };
+        }
+
+        const response = await apiCall(endpoint, {
+            method: action === 'COMPLETED' || action.startsWith('NO_SHOW') ? 'POST' : 'PATCH',
+            body: JSON.stringify(body),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message || 'Interview updated', 'success');
+            closeInterviewActionModal();
+            loadInterviews();
+        } else {
+            showToast(data.message || 'Failed to update interview', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating interview:', error);
+        showToast('Failed to update interview', 'error');
+    }
+}
+
+// Setup interview filter
+document.getElementById('interviewStatusFilter')?.addEventListener('change', (e) => {
+    loadInterviewsList(1, e.target.value);
+});
+
+// ==========================================
+// ANALYTICS
+// ==========================================
+
+async function loadAnalytics() {
+    try {
+        await Promise.all([
+            loadEnhancedAnalytics(),
+            loadRevenueReport(),
+        ]);
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
+}
+
+async function loadEnhancedAnalytics() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/analytics`);
+        const data = await response.json();
+
+        if (data) {
+            adminState.analytics = data;
+            updateAnalyticsUI();
+        }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
+}
+
+async function loadRevenueReport() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/revenue-report`);
+        const data = await response.json();
+
+        if (data) {
+            adminState.revenueReport = data;
+            updateRevenueUI();
+        }
+    } catch (error) {
+        console.error('Error loading revenue report:', error);
+    }
+}
+
+function updateAnalyticsUI() {
+    const analytics = adminState.analytics;
+
+    // Users
+    document.getElementById('analyticsCandidates').textContent = analytics.users?.totalCandidates || 0;
+    document.getElementById('analyticsHRs').textContent = analytics.users?.totalHRs || 0;
+    document.getElementById('analyticsActiveUsers').textContent = analytics.users?.activeUsers || 0;
+    document.getElementById('analyticsBlockedUsers').textContent = analytics.users?.blockedUsers || 0;
+
+    // Tests
+    document.getElementById('analyticsTestAttempts').textContent = analytics.tests?.totalAttempts || 0;
+    document.getElementById('analyticsTestsPassed').textContent = analytics.tests?.passed || 0;
+    document.getElementById('analyticsTestsFailed').textContent = analytics.tests?.failed || 0;
+    document.getElementById('analyticsPassRate').textContent = analytics.tests?.passRate || '0%';
+    document.getElementById('statTestPassRate').textContent = analytics.tests?.passRate || '0%';
+
+    // Interviews
+    document.getElementById('statInterviewCompletion').textContent = analytics.interviews?.completionRate || '0%';
+
+    // Payments
+    document.getElementById('analyticsPaymentsTotal').textContent = analytics.payments?.total || 0;
+    document.getElementById('analyticsPaymentsSuccess').textContent = analytics.payments?.successful || 0;
+    document.getElementById('analyticsPaymentsRefunded').textContent = analytics.payments?.refunded || 0;
+}
+
+function updateRevenueUI() {
+    const revenue = adminState.revenueReport;
+    const summary = revenue.summary || {};
+
+    document.getElementById('statNetRevenue').textContent = `₹${formatNumber(summary.netRevenue || 0)}`;
+    document.getElementById('statTotalRefunds').textContent = `₹${formatNumber(summary.totalRefunds || 0)}`;
+}

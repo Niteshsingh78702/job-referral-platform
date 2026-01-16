@@ -215,35 +215,44 @@ let JobService = class JobService {
         if (existingApplication) {
             throw new common_1.BadRequestException('Already applied for this job');
         }
-        let applicationStatus = constants_1.ApplicationStatus.REFERRAL_PENDING;
-        let skillTestStatus = null;
-        if (job.skillBucketId && job.skillBucket) {
-            skillTestStatus = await this.skillBucketService.checkCandidateSkillStatus(candidate.id, job.skillBucketId);
-            if (skillTestStatus.isPassed && skillTestStatus.isValid) {
-                applicationStatus = constants_1.ApplicationStatus.REFERRAL_PENDING;
-            }
-            else if (skillTestStatus.isPassed && !skillTestStatus.isValid) {
-                throw new common_1.BadRequestException(`Your ${skillTestStatus.skillBucketName} verification has expired. Please retake the HR Shortlisting Check.`);
-            }
-            else if (skillTestStatus.isFailed && !skillTestStatus.canRetest) {
-                throw new common_1.BadRequestException(`You can retry the ${skillTestStatus.skillBucketName} HR Shortlisting Check after ${skillTestStatus.retestInHours} hours.`);
+        let applicationStatus = constants_1.ApplicationStatus.APPLIED;
+        let skillCheckResult = null;
+        skillCheckResult = await this.skillBucketService.checkAllRequiredSkillsForJob(candidate.id, job.id);
+        if (skillCheckResult.hasRequirements) {
+            if (skillCheckResult.canApply) {
+                applicationStatus = constants_1.ApplicationStatus.APPLIED;
             }
             else {
-                applicationStatus = constants_1.ApplicationStatus.TEST_PENDING;
+                const missingSkillNames = skillCheckResult.missingTests
+                    .map(t => t.displayName || t.skillBucketName)
+                    .join(', ');
+                const inCooldown = skillCheckResult.missingTests.filter(t => t.isFailed && !t.canRetest);
+                if (inCooldown.length > 0) {
+                    const cooldownInfo = inCooldown
+                        .map(t => `${t.skillBucketName} (${t.retestInHours}h remaining)`)
+                        .join(', ');
+                    throw new common_1.BadRequestException(`You are in cooldown for: ${cooldownInfo}. Please wait before retrying.`);
+                }
+                const expired = skillCheckResult.missingTests.filter(t => t.isPassed && !t.isValid);
+                if (expired.length > 0) {
+                    throw new common_1.BadRequestException(`Your verification has expired for: ${missingSkillNames}. Please retake the HR Shortlisting Check.`);
+                }
+                throw new common_1.BadRequestException(`You need to pass the following skill tests before applying: ${missingSkillNames}`);
             }
         }
         else if (job.testId) {
-            applicationStatus = constants_1.ApplicationStatus.TEST_PENDING;
+            applicationStatus = constants_1.ApplicationStatus.TEST_REQUIRED;
         }
         const application = await this.prisma.$transaction(async (tx) => {
+            const firstPassedTest = skillCheckResult?.passedTests[0];
             const app = await tx.jobApplication.create({
                 data: {
                     candidateId: candidate.id,
                     jobId: job.id,
                     status: applicationStatus,
                     coverLetter: dto.coverLetter,
-                    ...(skillTestStatus?.isPassed && skillTestStatus?.isValid && {
-                        testScore: skillTestStatus.score,
+                    ...(firstPassedTest && {
+                        testScore: firstPassedTest.score,
                         testPassedAt: new Date(),
                     }),
                 },
@@ -256,13 +265,15 @@ let JobService = class JobService {
         });
         return {
             ...application,
-            skillTestInfo: skillTestStatus ? {
-                skillBucketName: skillTestStatus.skillBucketName,
-                displayName: skillTestStatus.displayName,
-                isPassed: skillTestStatus.isPassed,
-                isValid: skillTestStatus.isValid,
-                validTill: skillTestStatus.validTill,
-                validDaysRemaining: skillTestStatus.validDaysRemaining,
+            skillTestInfo: skillCheckResult?.hasRequirements ? {
+                passedSkills: skillCheckResult.passedTests.map(t => ({
+                    skillBucketName: t.skillBucketName,
+                    displayName: t.displayName,
+                    score: t.score,
+                    validTill: t.validTill,
+                    validDaysRemaining: t.validDaysRemaining,
+                })),
+                canApply: skillCheckResult.canApply,
             } : null,
         };
     }

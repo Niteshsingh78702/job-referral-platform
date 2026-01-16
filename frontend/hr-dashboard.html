@@ -851,9 +851,9 @@
                             </select>
                             <select id="appFilterStatus" class="btn btn-outline btn-sm" style="padding: 8px 12px;">
                                 <option value="">All Status</option>
-                                <option value="APPLIED">Applied</option>
-                                <option value="TEST_PASSED">Test Passed</option>
-                                <option value="REFERRAL_CONFIRMED">Referred</option>
+                                <option value="APPLIED">Test Passed / Applied</option>
+                                <option value="INTERVIEW_CONFIRMED">Interview Confirmed</option>
+                                <option value="PAYMENT_SUCCESS">Paid</option>
                             </select>
                         </div>
                     </div>
@@ -887,9 +887,9 @@
                             <select id="interviewFilterStatus" class="btn btn-outline btn-sm"
                                 style="padding: 8px 12px;">
                                 <option value="">All Status</option>
-                                <option value="PAYMENT_PENDING">Awaiting Payment</option>
-                                <option value="READY_TO_SCHEDULE">Ready to Schedule</option>
-                                <option value="INTERVIEW_SCHEDULED">Scheduled</option>
+                                <option value="INTERVIEW_CONFIRMED">Awaiting Payment</option>
+                                <option value="PAYMENT_SUCCESS">Paid / Ready</option>
+                                <option value="INTERVIEW_COMPLETED">Completed</option>
                             </select>
                         </div>
                     </div>
@@ -902,8 +902,8 @@
                                     <th>Mode</th>
                                     <th>Status</th>
                                     <th>Requested</th>
-                                    <th>Scheduled</th>
-                                    <th>Actions</th>
+                                    <th>Date/Time</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="interviewsTableBody">
@@ -921,15 +921,32 @@
         </main>
     </div>
 
-    <!-- Interview Request Modal -->
+    <!-- Confirm Interview Modal (Confirmation-First Flow) -->
     <div class="modal-overlay" id="interviewRequestModal">
         <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 class="modal-title">📅 Request Interview</h3>
+                <h3 class="modal-title">📅 Confirm Interview Scheduled</h3>
                 <button class="modal-close" onclick="closeInterviewRequestModal()">×</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="interviewApplicationId">
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                    <p style="color: #10b981; font-size: 13px; margin: 0;">
+                        ✅ <strong>Confirmation-First Flow:</strong> Enter interview details now. Candidate will pay ₹99
+                        to unlock these details.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmInterviewDate">Interview Date *</label>
+                    <input type="date" id="confirmInterviewDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmInterviewTime">Interview Time *</label>
+                    <input type="text" id="confirmInterviewTime" placeholder="e.g. 10:00 AM IST" required>
+                </div>
                 <div class="form-group">
                     <label for="interviewMode">Interview Mode *</label>
                     <select id="interviewMode" required>
@@ -940,20 +957,19 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="interviewTimeWindow">Preferred Time Window</label>
-                    <input type="text" id="interviewTimeWindow" placeholder="e.g. Next 3 days, Mon-Wed">
+                    <label for="interviewHRNote">Note for Candidate (Optional)</label>
+                    <textarea id="interviewHRNote"
+                        placeholder="e.g. Google Meet link will be shared before the interview..."></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="interviewNotes">Notes for Candidate</label>
-                    <textarea id="interviewNotes" placeholder="Any additional info..."></textarea>
-                </div>
+
                 <p style="font-size: 13px; color: var(--text-dim); margin-top: 16px;">
-                    💡 Candidate will pay ₹99 to confirm. You'll be notified when payment is complete.
+                    💡 Once you confirm, candidate will be notified to pay ₹99 to unlock interview details.
+                    <br><strong>You cannot edit after confirmation</strong> without admin approval.
                 </p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeInterviewRequestModal()">Cancel</button>
-                <button class="btn btn-primary" id="submitInterviewRequestBtn">Send Request</button>
+                <button class="btn btn-primary" id="submitInterviewRequestBtn">Confirm Interview</button>
             </div>
         </div>
     </div>
@@ -1692,20 +1708,26 @@
                 tbody.innerHTML = data.map(interview => {
                     const candidate = interview.application.candidate;
                     const job = interview.application.job;
+                    // Updated status colors for confirmation-first flow
                     const statusColors = {
-                        'PAYMENT_PENDING': 'pending',
-                        'READY_TO_SCHEDULE': 'draft',
-                        'INTERVIEW_SCHEDULED': 'active',
-                        'COMPLETED': 'active'
+                        'INTERVIEW_CONFIRMED': 'pending',
+                        'PAYMENT_SUCCESS': 'active',
+                        'INTERVIEW_COMPLETED': 'active',
+                        'CANDIDATE_NO_SHOW': 'closed',
+                        'HR_NO_SHOW': 'closed',
+                        'CANCELLED': 'closed'
                     };
 
-                    let actionBtn = '';
-                    if (interview.status === 'READY_TO_SCHEDULE') {
-                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openScheduleModal('${interview.id}')">📆 Schedule</button>`;
-                    } else if (interview.status === 'INTERVIEW_SCHEDULED') {
-                        actionBtn = `<span class="badge badge-active">✅ Scheduled</span>`;
+                    // Updated status badges for confirmation-first flow
+                    let statusBadge = '';
+                    if (interview.status === 'INTERVIEW_CONFIRMED') {
+                        statusBadge = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
+                    } else if (interview.status === 'PAYMENT_SUCCESS') {
+                        statusBadge = `<span class="badge badge-active">✅ Paid - Details Unlocked</span>`;
+                    } else if (interview.status === 'INTERVIEW_COMPLETED') {
+                        statusBadge = `<span class="badge badge-active">✅ Completed</span>`;
                     } else {
-                        actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
+                        statusBadge = `<span class="badge badge-${statusColors[interview.status] || 'draft'}">${interview.status.replace(/_/g, ' ')}</span>`;
                     }
 
                     return `
@@ -1718,10 +1740,10 @@
                             <td>
                                 <span class="badge">${interview.mode === 'VIDEO' ? '📹' : interview.mode === 'CALL' ? '📞' : '🏢'} ${interview.mode}</span>
                             </td>
-                            <td><span class="badge badge-${statusColors[interview.status] || ''}">${interview.status.replace(/_/g, ' ')}</span></td>
-                            <td>${new Date(interview.requestedAt).toLocaleDateString()}</td>
-                            <td>${interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString() + ' ' + interview.scheduledTime : '-'}</td>
-                            <td>${actionBtn}</td>
+                            <td>${statusBadge}</td>
+                            <td>${new Date(interview.requestedAt || interview.createdAt).toLocaleDateString()}</td>
+                            <td>${interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString() + ' ' + (interview.scheduledTime || '') : '-'}</td>
+                            <td>${statusBadge}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1730,50 +1752,69 @@
             }
         }
 
-        // Interview Request Modal Functions
+        // Interview Confirmation Modal Functions (Confirmation-First Flow)
         function openInterviewRequestModal(applicationId) {
             document.getElementById('interviewApplicationId').value = applicationId;
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('confirmInterviewDate').min = today;
             document.getElementById('interviewRequestModal').classList.add('show');
         }
 
         function closeInterviewRequestModal() {
             document.getElementById('interviewRequestModal').classList.remove('show');
+            document.getElementById('confirmInterviewDate').value = '';
+            document.getElementById('confirmInterviewTime').value = '';
             document.getElementById('interviewMode').value = '';
-            document.getElementById('interviewTimeWindow').value = '';
-            document.getElementById('interviewNotes').value = '';
+            document.getElementById('interviewHRNote').value = '';
         }
 
         document.getElementById('submitInterviewRequestBtn').addEventListener('click', async () => {
             const btn = document.getElementById('submitInterviewRequestBtn');
             const applicationId = document.getElementById('interviewApplicationId').value;
+            const scheduledDate = document.getElementById('confirmInterviewDate').value;
+            const scheduledTime = document.getElementById('confirmInterviewTime').value;
             const mode = document.getElementById('interviewMode').value;
+            const hrNote = document.getElementById('interviewHRNote').value;
 
+            // Validation
+            if (!scheduledDate) {
+                showToast('Please select interview date', 'error');
+                return;
+            }
+            if (!scheduledTime) {
+                showToast('Please enter interview time', 'error');
+                return;
+            }
             if (!mode) {
                 showToast('Please select interview mode', 'error');
                 return;
             }
 
             btn.disabled = true;
-            btn.innerHTML = 'Sending...';
+            btn.innerHTML = 'Confirming...';
 
             try {
-                await api(`/interviews/request/${applicationId}`, {
+                // Call new confirmInterview API endpoint
+                await api(`/interviews/confirm/${applicationId}`, {
                     method: 'POST',
                     body: JSON.stringify({
+                        scheduledDate,
+                        scheduledTime,
                         mode,
-                        preferredTimeWindow: document.getElementById('interviewTimeWindow').value,
-                        hrNotes: document.getElementById('interviewNotes').value,
+                        hrNote
                     }),
                 });
 
-                showToast('Interview request sent! Candidate will be notified.', 'success');
+                showToast('Interview confirmed! Candidate will be notified to pay ₹99 to unlock details.', 'success');
                 closeInterviewRequestModal();
                 loadApplications(); // Refresh applications table
+                loadInterviews(); // Also refresh interviews table
             } catch (error) {
                 showToast(error.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Send Request';
+                btn.innerHTML = 'Confirm Interview';
             }
         });
 

@@ -200,7 +200,7 @@ export class TestService {
             throw new ForbiddenException('Not authorized to access this application');
         }
 
-        if (application.status !== ApplicationStatus.TEST_PENDING) {
+        if (application.status !== ApplicationStatus.TEST_REQUIRED) {
             throw new BadRequestException('Test not available for this application');
         }
 
@@ -546,7 +546,7 @@ export class TestService {
 
         // Update application status
         const newStatus = isPassed
-            ? ApplicationStatus.TEST_PASSED
+            ? ApplicationStatus.APPLIED
             : ApplicationStatus.TEST_FAILED;
 
         await this.prisma.jobApplication.update({

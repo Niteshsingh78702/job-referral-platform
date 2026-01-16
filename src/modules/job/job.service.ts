@@ -271,41 +271,65 @@ export class JobService {
             throw new BadRequestException('Already applied for this job');
         }
 
-        // Skill-based test logic
-        let applicationStatus = ApplicationStatus.REFERRAL_PENDING;
-        let skillTestStatus: SkillTestStatusDto | null = null;
+        // Skill-based test logic - now supports composite requirements (Full Stack etc.)
+        let applicationStatus = ApplicationStatus.APPLIED;
+        let skillCheckResult: {
+            canApply: boolean;
+            missingTests: SkillTestStatusDto[];
+            passedTests: SkillTestStatusDto[];
+            hasRequirements: boolean;
+        } | null = null;
 
-        if (job.skillBucketId && job.skillBucket) {
-            // Check candidate's skill test status
-            skillTestStatus = await this.skillBucketService.checkCandidateSkillStatus(
-                candidate.id,
-                job.skillBucketId,
-            );
+        // Check ALL required skills for this job (supports multiple skill requirements)
+        skillCheckResult = await this.skillBucketService.checkAllRequiredSkillsForJob(
+            candidate.id,
+            job.id,
+        );
 
-            if (skillTestStatus.isPassed && skillTestStatus.isValid) {
-                // Valid pass - allow instant application without test
-                applicationStatus = ApplicationStatus.REFERRAL_PENDING;
-            } else if (skillTestStatus.isPassed && !skillTestStatus.isValid) {
-                // Expired pass - need to retest
-                throw new BadRequestException(
-                    `Your ${skillTestStatus.skillBucketName} verification has expired. Please retake the HR Shortlisting Check.`
-                );
-            } else if (skillTestStatus.isFailed && !skillTestStatus.canRetest) {
-                // Failed and in cooldown
-                throw new BadRequestException(
-                    `You can retry the ${skillTestStatus.skillBucketName} HR Shortlisting Check after ${skillTestStatus.retestInHours} hours.`
-                );
+        if (skillCheckResult.hasRequirements) {
+            if (skillCheckResult.canApply) {
+                // All required skills are passed and valid - allow instant application
+                applicationStatus = ApplicationStatus.APPLIED;
             } else {
-                // Never taken or can retest - need to take the test
-                applicationStatus = ApplicationStatus.TEST_PENDING;
+                // Some skills are missing - show detailed error
+                const missingSkillNames = skillCheckResult.missingTests
+                    .map(t => t.displayName || t.skillBucketName)
+                    .join(', ');
+
+                // Check if any are in cooldown (failed recently)
+                const inCooldown = skillCheckResult.missingTests.filter(t => t.isFailed && !t.canRetest);
+                if (inCooldown.length > 0) {
+                    const cooldownInfo = inCooldown
+                        .map(t => `${t.skillBucketName} (${t.retestInHours}h remaining)`)
+                        .join(', ');
+                    throw new BadRequestException(
+                        `You are in cooldown for: ${cooldownInfo}. Please wait before retrying.`
+                    );
+                }
+
+                // Check if any are expired
+                const expired = skillCheckResult.missingTests.filter(t => t.isPassed && !t.isValid);
+                if (expired.length > 0) {
+                    throw new BadRequestException(
+                        `Your verification has expired for: ${missingSkillNames}. Please retake the HR Shortlisting Check.`
+                    );
+                }
+
+                // Need to take tests for missing skills
+                throw new BadRequestException(
+                    `You need to pass the following skill tests before applying: ${missingSkillNames}`
+                );
             }
         } else if (job.testId) {
             // Fallback to old per-job test logic (for backwards compatibility)
-            applicationStatus = ApplicationStatus.TEST_PENDING;
+            applicationStatus = ApplicationStatus.TEST_REQUIRED;
         }
 
         // Create application
         const application = await this.prisma.$transaction(async (tx) => {
+            // Get the first passed test score if any (for backward compatibility)
+            const firstPassedTest = skillCheckResult?.passedTests[0];
+
             const app = await tx.jobApplication.create({
                 data: {
                     candidateId: candidate.id,
@@ -313,8 +337,8 @@ export class JobService {
                     status: applicationStatus,
                     coverLetter: dto.coverLetter,
                     // If valid skill pass, mark test as passed
-                    ...(skillTestStatus?.isPassed && skillTestStatus?.isValid && {
-                        testScore: skillTestStatus.score,
+                    ...(firstPassedTest && {
+                        testScore: firstPassedTest.score,
                         testPassedAt: new Date(),
                     }),
                 },
@@ -332,13 +356,15 @@ export class JobService {
         // Return with skill status info
         return {
             ...application,
-            skillTestInfo: skillTestStatus ? {
-                skillBucketName: skillTestStatus.skillBucketName,
-                displayName: skillTestStatus.displayName,
-                isPassed: skillTestStatus.isPassed,
-                isValid: skillTestStatus.isValid,
-                validTill: skillTestStatus.validTill,
-                validDaysRemaining: skillTestStatus.validDaysRemaining,
+            skillTestInfo: skillCheckResult?.hasRequirements ? {
+                passedSkills: skillCheckResult.passedTests.map(t => ({
+                    skillBucketName: t.skillBucketName,
+                    displayName: t.displayName,
+                    score: t.score,
+                    validTill: t.validTill,
+                    validDaysRemaining: t.validDaysRemaining,
+                })),
+                canApply: skillCheckResult.canApply,
             } : null,
         };
     }

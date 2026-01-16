@@ -37,17 +37,17 @@ enum JobStatus {
 }
 
 enum ApplicationStatus {
-  APPLIED
-  TEST_PENDING
-  TEST_PASSED
-  TEST_FAILED
-  REFERRAL_PENDING
-  REFERRAL_CONFIRMED
-  INTERVIEW_REQUESTED
-  PAYMENT_PENDING
-  CONTACT_UNLOCKED
-  CLOSED
-  EXPIRED
+  TEST_REQUIRED           // Skill test not yet passed
+  TEST_IN_PROGRESS        // Currently taking test
+  TEST_FAILED             // Test failed - retry after 24hrs
+  APPLIED                 // Test passed, application submitted
+  INTERVIEW_CONFIRMED     // HR has confirmed interview with date/time/mode
+  PAYMENT_PENDING         // Waiting for candidate to pay ₹99
+  PAYMENT_SUCCESS         // Payment done, details unlocked
+  INTERVIEW_COMPLETED     // Interview was conducted
+  CANDIDATE_NO_SHOW       // Candidate missed interview
+  HR_NO_SHOW              // HR missed/cancelled interview
+  REJECTED                // Application rejected
 }
 
 enum TestSessionStatus {
@@ -143,10 +143,12 @@ enum TestType {
 }
 
 enum InterviewStatus {
-  PAYMENT_PENDING       // HR requested, waiting for candidate payment
-  READY_TO_SCHEDULE     // Candidate paid, HR can now schedule
-  INTERVIEW_SCHEDULED   // HR has set date/time/link
-  COMPLETED             // Interview was conducted
+  INTERVIEW_CONFIRMED   // HR has set date/time/mode (awaiting payment)
+  PAYMENT_PENDING       // Alias - waiting for candidate payment
+  PAYMENT_SUCCESS       // Candidate paid, details unlocked
+  INTERVIEW_COMPLETED   // Interview was conducted
+  CANDIDATE_NO_SHOW     // Candidate missed interview
+  HR_NO_SHOW            // HR missed/cancelled interview  
   CANCELLED             // Interview was cancelled
 }
 
@@ -251,6 +253,9 @@ model SkillBucket {
   
   jobs     Job[]
   attempts SkillTestAttempt[]
+  
+  // Relation for jobs requiring this skill (composite requirements)
+  jobRequirements JobRequiredSkillBucket[]
 
   @@index([code])
   @@index([isActive])
@@ -286,6 +291,31 @@ model SkillTestAttempt {
   @@index([skillBucketId])
   @@index([candidateId, skillBucketId])
   @@index([validTill])
+}
+
+// ===========================================
+// JOB REQUIRED SKILL BUCKETS (Composite Skill Requirements)
+// ===========================================
+
+// Allows jobs to require multiple skill buckets
+// Example: Full Stack job requires both JAVA_BACKEND_0_3 and REACT_FRONTEND_0_3
+model JobRequiredSkillBucket {
+  id            String      @id @default(uuid())
+  
+  jobId         String
+  job           Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  skillBucketId String
+  skillBucket   SkillBucket @relation(fields: [skillBucketId], references: [id])
+  
+  // Order for display purposes
+  displayOrder  Int         @default(0)
+  
+  createdAt     DateTime    @default(now())
+  
+  @@unique([jobId, skillBucketId])
+  @@index([jobId])
+  @@index([skillBucketId])
 }
 
 // ===========================================
@@ -618,6 +648,9 @@ model Job {
   // Relations
   skills       JobSkill[]
   applications JobApplication[]
+  
+  // Multiple skill bucket requirements (for Full Stack etc.)
+  requiredSkillBuckets JobRequiredSkillBucket[]
 
   @@index([slug])
   @@index([status])

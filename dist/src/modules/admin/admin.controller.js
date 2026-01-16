@@ -82,6 +82,54 @@ let AdminController = class AdminController {
     async getAuditLogs(page, limit, action) {
         return this.adminService.getAuditLogs(page, limit, action);
     }
+    async getInterviews(page, limit, status) {
+        return this.adminService.getAllInterviews(page, limit, status);
+    }
+    async getInterviewStats() {
+        return this.adminService.getInterviewStats();
+    }
+    async updateInterviewStatus(interviewId, newStatus, reason, adminId) {
+        return this.adminService.updateInterviewStatus(interviewId, newStatus, adminId, reason);
+    }
+    async markInterviewCompleted(interviewId, notes, adminId) {
+        return this.adminService.markInterviewCompleted(interviewId, adminId, notes);
+    }
+    async markInterviewNoShow(interviewId, noShowType, notes, adminId) {
+        return this.adminService.markInterviewNoShow(interviewId, adminId, noShowType, notes);
+    }
+    async getSkillBuckets(includeInactive) {
+        return this.adminService.getAllSkillBuckets(includeInactive === 'true');
+    }
+    async createSkillBucket(data, adminId) {
+        return this.adminService.createSkillBucket(data, adminId);
+    }
+    async updateSkillBucket(id, data, adminId) {
+        return this.adminService.updateSkillBucket(id, data, adminId);
+    }
+    async deleteSkillBucket(id, adminId) {
+        return this.adminService.deleteSkillBucket(id, adminId);
+    }
+    async getJobSkillRequirements(jobId) {
+        return this.adminService.getJobSkillRequirements(jobId);
+    }
+    async addSkillRequirementToJob(jobId, skillBucketId, adminId) {
+        return this.adminService.addSkillRequirementToJob(jobId, skillBucketId, adminId);
+    }
+    async removeSkillRequirementFromJob(jobId, skillBucketId, adminId) {
+        return this.adminService.removeSkillRequirementFromJob(jobId, skillBucketId, adminId);
+    }
+    async updatePaymentStatus(paymentId, newStatus, reason, adminId) {
+        return this.adminService.updatePaymentStatus(paymentId, newStatus, adminId, reason);
+    }
+    async issueManualRefund(paymentId, reason, adminId) {
+        return this.adminService.issueManualRefund(paymentId, adminId, reason);
+    }
+    async getRevenueReport(startDate, endDate) {
+        return this.adminService.getRevenueReport(startDate ? new Date(startDate) : undefined, endDate ? new Date(endDate) : undefined);
+    }
+    async getEnhancedAnalytics() {
+        return this.adminService.getEnhancedAnalytics();
+    }
 };
 exports.AdminController = AdminController;
 __decorate([
@@ -248,6 +296,140 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getAuditLogs", null);
+__decorate([
+    (0, common_1.Get)('interviews'),
+    __param(0, (0, common_1.Query)('page')),
+    __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getInterviews", null);
+__decorate([
+    (0, common_1.Get)('interviews/stats'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getInterviewStats", null);
+__decorate([
+    (0, common_1.Patch)('interviews/:id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('status')),
+    __param(2, (0, common_1.Body)('reason')),
+    __param(3, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "updateInterviewStatus", null);
+__decorate([
+    (0, common_1.Post)('interviews/:id/mark-completed'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('notes')),
+    __param(2, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "markInterviewCompleted", null);
+__decorate([
+    (0, common_1.Post)('interviews/:id/mark-no-show'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('noShowType')),
+    __param(2, (0, common_1.Body)('notes')),
+    __param(3, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "markInterviewNoShow", null);
+__decorate([
+    (0, common_1.Get)('skill-buckets'),
+    __param(0, (0, common_1.Query)('includeInactive')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getSkillBuckets", null);
+__decorate([
+    (0, common_1.Post)('skill-buckets'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "createSkillBucket", null);
+__decorate([
+    (0, common_1.Patch)('skill-buckets/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "updateSkillBucket", null);
+__decorate([
+    (0, common_1.Delete)('skill-buckets/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "deleteSkillBucket", null);
+__decorate([
+    (0, common_1.Get)('jobs/:jobId/skill-requirements'),
+    __param(0, (0, common_1.Param)('jobId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getJobSkillRequirements", null);
+__decorate([
+    (0, common_1.Post)('jobs/:jobId/skill-requirements'),
+    __param(0, (0, common_1.Param)('jobId')),
+    __param(1, (0, common_1.Body)('skillBucketId')),
+    __param(2, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "addSkillRequirementToJob", null);
+__decorate([
+    (0, common_1.Delete)('jobs/:jobId/skill-requirements/:skillBucketId'),
+    __param(0, (0, common_1.Param)('jobId')),
+    __param(1, (0, common_1.Param)('skillBucketId')),
+    __param(2, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "removeSkillRequirementFromJob", null);
+__decorate([
+    (0, common_1.Patch)('payments/:id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('status')),
+    __param(2, (0, common_1.Body)('reason')),
+    __param(3, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "updatePaymentStatus", null);
+__decorate([
+    (0, common_1.Post)('payments/:id/manual-refund'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('reason')),
+    __param(2, (0, decorators_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "issueManualRefund", null);
+__decorate([
+    (0, common_1.Get)('revenue-report'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getRevenueReport", null);
+__decorate([
+    (0, common_1.Get)('analytics'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getEnhancedAnalytics", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)('admin'),
     (0, decorators_1.Roles)(constants_1.UserRole.ADMIN),

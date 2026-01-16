@@ -191,4 +191,164 @@ export class AdminController {
     ) {
         return this.adminService.getAuditLogs(page, limit, action);
     }
+
+    // ===========================================
+    // INTERVIEW MANAGEMENT
+    // ===========================================
+
+    @Get('interviews')
+    async getInterviews(
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('status') status?: string,
+    ) {
+        return this.adminService.getAllInterviews(page, limit, status);
+    }
+
+    @Get('interviews/stats')
+    async getInterviewStats() {
+        return this.adminService.getInterviewStats();
+    }
+
+    @Patch('interviews/:id/status')
+    async updateInterviewStatus(
+        @Param('id') interviewId: string,
+        @Body('status') newStatus: string,
+        @Body('reason') reason: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.updateInterviewStatus(interviewId, newStatus, adminId, reason);
+    }
+
+    @Post('interviews/:id/mark-completed')
+    async markInterviewCompleted(
+        @Param('id') interviewId: string,
+        @Body('notes') notes: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.markInterviewCompleted(interviewId, adminId, notes);
+    }
+
+    @Post('interviews/:id/mark-no-show')
+    async markInterviewNoShow(
+        @Param('id') interviewId: string,
+        @Body('noShowType') noShowType: 'CANDIDATE' | 'HR',
+        @Body('notes') notes: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.markInterviewNoShow(interviewId, adminId, noShowType, notes);
+    }
+
+    // ===========================================
+    // SKILL BUCKET MANAGEMENT
+    // ===========================================
+
+    @Get('skill-buckets')
+    async getSkillBuckets(@Query('includeInactive') includeInactive?: string) {
+        return this.adminService.getAllSkillBuckets(includeInactive === 'true');
+    }
+
+    @Post('skill-buckets')
+    async createSkillBucket(
+        @Body() data: {
+            code: string;
+            name: string;
+            description?: string;
+            displayName?: string;
+            experienceMin?: number;
+            experienceMax?: number;
+            testId?: string;
+            testTemplateId?: string;
+        },
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.createSkillBucket(data, adminId);
+    }
+
+    @Patch('skill-buckets/:id')
+    async updateSkillBucket(
+        @Param('id') id: string,
+        @Body() data: any,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.updateSkillBucket(id, data, adminId);
+    }
+
+    @Delete('skill-buckets/:id')
+    async deleteSkillBucket(
+        @Param('id') id: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.deleteSkillBucket(id, adminId);
+    }
+
+    // ===========================================
+    // JOB SKILL REQUIREMENTS
+    // ===========================================
+
+    @Get('jobs/:jobId/skill-requirements')
+    async getJobSkillRequirements(@Param('jobId') jobId: string) {
+        return this.adminService.getJobSkillRequirements(jobId);
+    }
+
+    @Post('jobs/:jobId/skill-requirements')
+    async addSkillRequirementToJob(
+        @Param('jobId') jobId: string,
+        @Body('skillBucketId') skillBucketId: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.addSkillRequirementToJob(jobId, skillBucketId, adminId);
+    }
+
+    @Delete('jobs/:jobId/skill-requirements/:skillBucketId')
+    async removeSkillRequirementFromJob(
+        @Param('jobId') jobId: string,
+        @Param('skillBucketId') skillBucketId: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.removeSkillRequirementFromJob(jobId, skillBucketId, adminId);
+    }
+
+    // ===========================================
+    // PAYMENT CONTROL
+    // ===========================================
+
+    @Patch('payments/:id/status')
+    async updatePaymentStatus(
+        @Param('id') paymentId: string,
+        @Body('status') newStatus: PaymentStatus,
+        @Body('reason') reason: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.updatePaymentStatus(paymentId, newStatus, adminId, reason);
+    }
+
+    @Post('payments/:id/manual-refund')
+    async issueManualRefund(
+        @Param('id') paymentId: string,
+        @Body('reason') reason: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.issueManualRefund(paymentId, adminId, reason);
+    }
+
+    // ===========================================
+    // REVENUE & ANALYTICS
+    // ===========================================
+
+    @Get('revenue-report')
+    async getRevenueReport(
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string,
+    ) {
+        return this.adminService.getRevenueReport(
+            startDate ? new Date(startDate) : undefined,
+            endDate ? new Date(endDate) : undefined,
+        );
+    }
+
+    @Get('analytics')
+    async getEnhancedAnalytics() {
+        return this.adminService.getEnhancedAnalytics();
+    }
 }

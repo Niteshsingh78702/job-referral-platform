@@ -360,7 +360,7 @@ let EmployeeService = class EmployeeService {
             });
             await tx.jobApplication.update({
                 where: { id: referral.applicationId },
-                data: { status: constants_1.ApplicationStatus.REFERRAL_CONFIRMED },
+                data: { status: constants_1.ApplicationStatus.APPLIED },
             });
             const earning = await tx.employeeEarning.create({
                 data: {

@@ -71,10 +71,12 @@ export class PaymentService {
             throw new ForbiddenException('Not authorized');
         }
 
-        // Verify eligibility
-        if (application.status !== ApplicationStatus.REFERRAL_CONFIRMED) {
+        // Verify eligibility - now uses INTERVIEW_CONFIRMED for interview payments
+        // or APPLIED for old referral payments
+        if (application.status !== ApplicationStatus.APPLIED &&
+            application.status !== ApplicationStatus.INTERVIEW_CONFIRMED) {
             throw new BadRequestException(
-                'Payment not available. Referral must be confirmed first.',
+                'Payment not available for this application status.',
             );
         }
 
@@ -273,12 +275,12 @@ export class PaymentService {
                 where: { applicationId: payment.applicationId },
             });
 
-            if (interview && interview.status === 'PAYMENT_PENDING') {
+            if (interview && interview.status === 'INTERVIEW_CONFIRMED') {
                 // This is an interview payment - update interview status
                 await tx.interview.update({
                     where: { id: interview.id },
                     data: {
-                        status: 'READY_TO_SCHEDULE' as any,
+                        status: 'PAYMENT_SUCCESS' as any,
                         paymentStatus: PaymentStatus.SUCCESS as any,
                         paidAt: new Date(),
                     },
@@ -286,11 +288,11 @@ export class PaymentService {
 
                 // Note: Interview payment confirmation email will be sent separately
             } else {
-                // This is a referral payment - existing logic
+                // This is a referral/legacy payment - update to PAYMENT_SUCCESS
                 await tx.jobApplication.update({
                     where: { id: payment.applicationId },
                     data: {
-                        status: ApplicationStatus.CONTACT_UNLOCKED,
+                        status: ApplicationStatus.PAYMENT_SUCCESS as any,
                         contactUnlockedAt: new Date(),
                     },
                 });
@@ -425,13 +427,13 @@ export class PaymentService {
             throw new BadRequestException('Refund already requested');
         }
 
-        // Check if contact was shared
+        // Check if interview details were already unlocked
         if (
-            payment.application.status === ApplicationStatus.CONTACT_UNLOCKED ||
+            payment.application.status === ApplicationStatus.PAYMENT_SUCCESS ||
             payment.application.referral?.status === ReferralStatus.CONTACTED
         ) {
             throw new BadRequestException(
-                'Refund not available after contact has been shared',
+                'Refund not available after details have been shared',
             );
         }
 

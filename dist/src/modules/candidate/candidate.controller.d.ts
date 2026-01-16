@@ -18,9 +18,9 @@ export declare class CandidateController {
         skills: {
             id: string;
             name: string;
+            candidateId: string;
             level: number;
             yearsOfExp: number | null;
-            candidateId: string;
         }[];
         experiences: {
             id: string;
@@ -28,22 +28,22 @@ export declare class CandidateController {
             createdAt: Date;
             description: string | null;
             location: string | null;
+            candidateId: string;
             company: string;
             startDate: Date;
             endDate: Date | null;
             isCurrent: boolean;
-            candidateId: string;
         }[];
         educations: {
             id: string;
             createdAt: Date;
+            candidateId: string;
             institution: string;
             degree: string;
             field: string | null;
             grade: string | null;
             startYear: number;
             endYear: number | null;
-            candidateId: string;
         }[];
     } & {
         id: string;
@@ -70,9 +70,9 @@ export declare class CandidateController {
         skills: {
             id: string;
             name: string;
+            candidateId: string;
             level: number;
             yearsOfExp: number | null;
-            candidateId: string;
         }[];
         experiences: {
             id: string;
@@ -80,22 +80,22 @@ export declare class CandidateController {
             createdAt: Date;
             description: string | null;
             location: string | null;
+            candidateId: string;
             company: string;
             startDate: Date;
             endDate: Date | null;
             isCurrent: boolean;
-            candidateId: string;
         }[];
         educations: {
             id: string;
             createdAt: Date;
+            candidateId: string;
             institution: string;
             degree: string;
             field: string | null;
             grade: string | null;
             startYear: number;
             endYear: number | null;
-            candidateId: string;
         }[];
     } & {
         id: string;
@@ -133,9 +133,9 @@ export declare class CandidateController {
             skills: {
                 id: string;
                 name: string;
+                candidateId: string;
                 level: number;
                 yearsOfExp: number | null;
-                candidateId: string;
             }[];
             experiences: {
                 id: string;
@@ -143,22 +143,22 @@ export declare class CandidateController {
                 createdAt: Date;
                 description: string | null;
                 location: string | null;
+                candidateId: string;
                 company: string;
                 startDate: Date;
                 endDate: Date | null;
                 isCurrent: boolean;
-                candidateId: string;
             }[];
             educations: {
                 id: string;
                 createdAt: Date;
+                candidateId: string;
                 institution: string;
                 degree: string;
                 field: string | null;
                 grade: string | null;
                 startYear: number;
                 endYear: number | null;
-                candidateId: string;
             }[];
         } & {
             id: string;
@@ -185,16 +185,16 @@ export declare class CandidateController {
     addSkill(userId: string, dto: AddSkillDto): Promise<{
         id: string;
         name: string;
+        candidateId: string;
         level: number;
         yearsOfExp: number | null;
-        candidateId: string;
     }>;
     removeSkill(userId: string, skillId: string): Promise<{
         id: string;
         name: string;
+        candidateId: string;
         level: number;
         yearsOfExp: number | null;
-        candidateId: string;
     }>;
     addExperience(userId: string, dto: AddExperienceDto): Promise<{
         id: string;
@@ -202,11 +202,11 @@ export declare class CandidateController {
         createdAt: Date;
         description: string | null;
         location: string | null;
+        candidateId: string;
         company: string;
         startDate: Date;
         endDate: Date | null;
         isCurrent: boolean;
-        candidateId: string;
     }>;
     removeExperience(userId: string, experienceId: string): Promise<{
         id: string;
@@ -214,33 +214,33 @@ export declare class CandidateController {
         createdAt: Date;
         description: string | null;
         location: string | null;
+        candidateId: string;
         company: string;
         startDate: Date;
         endDate: Date | null;
         isCurrent: boolean;
-        candidateId: string;
     }>;
     addEducation(userId: string, dto: AddEducationDto): Promise<{
         id: string;
         createdAt: Date;
+        candidateId: string;
         institution: string;
         degree: string;
         field: string | null;
         grade: string | null;
         startYear: number;
         endYear: number | null;
-        candidateId: string;
     }>;
     removeEducation(userId: string, educationId: string): Promise<{
         id: string;
         createdAt: Date;
+        candidateId: string;
         institution: string;
         degree: string;
         field: string | null;
         grade: string | null;
         startYear: number;
         endYear: number | null;
-        candidateId: string;
     }>;
     getApplications(userId: string, status?: ApplicationStatus): Promise<({
         job: {

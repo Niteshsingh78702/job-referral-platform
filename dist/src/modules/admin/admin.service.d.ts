@@ -428,4 +428,274 @@ export declare class AdminService {
             totalPages: number;
         };
     }>;
+    getAllInterviews(page?: number, limit?: number, status?: string): Promise<{
+        data: ({
+            application: {
+                candidate: {
+                    firstName: string;
+                    lastName: string;
+                };
+                job: {
+                    companyName: string;
+                    title: string;
+                };
+            } & {
+                id: string;
+                status: import("@prisma/client").$Enums.ApplicationStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                jobId: string;
+                candidateId: string;
+                coverLetter: string | null;
+                testScore: number | null;
+                testPassedAt: Date | null;
+                contactUnlockedAt: Date | null;
+            };
+        } & {
+            id: string;
+            status: import("@prisma/client").$Enums.InterviewStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            mode: import("@prisma/client").$Enums.InterviewMode;
+            applicationId: string;
+            paidAt: Date | null;
+            preferredTimeWindow: string | null;
+            hrNotes: string | null;
+            paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+            scheduledDate: Date | null;
+            scheduledTime: string | null;
+            interviewLink: string | null;
+            callDetails: string | null;
+            requestedAt: Date;
+            scheduledAt: Date | null;
+            completedAt: Date | null;
+        })[];
+        meta: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }>;
+    getInterviewStats(): Promise<{
+        total: number;
+        byStatus: {
+            interviewConfirmed: number;
+            paymentSuccess: number;
+            completed: number;
+            candidateNoShow: number;
+            hrNoShow: number;
+            cancelled: number;
+        };
+        noShowRate: string;
+        completionRate: string;
+    }>;
+    updateInterviewStatus(interviewId: string, newStatus: string, adminId: string, reason?: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    markInterviewCompleted(interviewId: string, adminId: string, notes?: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    markInterviewNoShow(interviewId: string, adminId: string, noShowType: 'CANDIDATE' | 'HR', notes?: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    getAllSkillBuckets(includeInactive?: boolean): Promise<({
+        test: {
+            id: string;
+            title: string;
+            duration: number;
+            totalQuestions: number;
+        } | null;
+        _count: {
+            jobs: number;
+            attempts: number;
+            jobRequirements: number;
+        };
+        testTemplate: {
+            id: string;
+            name: string;
+            duration: number;
+            passingCriteria: number;
+        } | null;
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        description: string | null;
+        isActive: boolean;
+        testId: string | null;
+        experienceMin: number;
+        experienceMax: number;
+        testTemplateId: string | null;
+        code: string;
+        displayName: string | null;
+    })[]>;
+    createSkillBucket(data: {
+        code: string;
+        name: string;
+        description?: string;
+        displayName?: string;
+        experienceMin?: number;
+        experienceMax?: number;
+        testId?: string;
+        testTemplateId?: string;
+    }, adminId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            isActive: boolean;
+            testId: string | null;
+            experienceMin: number;
+            experienceMax: number;
+            testTemplateId: string | null;
+            code: string;
+            displayName: string | null;
+        };
+    }>;
+    updateSkillBucket(id: string, data: any, adminId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            isActive: boolean;
+            testId: string | null;
+            experienceMin: number;
+            experienceMax: number;
+            testTemplateId: string | null;
+            code: string;
+            displayName: string | null;
+        };
+    }>;
+    deleteSkillBucket(id: string, adminId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    addSkillRequirementToJob(jobId: string, skillBucketId: string, adminId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            skillBucket: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                isActive: boolean;
+                testId: string | null;
+                experienceMin: number;
+                experienceMax: number;
+                testTemplateId: string | null;
+                code: string;
+                displayName: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            skillBucketId: string;
+            jobId: string;
+            displayOrder: number;
+        };
+    }>;
+    removeSkillRequirementFromJob(jobId: string, skillBucketId: string, adminId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    getJobSkillRequirements(jobId: string): Promise<{
+        jobId: string;
+        jobTitle: string;
+        legacySkillBucket: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            isActive: boolean;
+            testId: string | null;
+            experienceMin: number;
+            experienceMax: number;
+            testTemplateId: string | null;
+            code: string;
+            displayName: string | null;
+        } | null;
+        compositeRequirements: ({
+            skillBucket: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                isActive: boolean;
+                testId: string | null;
+                experienceMin: number;
+                experienceMax: number;
+                testTemplateId: string | null;
+                code: string;
+                displayName: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            skillBucketId: string;
+            jobId: string;
+            displayOrder: number;
+        })[];
+    }>;
+    updatePaymentStatus(paymentId: string, newStatus: PaymentStatus, adminId: string, reason?: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    issueManualRefund(paymentId: string, adminId: string, reason: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    getRevenueReport(startDate?: Date, endDate?: Date): Promise<{
+        summary: {
+            totalRevenue: number;
+            totalRefunds: number;
+            netRevenue: number;
+            transactionCount: number;
+        };
+        dailyBreakdown: {
+            date: string;
+            amount: number;
+        }[];
+    }>;
+    getEnhancedAnalytics(): Promise<{
+        users: {
+            totalCandidates: number;
+            totalHRs: number;
+            activeUsers: number;
+            blockedUsers: number;
+        };
+        tests: {
+            totalAttempts: number;
+            passed: number;
+            failed: number;
+            passRate: string;
+        };
+        interviews: {
+            total: number;
+            completed: number;
+            scheduled: number;
+            completionRate: string;
+        };
+        payments: {
+            total: number;
+            successful: number;
+            refunded: number;
+        };
+    }>;
 }

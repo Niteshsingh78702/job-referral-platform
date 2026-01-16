@@ -167,7 +167,7 @@ let TestService = TestService_1 = class TestService {
         if (application.candidate.userId !== userId) {
             throw new common_1.ForbiddenException('Not authorized to access this application');
         }
-        if (application.status !== constants_1.ApplicationStatus.TEST_PENDING) {
+        if (application.status !== constants_1.ApplicationStatus.TEST_REQUIRED) {
             throw new common_1.BadRequestException('Test not available for this application');
         }
         if (!application.job.test) {
@@ -417,7 +417,7 @@ let TestService = TestService_1 = class TestService {
             },
         });
         const newStatus = isPassed
-            ? constants_1.ApplicationStatus.TEST_PASSED
+            ? constants_1.ApplicationStatus.APPLIED
             : constants_1.ApplicationStatus.TEST_FAILED;
         await this.prisma.jobApplication.update({
             where: { id: session.applicationId },

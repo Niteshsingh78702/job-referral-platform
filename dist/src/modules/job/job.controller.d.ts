@@ -181,12 +181,14 @@ export declare class JobController {
     }>;
     applyForJob(jobId: string, userId: string, dto: ApplyJobDto): Promise<{
         skillTestInfo: {
-            skillBucketName: string;
-            displayName: string;
-            isPassed: boolean;
-            isValid: boolean;
-            validTill: Date | undefined;
-            validDaysRemaining: number | undefined;
+            passedSkills: {
+                skillBucketName: string;
+                displayName: string;
+                score: number | undefined;
+                validTill: Date | undefined;
+                validDaysRemaining: number | undefined;
+            }[];
+            canApply: boolean;
         } | null;
         id: string;
         status: import("@prisma/client").$Enums.ApplicationStatus;

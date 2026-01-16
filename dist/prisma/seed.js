@@ -333,6 +333,31 @@ async function main() {
         },
     });
     console.log('✅ Test candidate created:', candidateUser.email);
+    const candidateProfile = await prisma.candidate.findUnique({
+        where: { userId: candidateUser.id },
+    });
+    const allJobs = await prisma.job.findMany({
+        take: 3,
+    });
+    for (let i = 0; i < allJobs.length; i++) {
+        const job = allJobs[i];
+        await prisma.jobApplication.upsert({
+            where: {
+                candidateId_jobId: {
+                    candidateId: candidateProfile.id,
+                    jobId: job.id,
+                },
+            },
+            update: {},
+            create: {
+                candidateId: candidateProfile.id,
+                jobId: job.id,
+                status: 'APPLIED',
+                coverLetter: `I am very interested in the ${job.title} position at ${job.companyName}. My skills and experience make me a strong candidate for this role.`,
+            },
+        });
+    }
+    console.log('✅ Created', allJobs.length, 'sample job applications');
     const employeePassword = await bcrypt.hash('emp123456', 10);
     const employeeUser = await prisma.user.upsert({
         where: { email: 'employee@google.com' },

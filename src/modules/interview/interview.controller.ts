@@ -10,7 +10,7 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { InterviewService } from './interview.service';
-import { RequestInterviewDto, ScheduleInterviewDto } from './dto';
+import { ConfirmInterviewDto } from './dto';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { RolesGuard } from '../../common/guards';
 import { UserRole } from '../../common/constants';
@@ -24,33 +24,19 @@ export class InterviewController {
     // ===========================================
 
     /**
-     * HR requests an interview for an application
-     * Creates interview with PAYMENT_PENDING status
+     * HR confirms an interview with date/time/mode.
+     * NEW FLOW: HR provides all details upfront, candidate pays to unlock.
      */
-    @Post('request/:applicationId')
+    @Post('confirm/:applicationId')
     @UseGuards(RolesGuard)
     @Roles(UserRole.HR)
     @HttpCode(HttpStatus.CREATED)
-    async requestInterview(
+    async confirmInterview(
         @CurrentUser('sub') userId: string,
         @Param('applicationId') applicationId: string,
-        @Body() dto: RequestInterviewDto,
+        @Body() dto: ConfirmInterviewDto,
     ) {
-        return this.interviewService.requestInterview(userId, applicationId, dto);
-    }
-
-    /**
-     * HR schedules an interview (only after payment is confirmed)
-     */
-    @Post('schedule/:interviewId')
-    @UseGuards(RolesGuard)
-    @Roles(UserRole.HR)
-    async scheduleInterview(
-        @CurrentUser('sub') userId: string,
-        @Param('interviewId') interviewId: string,
-        @Body() dto: ScheduleInterviewDto,
-    ) {
-        return this.interviewService.scheduleInterview(userId, interviewId, dto);
+        return this.interviewService.confirmInterview(userId, applicationId, dto);
     }
 
     /**
@@ -121,5 +107,32 @@ export class InterviewController {
         @Query('status') status?: string,
     ) {
         return this.interviewService.getAdminInterviews(page || 1, limit || 20, status);
+    }
+
+    /**
+     * Admin marks interview as no-show (candidate or HR)
+     */
+    @Post('admin/:interviewId/no-show')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.ADMIN)
+    async markNoShow(
+        @CurrentUser('sub') adminUserId: string,
+        @Param('interviewId') interviewId: string,
+        @Body('type') type: 'CANDIDATE' | 'HR',
+    ) {
+        return this.interviewService.markNoShow(interviewId, type, adminUserId);
+    }
+
+    /**
+     * Admin marks interview as completed
+     */
+    @Post('admin/:interviewId/complete')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.ADMIN)
+    async markCompleted(
+        @CurrentUser('sub') adminUserId: string,
+        @Param('interviewId') interviewId: string,
+    ) {
+        return this.interviewService.markCompleted(interviewId, adminUserId);
     }
 }

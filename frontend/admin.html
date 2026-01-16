@@ -540,6 +540,10 @@
                 <li><a href="#dashboard" class="nav-link active" data-page="dashboard"><span
                             class="sidebar-icon">📊</span> Dashboard</a></li>
                 <li><a href="#jobs" class="nav-link" data-page="jobs"><span class="sidebar-icon">💼</span> Jobs</a></li>
+                <li><a href="#skillBuckets" class="nav-link" data-page="skillBuckets"><span
+                            class="sidebar-icon">🎯</span> Skill Clusters</a></li>
+                <li><a href="#interviews" class="nav-link" data-page="interviews"><span class="sidebar-icon">🎤</span>
+                        Interviews</a></li>
                 <li><a href="#questions" class="nav-link" data-page="questions"><span class="sidebar-icon">❓</span>
                         Question Bank</a></li>
                 <li><a href="#users" class="nav-link" data-page="users"><span class="sidebar-icon">👥</span> Users</a>
@@ -552,6 +556,8 @@
                         Payments</a></li>
                 <li><a href="#refunds" class="nav-link" data-page="refunds"><span class="sidebar-icon">💸</span>
                         Refunds</a></li>
+                <li><a href="#analytics" class="nav-link" data-page="analytics"><span class="sidebar-icon">📈</span>
+                        Analytics</a></li>
                 <li><a href="#audit" class="nav-link" data-page="audit"><span class="sidebar-icon">📝</span> Audit
                         Logs</a></li>
             </ul>
@@ -758,6 +764,138 @@
                     <div class="pagination" id="auditPagination"></div>
                 </div>
             </div>
+
+            <!-- Skill Clusters Page -->
+            <div id="skillBucketsPage" class="page-content hidden">
+                <div class="data-section">
+                    <div class="section-header">
+                        <h3>Skill Clusters</h3>
+                        <button class="btn btn-primary" onclick="showCreateSkillBucketModal()">+ Create Skill
+                            Cluster</button>
+                    </div>
+                    <p style="color: var(--text-dim); margin-bottom: 20px;">
+                        Manage skill-based tests. Jobs can require one or more skill clusters (e.g., Full Stack = Java
+                        Backend + React Frontend).
+                    </p>
+                    <div id="skillBucketsTableContainer"></div>
+                </div>
+            </div>
+
+            <!-- Interviews Page -->
+            <div id="interviewsPage" class="page-content hidden">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <h3>Total Interviews</h3>
+                        <div class="value" id="statTotalInterviews">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Scheduled</h3>
+                        <div class="value" style="color: var(--info);" id="statScheduledInterviews">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed</h3>
+                        <div class="value" style="color: var(--success);" id="statCompletedInterviews">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>No-Show Rate</h3>
+                        <div class="value" style="color: var(--danger);" id="statNoShowRate">0%</div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <div class="section-header">
+                        <h3>All Interviews</h3>
+                    </div>
+                    <div class="search-filter">
+                        <select id="interviewStatusFilter">
+                            <option value="">All Status</option>
+                            <option value="PAYMENT_PENDING">Payment Pending</option>
+                            <option value="READY_TO_SCHEDULE">Ready to Schedule</option>
+                            <option value="INTERVIEW_SCHEDULED">Scheduled</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                    <div id="interviewsTableContainer"></div>
+                    <div class="pagination" id="interviewsPagination"></div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analyticsPage" class="page-content hidden">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <h3>Net Revenue</h3>
+                        <div class="value" style="color: var(--success);" id="statNetRevenue">₹0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Refunds</h3>
+                        <div class="value" style="color: var(--danger);" id="statTotalRefunds">₹0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Test Pass Rate</h3>
+                        <div class="value" style="color: var(--info);" id="statTestPassRate">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Interview Completion</h3>
+                        <div class="value" style="color: var(--warning);" id="statInterviewCompletion">0%</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="data-section" style="grid-column: 1 / -1;">
+                        <div class="section-header">
+                            <h3>📊 Platform Summary</h3>
+                        </div>
+                        <div class="stats-grid" style="margin-bottom: 0;">
+                            <div class="stat-card">
+                                <h3>Total Candidates</h3>
+                                <div class="value" id="analyticsCandidates">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Total HRs</h3>
+                                <div class="value" id="analyticsHRs">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Active Users</h3>
+                                <div class="value" style="color: var(--success);" id="analyticsActiveUsers">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Blocked Users</h3>
+                                <div class="value" style="color: var(--danger);" id="analyticsBlockedUsers">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="margin-top: 24px;">
+                    <div class="data-section">
+                        <div class="section-header">
+                            <h3>🎯 Test Statistics</h3>
+                        </div>
+                        <div id="testStatsContainer">
+                            <p><strong>Total Attempts:</strong> <span id="analyticsTestAttempts">0</span></p>
+                            <p><strong>Passed:</strong> <span id="analyticsTestsPassed"
+                                    style="color: var(--success);">0</span></p>
+                            <p><strong>Failed:</strong> <span id="analyticsTestsFailed"
+                                    style="color: var(--danger);">0</span></p>
+                            <p><strong>Pass Rate:</strong> <span id="analyticsPassRate"
+                                    style="color: var(--info);">0%</span></p>
+                        </div>
+                    </div>
+                    <div class="data-section">
+                        <div class="section-header">
+                            <h3>💳 Payment Statistics</h3>
+                        </div>
+                        <div id="paymentStatsContainer">
+                            <p><strong>Total Payments:</strong> <span id="analyticsPaymentsTotal">0</span></p>
+                            <p><strong>Successful:</strong> <span id="analyticsPaymentsSuccess"
+                                    style="color: var(--success);">0</span></p>
+                            <p><strong>Refunded:</strong> <span id="analyticsPaymentsRefunded"
+                                    style="color: var(--danger);">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -890,6 +1028,83 @@
                     <button type="button" class="btn btn-danger" onclick="closeQuestionModal()">Cancel</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Skill Bucket Create/Edit Modal -->
+    <div id="skillBucketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="skillBucketModalTitle">Create Skill Cluster</h3>
+                <button class="close-modal" onclick="closeSkillBucketModal()">×</button>
+            </div>
+            <form id="skillBucketForm">
+                <input type="hidden" id="skillBucketId">
+                <div class="form-group">
+                    <label>Code * (e.g., JAVA_BACKEND_0_3)</label>
+                    <input type="text" id="skillBucketCode" required placeholder="JAVA_BACKEND_0_3">
+                </div>
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="skillBucketName" required placeholder="Java Backend">
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" id="skillBucketDisplayName" placeholder="HR Shortlisting Check - Java Backend">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="skillBucketDescription" rows="2"
+                        style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical;"
+                        placeholder="Description of this skill cluster..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Experience Min (years)</label>
+                    <input type="number" id="skillBucketExpMin" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Experience Max (years)</label>
+                    <input type="number" id="skillBucketExpMax" value="3" min="0">
+                </div>
+                <div style="display:flex;gap:12px;margin-top:24px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">Save Skill Cluster</button>
+                    <button type="button" class="btn btn-danger" onclick="closeSkillBucketModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Interview Action Modal -->
+    <div id="interviewActionModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="interviewActionTitle">Interview Action</h3>
+                <button class="close-modal" onclick="closeInterviewActionModal()">×</button>
+            </div>
+            <div id="interviewDetails"
+                style="margin-bottom: 20px; padding: 16px; background: var(--bg-input); border-radius: 8px;">
+                <!-- Interview details will be populated here -->
+            </div>
+            <div class="form-group">
+                <label>Action</label>
+                <select id="interviewAction" style="width: 100%;">
+                    <option value="">Select Action</option>
+                    <option value="COMPLETED">Mark as Completed</option>
+                    <option value="NO_SHOW_CANDIDATE">Mark No-Show (Candidate)</option>
+                    <option value="NO_SHOW_HR">Mark No-Show (HR)</option>
+                    <option value="CANCELLED">Cancel Interview</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes / Reason</label>
+                <textarea id="interviewActionNotes" rows="2"
+                    style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical;"
+                    placeholder="Optional notes..."></textarea>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+                <button class="btn btn-primary" style="flex:1;" onclick="submitInterviewAction()">Submit Action</button>
+                <button class="btn btn-danger" onclick="closeInterviewActionModal()">Cancel</button>
+            </div>
         </div>
     </div>
 

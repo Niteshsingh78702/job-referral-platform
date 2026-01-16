@@ -14,6 +14,9 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-__exportStar(require("./request-interview.dto"), exports);
+exports.RequestInterviewDto = void 0;
+__exportStar(require("./confirm-interview.dto"), exports);
+var request_interview_dto_1 = require("./request-interview.dto");
+Object.defineProperty(exports, "RequestInterviewDto", { enumerable: true, get: function () { return request_interview_dto_1.RequestInterviewDto; } });
 __exportStar(require("./schedule-interview.dto"), exports);
 //# sourceMappingURL=index.js.map

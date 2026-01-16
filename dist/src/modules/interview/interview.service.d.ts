@@ -1,17 +1,18 @@
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
-import { RequestInterviewDto, ScheduleInterviewDto } from './dto';
+import { ConfirmInterviewDto } from './dto';
 export declare class InterviewService {
     private prisma;
     private emailService;
     constructor(prisma: PrismaService, emailService: EmailService);
-    requestInterview(userId: string, applicationId: string, dto: RequestInterviewDto): Promise<{
+    confirmInterview(userId: string, applicationId: string, dto: ConfirmInterviewDto): Promise<{
         message: string;
         interview: {
             id: string;
             mode: import("@prisma/client").$Enums.InterviewMode;
             status: import("@prisma/client").$Enums.InterviewStatus;
-            preferredTimeWindow: string | null;
+            scheduledDate: Date | null;
+            scheduledTime: string | null;
         };
     }>;
     processPaymentSuccess(applicationId: string, paymentId: string): Promise<{
@@ -33,28 +34,6 @@ export declare class InterviewService {
         scheduledAt: Date | null;
         completedAt: Date | null;
     }>;
-    scheduleInterview(userId: string, interviewId: string, dto: ScheduleInterviewDto): Promise<{
-        message: string;
-        interview: {
-            id: string;
-            status: import("@prisma/client").$Enums.InterviewStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            mode: import("@prisma/client").$Enums.InterviewMode;
-            applicationId: string;
-            paidAt: Date | null;
-            preferredTimeWindow: string | null;
-            hrNotes: string | null;
-            paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-            scheduledDate: Date | null;
-            scheduledTime: string | null;
-            interviewLink: string | null;
-            callDetails: string | null;
-            requestedAt: Date;
-            scheduledAt: Date | null;
-            completedAt: Date | null;
-        };
-    }>;
     getInterviewForCandidate(userId: string, interviewId: string): Promise<{
         id: string;
         mode: import("@prisma/client").$Enums.InterviewMode;
@@ -65,9 +44,10 @@ export declare class InterviewService {
             companyName: string;
             title: string;
         };
-        requestedAt: Date;
+        createdAt: Date;
     } | {
         message: string;
+        requiresPayment: boolean;
         id: string;
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
@@ -77,41 +57,12 @@ export declare class InterviewService {
             companyName: string;
             title: string;
         };
-        requestedAt: Date;
-    } | {
-        message: string;
-        paidAt: Date | null;
-        id: string;
-        mode: import("@prisma/client").$Enums.InterviewMode;
-        status: import("@prisma/client").$Enums.InterviewStatus;
-        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
-        requestedAt: Date;
+        createdAt: Date;
     } | {
         scheduledDate: Date | null;
         scheduledTime: string | null;
-        interviewLink: string | null;
-        callDetails: string | null;
+        hrNote: string | null;
         paidAt: Date | null;
-        scheduledAt: Date | null;
-        id: string;
-        mode: import("@prisma/client").$Enums.InterviewMode;
-        status: import("@prisma/client").$Enums.InterviewStatus;
-        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
-        requestedAt: Date;
-    } | {
-        scheduledDate: Date | null;
-        scheduledTime: string | null;
-        completedAt: Date | null;
         message: string;
         id: string;
         mode: import("@prisma/client").$Enums.InterviewMode;
@@ -122,25 +73,24 @@ export declare class InterviewService {
             companyName: string;
             title: string;
         };
-        requestedAt: Date;
+        createdAt: Date;
+    } | {
+        message: string;
+        id: string;
+        mode: import("@prisma/client").$Enums.InterviewMode;
+        status: import("@prisma/client").$Enums.InterviewStatus;
+        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+        job: {
+            id: string;
+            companyName: string;
+            title: string;
+        };
+        createdAt: Date;
     }>;
     getCandidateInterviews(userId: string): Promise<({
-        id: string;
-        mode: import("@prisma/client").$Enums.InterviewMode;
-        status: import("@prisma/client").$Enums.InterviewStatus;
-        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
-        requestedAt: Date;
-        paidAt: Date | null;
-    } | {
         scheduledDate: Date | null;
         scheduledTime: string | null;
-        interviewLink: string | null;
-        callDetails: string | null;
+        hrNote: string | null;
         id: string;
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
@@ -150,7 +100,20 @@ export declare class InterviewService {
             companyName: string;
             title: string;
         };
-        requestedAt: Date;
+        createdAt: Date;
+        paidAt: Date | null;
+    } | {
+        requiresPayment: boolean;
+        id: string;
+        mode: import("@prisma/client").$Enums.InterviewMode;
+        status: import("@prisma/client").$Enums.InterviewStatus;
+        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+        job: {
+            id: string;
+            companyName: string;
+            title: string;
+        };
+        createdAt: Date;
         paidAt: Date | null;
     })[]>;
     getHRInterviews(userId: string, filters?: {
@@ -204,10 +167,11 @@ export declare class InterviewService {
     getAdminInterviewStats(): Promise<{
         total: number;
         byStatus: {
-            paymentPending: number;
-            readyToSchedule: number;
-            scheduled: number;
+            confirmed: number;
+            paymentSuccess: number;
             completed: number;
+            candidateNoShow: number;
+            hrNoShow: number;
         };
         flaggedHRs: unknown;
     }>;
@@ -263,7 +227,51 @@ export declare class InterviewService {
             totalPages: number;
         };
     }>;
-    private sendInterviewRequestEmail;
-    private sendPaymentConfirmationToHR;
-    private sendInterviewScheduledEmail;
+    markNoShow(interviewId: string, type: 'CANDIDATE' | 'HR', adminUserId: string): Promise<{
+        message: string;
+        interview: {
+            id: string;
+            status: import("@prisma/client").$Enums.InterviewStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            mode: import("@prisma/client").$Enums.InterviewMode;
+            applicationId: string;
+            paidAt: Date | null;
+            preferredTimeWindow: string | null;
+            hrNotes: string | null;
+            paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+            scheduledDate: Date | null;
+            scheduledTime: string | null;
+            interviewLink: string | null;
+            callDetails: string | null;
+            requestedAt: Date;
+            scheduledAt: Date | null;
+            completedAt: Date | null;
+        };
+    }>;
+    markCompleted(interviewId: string, adminUserId: string): Promise<{
+        message: string;
+        interview: {
+            id: string;
+            status: import("@prisma/client").$Enums.InterviewStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            mode: import("@prisma/client").$Enums.InterviewMode;
+            applicationId: string;
+            paidAt: Date | null;
+            preferredTimeWindow: string | null;
+            hrNotes: string | null;
+            paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+            scheduledDate: Date | null;
+            scheduledTime: string | null;
+            interviewLink: string | null;
+            callDetails: string | null;
+            requestedAt: Date;
+            scheduledAt: Date | null;
+            completedAt: Date | null;
+        };
+    }>;
+    private sendInterviewConfirmedEmail;
+    private sendPaymentSuccessEmail;
+    private sendPaymentNotificationToHR;
 }

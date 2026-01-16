@@ -157,7 +157,7 @@ let ReferralService = class ReferralService {
             });
             await tx.jobApplication.update({
                 where: { id: referral.applicationId },
-                data: { status: constants_1.ApplicationStatus.REFERRAL_CONFIRMED },
+                data: { status: constants_1.ApplicationStatus.APPLIED },
             });
             return ref;
         });
@@ -217,7 +217,7 @@ let ReferralService = class ReferralService {
             });
             await tx.jobApplication.update({
                 where: { id: referral.applicationId },
-                data: { status: constants_1.ApplicationStatus.CLOSED },
+                data: { status: constants_1.ApplicationStatus.REJECTED },
             });
             return { success: true };
         });

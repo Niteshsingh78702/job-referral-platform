@@ -56,10 +56,10 @@ export class PaymentService {
         const application = await this.prisma.jobApplication.findUnique({
             where: { id: dto.applicationId },
             include: {
-                candidate: true,
-                job: true,
-                referral: true,
-                payments: true,
+                Candidate: true,
+                Job: true,
+                Referral: true,
+                Payment: true,
             },
         });
 
@@ -80,7 +80,7 @@ export class PaymentService {
             );
         }
 
-        if (!application.referral || application.referral.status !== ReferralStatus.CONFIRMED) {
+        if (!application.Referral || application.referral.status !== ReferralStatus.CONFIRMED) {
             throw new BadRequestException('Referral not confirmed');
         }
 
@@ -185,7 +185,7 @@ export class PaymentService {
             where: { razorpayOrderId: dto.razorpayOrderId },
             include: {
                 application: {
-                    include: { candidate: true },
+                    include: { Candidate: true },
                 },
             },
         });
@@ -225,7 +225,7 @@ export class PaymentService {
         }
 
         const event = payload.event;
-        const paymentData = payload.payload?.payment?.entity;
+        const paymentData = payload.payload?.Payment?.entity;
 
         if (!paymentData) {
             return { success: true };
@@ -257,7 +257,7 @@ export class PaymentService {
         return { success: true };
     }
 
-    private async processSuccessfulPayment(payment: any, paymentData: any) {
+    private async processSuccessfulPayment(Payment: any, paymentData: any) {
         await this.prisma.$transaction(async (tx) => {
             // Update payment
             await tx.payment.update({
@@ -316,7 +316,7 @@ export class PaymentService {
         });
     }
 
-    private async processFailedPayment(payment: any, paymentData: any) {
+    private async processFailedPayment(Payment: any, paymentData: any) {
         await this.prisma.payment.update({
             where: { id: payment.id },
             data: {
@@ -356,7 +356,7 @@ export class PaymentService {
             include: {
                 application: {
                     include: {
-                        job: {
+                        Job: {
                             select: {
                                 title: true,
                                 companyName: true,
@@ -364,7 +364,7 @@ export class PaymentService {
                         },
                     },
                 },
-                refund: true,
+                Refund: true,
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -377,11 +377,11 @@ export class PaymentService {
             include: {
                 application: {
                     include: {
-                        candidate: true,
-                        job: true,
+                        Candidate: true,
+                        Job: true,
                     },
                 },
-                refund: true,
+                Refund: true,
             },
         });
 
@@ -403,11 +403,11 @@ export class PaymentService {
             include: {
                 application: {
                     include: {
-                        candidate: true,
-                        referral: true,
+                        Candidate: true,
+                        Referral: true,
                     },
                 },
-                refund: true,
+                Refund: true,
             },
         });
 
@@ -423,14 +423,14 @@ export class PaymentService {
             throw new BadRequestException('Only successful payments can be refunded');
         }
 
-        if (payment.refund) {
+        if (payment.Refund) {
             throw new BadRequestException('Refund already requested');
         }
 
         // Check if interview details were already unlocked
         if (
             payment.application.status === ApplicationStatus.PAYMENT_SUCCESS ||
-            payment.application.referral?.status === ReferralStatus.CONTACTED
+            payment.application.Referral?.status === ReferralStatus.CONTACTED
         ) {
             throw new BadRequestException(
                 'Refund not available after details have been shared',
@@ -473,9 +473,9 @@ export class PaymentService {
         const application = await this.prisma.jobApplication.findUnique({
             where: { id: applicationId },
             include: {
-                candidate: true,
-                job: true,
-                interview: true,
+                Candidate: true,
+                Job: true,
+                Interview: true,
             },
         });
 
@@ -488,7 +488,7 @@ export class PaymentService {
         }
 
         // Verify interview exists and is pending payment
-        if (!application.interview) {
+        if (!application.Interview) {
             throw new BadRequestException('No interview request found for this application');
         }
 
@@ -599,9 +599,9 @@ export class PaymentService {
             include: {
                 application: {
                     include: {
-                        candidate: { include: { user: true } },
-                        interview: true,
-                        job: { include: { hr: { include: { user: true } } } },
+                        Candidate: { include: { User: true } },
+                        Interview: true,
+                        Job: { include: { HR: { include: { User: true } } } },
                     },
                 },
             },
@@ -619,7 +619,7 @@ export class PaymentService {
             return { success: true, message: 'Payment already verified' };
         }
 
-        const interview = payment.application.interview;
+        const interview = payment.application.Interview;
         if (!interview) {
             throw new BadRequestException('Interview not found');
         }

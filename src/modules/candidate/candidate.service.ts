@@ -17,14 +17,14 @@ export class CandidateService {
         const candidate = await this.prisma.candidate.findUnique({
             where: { userId },
             include: {
-                skills: true,
+                JobSkill: true,
                 experiences: {
                     orderBy: { startDate: 'desc' },
                 },
                 educations: {
                     orderBy: { startYear: 'desc' },
                 },
-                user: {
+                User: {
                     select: {
                         email: true,
                         phone: true,
@@ -56,7 +56,7 @@ export class CandidateService {
             where: { userId },
             data: dto,
             include: {
-                skills: true,
+                JobSkill: true,
                 experiences: true,
                 educations: true,
             },
@@ -77,7 +77,7 @@ export class CandidateService {
         resumeUrl: string,
         cloudinaryPublicId: string,
         parsedData: {
-            skills: string[];
+            JobSkill: string[];
             experience: { years: number; positions: string[] };
             education: string[];
         },
@@ -101,7 +101,7 @@ export class CandidateService {
         });
 
         // Auto-add parsed skills if they don't exist
-        for (const skillName of parsedData.skills.slice(0, 10)) { // Limit to 10 skills
+        for (const skillName of parsedData.jobSkill.slice(0, 10)) { // Limit to 10 skills
             const existingSkill = await this.prisma.candidateSkill.findFirst({
                 where: {
                     candidateId: candidate.id,
@@ -123,7 +123,7 @@ export class CandidateService {
         return this.prisma.candidate.findUnique({
             where: { userId },
             include: {
-                skills: true,
+                JobSkill: true,
                 experiences: true,
                 educations: true,
             },
@@ -267,7 +267,7 @@ export class CandidateService {
                 ...(status && { status }),
             },
             include: {
-                job: {
+                Job: {
                     select: {
                         id: true,
                         title: true,
@@ -278,13 +278,13 @@ export class CandidateService {
                         status: true,
                     },
                 },
-                referral: {
+                Referral: {
                     select: {
                         status: true,
                         type: true,
                     },
                 },
-                payments: {
+                Payment: {
                     select: {
                         status: true,
                         amount: true,
@@ -318,7 +318,7 @@ export class CandidateService {
                 applicationId: { in: applicationIds },
             },
             include: {
-                test: {
+                Test: {
                     select: {
                         title: true,
                         duration: true,
@@ -327,7 +327,7 @@ export class CandidateService {
                 },
                 application: {
                     include: {
-                        job: {
+                        Job: {
                             select: {
                                 title: true,
                                 companyName: true,
@@ -364,7 +364,7 @@ export class CandidateService {
             include: {
                 application: {
                     include: {
-                        job: {
+                        Job: {
                             select: {
                                 title: true,
                                 companyName: true,
@@ -372,7 +372,7 @@ export class CandidateService {
                         },
                     },
                 },
-                refund: true,
+                Refund: true,
             },
             orderBy: { createdAt: 'desc' },
         });

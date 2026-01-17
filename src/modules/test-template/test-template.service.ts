@@ -59,11 +59,11 @@ export class TestTemplateService {
                 take: limit,
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    skillBuckets: {
+                    SkillBucket: {
                         select: { id: true, code: true, name: true },
                     },
                     _count: {
-                        select: { testSessions: true },
+                        select: { TestSession: true },
                     },
                 },
             }),
@@ -88,7 +88,7 @@ export class TestTemplateService {
         const template = await this.prisma.testTemplate.findUnique({
             where: { id },
             include: {
-                skillBuckets: {
+                SkillBucket: {
                     select: { id: true, code: true, name: true },
                 },
             },
@@ -106,7 +106,7 @@ export class TestTemplateService {
 
         return {
             ...template,
-            availableQuestions: questionCount,
+            availableQuestionBank: questionCount,
         };
     }
 

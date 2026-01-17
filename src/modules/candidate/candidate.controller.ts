@@ -88,7 +88,7 @@ export class CandidateController {
             resumeUrl: url,
             fileName: file.originalname,
             parsedData: {
-                skills: parsedData.skills,
+                JobSkill: parsedData.JobSkill,
                 experience: parsedData.experience,
                 education: parsedData.education,
             },

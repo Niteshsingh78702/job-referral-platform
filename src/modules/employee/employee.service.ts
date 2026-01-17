@@ -26,7 +26,7 @@ export class EmployeeService {
         let employee = await this.prisma.employee.findUnique({
             where: { userId },
             include: {
-                user: {
+                User: {
                     select: {
                         email: true,
                         phone: true,
@@ -55,7 +55,7 @@ export class EmployeeService {
                         isVerified: false,
                     },
                     include: {
-                        user: {
+                        User: {
                             select: {
                                 email: true,
                                 phone: true,
@@ -85,7 +85,7 @@ export class EmployeeService {
         const tier = await this.getCurrentTier(userId);
 
         return {
-            ...employee,
+            ...Employee,
             currentTier: tier,
         };
     }
@@ -140,10 +140,10 @@ export class EmployeeService {
         const availableReferrals = await this.prisma.referral.count({
             where: {
                 status: ReferralStatus.PENDING,
-                type: ReferralType.EMPLOYEE,
+                type: ReferralType.Employee,
                 employeeId: null,
                 application: {
-                    job: {
+                    Job: {
                         companyName: {
                             equals: employee.companyName,
                             mode: 'insensitive',
@@ -168,12 +168,12 @@ export class EmployeeService {
         const currentTier = await this.getCurrentTier(userId);
 
         return {
-            totalReferrals: employee.referralCount,
-            successfulReferrals: employee.successfulReferrals,
-            pendingReferrals:
+            totalReferral: employee.referralCount,
+            successfulReferral: employee.successfulReferrals,
+            pendingReferral:
                 referralStats.find((s) => s.status === ReferralStatus.PENDING)?._count ||
                 0,
-            confirmedReferrals:
+            confirmedReferral:
                 referralStats.find((s) => s.status === ReferralStatus.CONFIRMED)?._count ||
                 0,
             availableReferrals,
@@ -211,10 +211,10 @@ export class EmployeeService {
         const referrals = await this.prisma.referral.findMany({
             where: {
                 status: ReferralStatus.PENDING,
-                type: ReferralType.EMPLOYEE,
+                type: ReferralType.Employee,
                 employeeId: null, // Not yet claimed by any employee
                 application: {
-                    job: {
+                    Job: {
                         companyName: {
                             equals: employee.companyName,
                             mode: 'insensitive',
@@ -224,17 +224,17 @@ export class EmployeeService {
                         ? {
                             OR: [
                                 {
-                                    candidate: {
+                                    Candidate: {
                                         firstName: { contains: search, mode: 'insensitive' },
                                     },
                                 },
                                 {
-                                    candidate: {
+                                    Candidate: {
                                         lastName: { contains: search, mode: 'insensitive' },
                                     },
                                 },
                                 {
-                                    job: {
+                                    Job: {
                                         title: { contains: search, mode: 'insensitive' },
                                     },
                                 },
@@ -246,7 +246,7 @@ export class EmployeeService {
             include: {
                 application: {
                     include: {
-                        candidate: {
+                        Candidate: {
                             select: {
                                 id: true,
                                 firstName: true,
@@ -254,12 +254,12 @@ export class EmployeeService {
                                 headline: true,
                                 totalExperience: true,
                                 currentCompany: true,
-                                skills: {
+                                JobSkill: {
                                     select: { name: true, level: true },
                                 },
                             },
                         },
-                        job: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true,
@@ -268,7 +268,7 @@ export class EmployeeService {
                                 referralFee: true,
                             },
                         },
-                        testSessions: {
+                        TestSession: {
                             where: { isPassed: true },
                             select: { score: true },
                             take: 1,
@@ -327,14 +327,14 @@ export class EmployeeService {
                 include: {
                     application: {
                         include: {
-                            candidate: {
+                            Candidate: {
                                 select: {
                                     firstName: true,
                                     lastName: true,
                                     headline: true,
                                 },
                             },
-                            job: {
+                            Job: {
                                 select: {
                                     title: true,
                                     companyName: true,
@@ -389,7 +389,7 @@ export class EmployeeService {
             include: {
                 application: {
                     include: {
-                        job: true,
+                        Job: true,
                     },
                 },
             },
@@ -463,7 +463,7 @@ export class EmployeeService {
                 },
             });
 
-            return { referral: updatedReferral, earning };
+            return { Referral: updatedReferral, earning };
         });
 
         // Check for badge achievements
@@ -504,14 +504,14 @@ export class EmployeeService {
             this.prisma.employeeEarning.findMany({
                 where,
                 include: {
-                    referral: {
+                    Referral: {
                         include: {
                             application: {
                                 include: {
-                                    candidate: {
+                                    Candidate: {
                                         select: { firstName: true, lastName: true },
                                     },
-                                    job: {
+                                    Job: {
                                         select: { title: true, companyName: true },
                                     },
                                 },
@@ -593,15 +593,15 @@ export class EmployeeService {
                 userId: true,
                 designation: true,
                 referralCount: true,
-                successfulReferrals: true,
+                successfulReferral: true,
                 points: true,
                 badges: true,
-                user: {
+                User: {
                     select: {
                         email: true,
                     },
                 },
-                referrals: period === 'month'
+                Referral: period === 'month'
                     ? {
                         where: dateFilter,
                         select: { id: true },
@@ -611,7 +611,7 @@ export class EmployeeService {
             orderBy:
                 period === 'month'
                     ? undefined
-                    : { successfulReferrals: 'desc' },
+                    : { successfulReferral: 'desc' },
             take: 20,
         });
 
@@ -625,7 +625,7 @@ export class EmployeeService {
                 period === 'month'
                     ? emp.referrals?.length || 0
                     : emp.referralCount,
-            successfulReferrals: emp.successfulReferrals,
+            successfulReferral: emp.successfulReferrals,
             points: emp.points,
             badges: emp.badges,
             isCurrentUser: emp.userId === userId,
@@ -646,7 +646,7 @@ export class EmployeeService {
             const higherRanked = await this.prisma.employee.count({
                 where: {
                     companyName: { equals: employee.companyName, mode: 'insensitive' },
-                    successfulReferrals: { gt: employee.successfulReferrals },
+                    successfulReferral: { gt: employee.successfulReferrals },
                 },
             });
             currentUserRank = higherRanked + 1;
@@ -657,7 +657,7 @@ export class EmployeeService {
             currentUserRank: currentUserInLeaderboard?.rank || currentUserRank,
             currentUserStats: {
                 referralCount: employee.referralCount,
-                successfulReferrals: employee.successfulReferrals,
+                successfulReferral: employee.successfulReferrals,
                 points: employee.points,
             },
         };
@@ -687,19 +687,19 @@ export class EmployeeService {
 
         const tier = await this.prisma.commissionTier.findFirst({
             where: {
-                minReferrals: { lte: employee.successfulReferrals },
+                minReferral: { lte: employee.successfulReferrals },
                 isActive: true,
             },
-            orderBy: { minReferrals: 'desc' },
+            orderBy: { minReferral: 'desc' },
         });
 
         // Get next tier
         const nextTier = await this.prisma.commissionTier.findFirst({
             where: {
-                minReferrals: { gt: employee.successfulReferrals },
+                minReferral: { gt: employee.successfulReferrals },
                 isActive: true,
             },
-            orderBy: { minReferrals: 'asc' },
+            orderBy: { minReferral: 'asc' },
         });
 
         return {
@@ -791,7 +791,7 @@ export class EmployeeService {
             where: { id: referralId },
             include: {
                 earning: true,
-                employee: true,
+                Employee: true,
             },
         });
 
@@ -814,9 +814,9 @@ export class EmployeeService {
             });
 
             // Update earning to eligible
-            if (referral.earning) {
+            if (referral.EmployeeEarning) {
                 await tx.employeeEarning.update({
-                    where: { id: referral.earning.id },
+                    where: { id: referral.employeeEarning.id },
                     data: { status: EarningStatus.ELIGIBLE },
                 });
             }
@@ -826,7 +826,7 @@ export class EmployeeService {
                 await tx.employee.update({
                     where: { id: referral.employeeId },
                     data: {
-                        successfulReferrals: { increment: 1 },
+                        successfulReferral: { increment: 1 },
                         points: { increment: 50 }, // Bonus points for successful hire
                     },
                 });

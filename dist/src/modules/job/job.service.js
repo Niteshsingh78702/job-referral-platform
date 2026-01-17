@@ -188,9 +188,9 @@ let JobService = class JobService {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
             include: {
-                SkillBucket: {
+                skillBucket: {
                     include: {
-                        Test: true,
+                        test: true,
                     },
                 },
             },

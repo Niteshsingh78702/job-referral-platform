@@ -30,7 +30,7 @@ export class ReferralService {
             where: {
                 status: { in: [ReferralStatus.PENDING, ReferralStatus.CONFIRMED] },
                 application: {
-                    job: {
+                    Job: {
                         hrId: hr.id,
                     },
                 },
@@ -38,18 +38,18 @@ export class ReferralService {
             include: {
                 application: {
                     include: {
-                        candidate: {
+                        Candidate: {
                             select: {
                                 firstName: true,
                                 lastName: true,
                                 headline: true,
                                 totalExperience: true,
                                 currentCompany: true,
-                                skills: true,
+                                JobSkill: true,
                                 // Don't include contact until payment
                             },
                         },
-                        job: {
+                        Job: {
                             select: {
                                 title: true,
                                 companyName: true,
@@ -76,12 +76,12 @@ export class ReferralService {
         return this.prisma.referral.findMany({
             where: {
                 status: ReferralStatus.PENDING,
-                type: ReferralType.EMPLOYEE,
+                type: ReferralType.Employee,
                 OR: [
                     { employeeId: employee.id },
                     {
                         application: {
-                            job: {
+                            Job: {
                                 companyName: { equals: employee.companyName, mode: 'insensitive' },
                             },
                         },
@@ -91,16 +91,16 @@ export class ReferralService {
             include: {
                 application: {
                     include: {
-                        candidate: {
+                        Candidate: {
                             select: {
                                 firstName: true,
                                 lastName: true,
                                 headline: true,
                                 totalExperience: true,
-                                skills: true,
+                                JobSkill: true,
                             },
                         },
-                        job: {
+                        Job: {
                             select: {
                                 title: true,
                                 companyName: true,
@@ -126,7 +126,7 @@ export class ReferralService {
             include: {
                 application: {
                     include: {
-                        job: { include: { hr: true } },
+                        Job: { include: { HR: true } },
                     },
                 },
             },
@@ -142,7 +142,7 @@ export class ReferralService {
 
         // Verify authorization
         if (userRole === 'HR') {
-            if (!referral.application.job.hr || referral.application.job.hr.userId !== userId) {
+            if (!referral.application.job.HR || referral.application.job.hR.userId !== userId) {
                 throw new ForbiddenException('Not authorized to confirm this referral');
             }
         } else if (userRole === 'EMPLOYEE') {
@@ -203,7 +203,7 @@ export class ReferralService {
             include: {
                 application: {
                     include: {
-                        job: { include: { hr: true } },
+                        Job: { include: { HR: true } },
                     },
                 },
             },
@@ -214,7 +214,7 @@ export class ReferralService {
         }
 
         // Only HR can mark as contacted
-        if (!referral.application.job.hr || referral.application.job.hr.userId !== userId) {
+        if (!referral.application.job.HR || referral.application.job.hR.userId !== userId) {
             throw new ForbiddenException('Only HR can mark as contacted');
         }
 
@@ -235,7 +235,7 @@ export class ReferralService {
             include: {
                 application: {
                     include: {
-                        job: { include: { hr: true } },
+                        Job: { include: { HR: true } },
                     },
                 },
             },
@@ -245,7 +245,7 @@ export class ReferralService {
             throw new NotFoundException('Referral not found');
         }
 
-        if (!referral.application.job.hr || referral.application.job.hr.userId !== userId) {
+        if (!referral.application.job.HR || referral.application.job.hR.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -282,13 +282,13 @@ export class ReferralService {
                 include: {
                     application: {
                         include: {
-                            candidate: {
+                            Candidate: {
                                 select: {
                                     firstName: true,
                                     lastName: true,
                                 },
                             },
-                            job: {
+                            Job: {
                                 select: {
                                     title: true,
                                 },
@@ -310,13 +310,13 @@ export class ReferralService {
                 include: {
                     application: {
                         include: {
-                            candidate: {
+                            Candidate: {
                                 select: {
                                     firstName: true,
                                     lastName: true,
                                 },
                             },
-                            job: {
+                            Job: {
                                 select: {
                                     title: true,
                                     companyName: true,

@@ -6,7 +6,7 @@ const mammoth = require('mammoth');
 
 export interface ParsedResumeData {
     text: string;
-    skills: string[];
+    JobSkill: string[];
     experience: {
         years: number;
         positions: string[];
@@ -51,7 +51,7 @@ export class ResumeParserService {
             return { text, skills, experience, education };
         } catch (error) {
             console.error('Error parsing resume:', error);
-            return { text: '', skills: [], experience: { years: 0, positions: [] }, education: [] };
+            return { text: '', JobSkill: [], experience: { years: 0, positions: [] }, education: [] };
         }
     }
 

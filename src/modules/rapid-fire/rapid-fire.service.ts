@@ -101,7 +101,7 @@ export class RapidFireTestService {
             canTake: true,
             status: 'AVAILABLE',
             testTemplate: skillBucket.testTemplate,
-            skillBucket: {
+            SkillBucket: {
                 id: skillBucket.id,
                 name: skillBucket.name,
                 displayName: skillBucket.displayName,
@@ -165,7 +165,7 @@ export class RapidFireTestService {
                 status: 'ACTIVE',
                 startedAt: new Date(now),
                 endsAt: new Date(now + this.TEST_DURATION_MS),
-                totalQuestions: questions.length,
+                totalQuestionBank: questions.length,
                 selectedQuestionIds: questions.map(q => q.id),
             },
         });
@@ -174,7 +174,7 @@ export class RapidFireTestService {
             sessionId,
             testName: template.name,
             duration: template.duration,
-            totalQuestions: questions.length,
+            totalQuestionBank: questions.length,
             remainingTime: Math.floor(this.TEST_DURATION_MS / 1000),
             startedAt: new Date(now).toISOString(),
             endsAt: new Date(now + this.TEST_DURATION_MS).toISOString(),
@@ -225,10 +225,10 @@ export class RapidFireTestService {
         return {
             sessionId,
             status: session.status,
-            totalQuestions: session.questionIds.length,
+            totalQuestionBank: session.questionIds.length,
             answeredCount: Object.keys(session.answers).length,
             remainingTime,
-            questions: questionsWithStatus,
+            QuestionBank: questionsWithStatus,
         };
     }
 
@@ -254,7 +254,7 @@ export class RapidFireTestService {
         return {
             success: true,
             answeredCount: Object.keys(session.answers).length,
-            totalQuestions: session.questionIds.length,
+            totalQuestionBank: session.questionIds.length,
         };
     }
 
@@ -452,7 +452,7 @@ export class RapidFireTestService {
         const attempts = await this.prisma.skillTestAttempt.findMany({
             where: { candidateId },
             include: {
-                skillBucket: {
+                SkillBucket: {
                     select: { id: true, name: true, displayName: true },
                 },
             },
@@ -462,7 +462,7 @@ export class RapidFireTestService {
 
         return attempts.map(a => ({
             id: a.id,
-            skillBucket: a.skillBucket,
+            SkillBucket: a.SkillBucket,
             score: a.score,
             isPassed: a.isPassed,
             attemptedAt: a.attemptedAt,

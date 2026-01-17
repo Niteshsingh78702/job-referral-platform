@@ -127,14 +127,14 @@ export class HRService {
 
         return {
             ...tokens,
-            user: {
+            User: {
                 id: result.user.id,
                 email: result.user.email,
                 role: result.user.role,
-                hr: {
-                    id: result.hr.id,
-                    companyName: result.hr.companyName,
-                    approvalStatus: result.hr.approvalStatus,
+                HR: {
+                    id: result.hR.id,
+                    companyName: result.hR.companyName,
+                    approvalStatus: result.hR.approvalStatus,
                 },
             },
         };
@@ -148,7 +148,7 @@ export class HRService {
     async login(dto: HRLoginDto, deviceInfo?: any) {
         const user = await this.prisma.user.findUnique({
             where: { email: dto.email },
-            include: { hr: true },
+            include: { HR: true },
         });
 
         if (!user || !user.passwordHash) {
@@ -164,16 +164,16 @@ export class HRService {
         }
 
         // Check HR approval status
-        if (!user.hr) {
+        if (!user.HR) {
             throw new BadRequestException('HR profile not found');
         }
 
-        if (user.hr.approvalStatus === HRApprovalStatus.PENDING) {
+        if (user.hR.approvalStatus === HRApprovalStatus.PENDING) {
             throw new ForbiddenException('Your account is pending approval. Please wait for admin verification.');
         }
 
-        if (user.hr.approvalStatus === HRApprovalStatus.REJECTED) {
-            throw new ForbiddenException(`Account rejected: ${user.hr.rejectionReason || 'Please contact support.'}`);
+        if (user.hR.approvalStatus === HRApprovalStatus.REJECTED) {
+            throw new ForbiddenException(`Account rejected: ${user.hR.rejectionReason || 'Please contact support.'}`);
         }
 
         // Verify password
@@ -207,7 +207,7 @@ export class HRService {
                     userId: user.id,
                     action: AuditAction.LOGIN,
                     entityType: 'HR',
-                    entityId: user.hr!.id,
+                    entityId: user.HR!.id,
                     metadata: { ip: deviceInfo?.ip, portal: 'hr' },
                 },
             });
@@ -224,14 +224,14 @@ export class HRService {
 
         return {
             ...tokens,
-            user: {
+            User: {
                 id: user.id,
                 email: user.email,
                 role: user.role,
-                hr: {
-                    id: user.hr.id,
-                    companyName: user.hr.companyName,
-                    designation: user.hr.designation,
+                HR: {
+                    id: user.hR.id,
+                    companyName: user.hR.companyName,
+                    designation: user.hR.designation,
                 },
             },
         };
@@ -244,7 +244,7 @@ export class HRService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                hr: {
+                HR: {
                     include: {
                         jobs: {
                             select: {
@@ -259,7 +259,7 @@ export class HRService {
             },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
@@ -273,15 +273,15 @@ export class HRService {
     async updateProfile(userId: string, dto: UpdateHRProfileDto) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
         const updated = await this.prisma.hR.update({
-            where: { id: user.hr.id },
+            where: { id: user.hR.id },
             data: {
                 companyName: dto.companyName,
                 companyWebsite: dto.companyWebsite,
@@ -299,20 +299,20 @@ export class HRService {
     async getDashboardStats(userId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
-        const hrId = user.hr.id;
+        const hrId = user.hR.id;
 
         // Get job stats
         const jobs = await this.prisma.job.findMany({
             where: { hrId },
             include: {
-                applications: {
+                JobApplication: {
                     select: {
                         id: true,
                         status: true,
@@ -327,9 +327,9 @@ export class HRService {
 
         const totalJobs = jobs.length;
         const activeJobs = jobs.filter(j => j.status === PrismaJobStatus.ACTIVE).length;
-        const totalApplications = jobs.reduce((acc, j) => acc + j.applications.length, 0);
+        const totalApplications = jobs.reduce((acc, j) => acc + j.jobApplication.length, 0);
         const recentApplications = jobs.reduce((acc, j) =>
-            acc + j.applications.filter(a => a.createdAt >= thirtyDaysAgo).length, 0);
+            acc + j.jobApplication.filter(a => a.createdAt >= thirtyDaysAgo).length, 0);
 
         const pendingReferrals = await this.prisma.referral.count({
             where: {
@@ -367,28 +367,28 @@ export class HRService {
     async getRecentActivity(userId: string, limit: number = 10) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
         // Get recent applications on HR's jobs
         const recentApplications = await this.prisma.jobApplication.findMany({
             where: {
-                job: { hrId: user.hr.id },
+                Job: { hrId: user.hR.id },
             },
             orderBy: { createdAt: 'desc' },
             take: limit,
             include: {
-                candidate: {
+                Candidate: {
                     select: {
                         firstName: true,
                         lastName: true,
                     },
                 },
-                job: {
+                Job: {
                     select: {
                         title: true,
                         companyName: true,
@@ -400,7 +400,7 @@ export class HRService {
         return recentApplications.map(app => ({
             id: app.id,
             type: 'application',
-            candidate: `${app.candidate.firstName} ${app.candidate.lastName}`,
+            Candidate: `${app.candidate.firstName} ${app.candidate.lastName}`,
             jobTitle: app.job.title,
             status: app.status,
             createdAt: app.createdAt,
@@ -413,10 +413,10 @@ export class HRService {
     async getJobs(userId: string, filters?: { status?: string; page?: number; limit?: number }) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
@@ -424,7 +424,7 @@ export class HRService {
         const limit = filters?.limit || 10;
         const skip = (page - 1) * limit;
 
-        const where: any = { hrId: user.hr.id };
+        const where: any = { hrId: user.hR.id };
         if (filters?.status) {
             where.status = filters.status;
         }
@@ -437,9 +437,9 @@ export class HRService {
                 orderBy: { createdAt: 'desc' },
                 include: {
                     _count: {
-                        select: { applications: true },
+                        select: { JobApplication: true },
                     },
-                    skills: true,
+                    JobSkill: true,
                 },
             }),
             this.prisma.job.count({ where }),
@@ -462,10 +462,10 @@ export class HRService {
     async createJob(userId: string, dto: CreateJobDto) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
@@ -485,7 +485,7 @@ export class HRService {
                     description: dto.description,
                     requirements: dto.requirements,
                     responsibilities: dto.responsibilities,
-                    companyName: user.hr!.companyName,
+                    companyName: user.HR!.companyName,
                     location: dto.location,
                     isRemote: dto.isRemote ?? false,
                     salaryMin: dto.salaryMin,
@@ -493,17 +493,17 @@ export class HRService {
                     experienceMin: dto.experienceMin,
                     experienceMax: dto.experienceMax,
                     educationLevel: dto.educationLevel,
-                    maxApplications: dto.maxApplications ?? 100,
+                    maxJobApplication: dto.maxApplications ?? 100,
                     referralFee: dto.referralFee ?? 499,
                     status: PrismaJobStatus.DRAFT,
-                    hrId: user.hr!.id,
+                    hrId: user.HR!.id,
                 },
             });
 
             // Add skills
-            if (dto.skills && dto.skills.length > 0) {
+            if (dto.JobSkill && dto.jobSkill.length > 0) {
                 await tx.jobSkill.createMany({
-                    data: dto.skills.map(skill => ({
+                    data: dto.jobSkill.map(skill => ({
                         jobId: newJob.id,
                         name: skill,
                         isRequired: true,
@@ -513,7 +513,7 @@ export class HRService {
 
             // Update HR stats
             await tx.hR.update({
-                where: { id: user.hr!.id },
+                where: { id: user.HR!.id },
                 data: { totalJobsPosted: { increment: 1 } },
             });
 
@@ -539,10 +539,10 @@ export class HRService {
     async updateJobStatus(userId: string, jobId: string, dto: UpdateJobStatusDto) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
@@ -554,7 +554,7 @@ export class HRService {
             throw new NotFoundException('Job not found');
         }
 
-        if (job.hrId !== user.hr.id) {
+        if (job.hrId !== user.hR.id) {
             throw new ForbiddenException('You can only modify your own jobs');
         }
 
@@ -573,12 +573,12 @@ export class HRService {
             // Update active jobs count
             if (newStatus === PrismaJobStatus.ACTIVE && originalStatus !== PrismaJobStatus.ACTIVE) {
                 await tx.hR.update({
-                    where: { id: user.hr!.id },
+                    where: { id: user.HR!.id },
                     data: { activeJobs: { increment: 1 } },
                 });
             } else if (originalStatus === PrismaJobStatus.ACTIVE && newStatus !== PrismaJobStatus.ACTIVE) {
                 await tx.hR.update({
-                    where: { id: user.hr!.id },
+                    where: { id: user.HR!.id },
                     data: { activeJobs: { decrement: 1 } },
                 });
             }
@@ -607,18 +607,18 @@ export class HRService {
     async getJobById(userId: string, jobId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
             include: {
-                skills: true,
-                applications: {
+                JobSkill: true,
+                JobApplication: {
                     select: {
                         id: true,
                         status: true,
@@ -632,7 +632,7 @@ export class HRService {
             throw new NotFoundException('Job not found');
         }
 
-        if (job.hrId !== user.hr.id) {
+        if (job.hrId !== user.hR.id) {
             throw new ForbiddenException('You can only view your own jobs');
         }
 
@@ -645,36 +645,36 @@ export class HRService {
     async updateJob(userId: string, jobId: string, dto: UpdateJobDto) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
         const existingJob = await this.prisma.job.findUnique({
             where: { id: jobId },
-            include: { skills: true },
+            include: { JobSkill: true },
         });
 
         if (!existingJob) {
             throw new NotFoundException('Job not found');
         }
 
-        if (existingJob.hrId !== user.hr.id) {
+        if (existingJob.hrId !== user.hR.id) {
             throw new ForbiddenException('You can only modify your own jobs');
         }
 
         const updatedJob = await this.prisma.$transaction(async (tx) => {
             // Update skills if provided
-            if (dto.skills && dto.skills.length > 0) {
+            if (dto.JobSkill && dto.jobSkill.length > 0) {
                 // Delete existing skills
                 await tx.jobSkill.deleteMany({
                     where: { jobId },
                 });
                 // Add new skills
                 await tx.jobSkill.createMany({
-                    data: dto.skills.map(skill => ({
+                    data: dto.jobSkill.map(skill => ({
                         jobId,
                         name: skill,
                         isRequired: true,
@@ -697,11 +697,11 @@ export class HRService {
                     experienceMin: dto.experienceMin,
                     experienceMax: dto.experienceMax,
                     educationLevel: dto.educationLevel,
-                    maxApplications: dto.maxApplications,
+                    maxJobApplication: dto.maxApplications,
                     referralFee: dto.referralFee,
                     status: dto.status ? dto.status as PrismaJobStatus : undefined,
                 },
-                include: { skills: true },
+                include: { JobSkill: true },
             });
 
             // Audit log
@@ -728,10 +728,10 @@ export class HRService {
     async deleteJob(userId: string, jobId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
@@ -743,7 +743,7 @@ export class HRService {
             throw new NotFoundException('Job not found');
         }
 
-        if (job.hrId !== user.hr.id) {
+        if (job.hrId !== user.hR.id) {
             throw new ForbiddenException('You can only delete your own jobs');
         }
 
@@ -757,7 +757,7 @@ export class HRService {
 
             // Update HR stats
             await tx.hR.update({
-                where: { id: user.hr!.id },
+                where: { id: user.HR!.id },
                 data: {
                     totalJobsPosted: { decrement: 1 },
                     activeJobs: job.status === PrismaJobStatus.ACTIVE ? { decrement: 1 } : undefined,
@@ -785,10 +785,10 @@ export class HRService {
     async getApplications(userId: string, filters?: { jobId?: string; status?: string; page?: number; limit?: number }) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
-        if (!user || !user.hr) {
+        if (!user || !user.HR) {
             throw new NotFoundException('HR profile not found');
         }
 
@@ -797,7 +797,7 @@ export class HRService {
         const skip = (page - 1) * limit;
 
         const where: any = {
-            job: { hrId: user.hr.id },
+            Job: { hrId: user.hR.id },
         };
 
         if (filters?.jobId) {
@@ -815,14 +815,14 @@ export class HRService {
                 take: limit,
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    candidate: {
+                    Candidate: {
                         select: {
                             firstName: true,
                             lastName: true,
                             headline: true,
                             totalExperience: true,
                             currentCompany: true,
-                            skills: {
+                            JobSkill: {
                                 select: {
                                     name: true,
                                     level: true,
@@ -830,7 +830,7 @@ export class HRService {
                             },
                         },
                     },
-                    job: {
+                    Job: {
                         select: {
                             id: true,
                             title: true,

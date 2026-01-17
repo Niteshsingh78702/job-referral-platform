@@ -19,13 +19,43 @@ export class PrismaService
     }
 
     async onModuleInit() {
+        await this.connectWithRetry();
+    }
+
+    private async connectWithRetry(maxRetries = 5): Promise<void> {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                this.logger.log(`Connecting to database (attempt ${attempt}/${maxRetries})...`);
+                await this.$connect();
+
+                // Warm up the connection with a simple query
+                await this.$queryRaw`SELECT 1`;
+
+                this.logger.log('Successfully connected to database');
+                return;
+            } catch (error) {
+                this.logger.warn(`Connection attempt ${attempt} failed: ${(error as Error).message}`);
+
+                if (attempt === maxRetries) {
+                    this.logger.error('Failed to connect to database after all retries:', error);
+                    throw error;
+                }
+
+                // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 16000);
+                this.logger.log(`Retrying in ${delay / 1000}s...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+
+    // Reconnect if connection is lost (handles Neon cold starts)
+    async ensureConnection(): Promise<void> {
         try {
-            this.logger.log('Connecting to database...');
-            await this.$connect();
-            this.logger.log('Successfully connected to database');
-        } catch (error) {
-            this.logger.error('Failed to connect to database:', error);
-            throw error;
+            await this.$queryRaw`SELECT 1`;
+        } catch {
+            this.logger.warn('Connection lost, reconnecting...');
+            await this.connectWithRetry(3);
         }
     }
 

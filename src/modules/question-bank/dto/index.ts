@@ -166,5 +166,5 @@ export class BulkQuestionDto {
 export class BulkUploadDto {
     @IsArray()
     @Type(() => BulkQuestionDto)
-    questions: BulkQuestionDto[];
+    QuestionBank: BulkQuestionDto[];
 }

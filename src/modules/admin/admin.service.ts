@@ -93,9 +93,9 @@ export class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    candidate: { select: { firstName: true, lastName: true } },
-                    hr: { select: { companyName: true, approvalStatus: true } },
-                    employee: { select: { companyName: true, referralCount: true } },
+                    Candidate: { select: { firstName: true, lastName: true } },
+                    HR: { select: { companyName: true, approvalStatus: true } },
+                    Employee: { select: { companyName: true, referralCount: true } },
                 },
                 orderBy: { createdAt: 'desc' },
             }),
@@ -164,7 +164,7 @@ export class AdminService {
         return this.prisma.hR.findMany({
             where: { approvalStatus: HRApprovalStatus.PENDING },
             include: {
-                user: { select: { email: true, createdAt: true } },
+                User: { select: { email: true, createdAt: true } },
             },
             orderBy: { createdAt: 'asc' },
         });
@@ -246,8 +246,8 @@ export class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    hr: { select: { companyName: true } },
-                    _count: { select: { applications: true } },
+                    HR: { select: { companyName: true } },
+                    _count: { select: { JobApplication: true } },
                 },
                 orderBy: { createdAt: 'desc' },
             }),
@@ -372,15 +372,15 @@ export class AdminService {
     async deleteJob(jobId: string, adminId: string) {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
-            include: { _count: { select: { applications: true } } },
+            include: { _count: { select: { JobApplication: true } } },
         });
 
         if (!job) throw new NotFoundException('Job not found');
 
         // Check if there are applications
-        if (job._count.applications > 0) {
+        if (job._count.JobApplication > 0) {
             throw new BadRequestException(
-                `Cannot delete job with ${job._count.applications} applications. Please expire the job instead.`
+                `Cannot delete job with ${job._count.JobApplication} applications. Please expire the job instead.`
             );
         }
 
@@ -411,8 +411,8 @@ export class AdminService {
         if (search) {
             where.OR = [
                 { email: { contains: search, mode: 'insensitive' } },
-                { candidate: { firstName: { contains: search, mode: 'insensitive' } } },
-                { candidate: { lastName: { contains: search, mode: 'insensitive' } } },
+                { Candidate: { firstName: { contains: search, mode: 'insensitive' } } },
+                { Candidate: { lastName: { contains: search, mode: 'insensitive' } } },
             ];
         }
 
@@ -424,11 +424,11 @@ export class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    candidate: {
+                    Candidate: {
                         include: {
-                            applications: {
+                            JobApplication: {
                                 include: {
-                                    job: { select: { title: true, companyName: true } },
+                                    Job: { select: { title: true, companyName: true } },
                                 },
                                 orderBy: { createdAt: 'desc' },
                                 take: 5,
@@ -451,9 +451,9 @@ export class AdminService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                candidate: { include: { _count: { select: { applications: true } } } },
-                hr: true,
-                employee: true,
+                Candidate: { include: { _count: { select: { JobApplication: true } } } },
+                HR: true,
+                Employee: true,
             },
         });
 
@@ -463,7 +463,7 @@ export class AdminService {
         }
 
         // Check for active applications
-        if (user.candidate && user.candidate._count.applications > 0) {
+        if (user.Candidate && user.candidate._count.JobApplication > 0) {
             throw new BadRequestException(
                 'Cannot delete user with active applications. Please block the user instead.'
             );
@@ -471,13 +471,13 @@ export class AdminService {
 
         await this.prisma.$transaction(async (tx) => {
             // Delete related data based on role
-            if (user.candidate) {
+            if (user.Candidate) {
                 await tx.candidate.delete({ where: { userId } });
             }
-            if (user.hr) {
+            if (user.HR) {
                 await tx.hR.delete({ where: { userId } });
             }
-            if (user.employee) {
+            if (user.Employee) {
                 await tx.employee.delete({ where: { userId } });
             }
 
@@ -515,11 +515,11 @@ export class AdminService {
                 include: {
                     application: {
                         include: {
-                            candidate: { select: { firstName: true, lastName: true } },
-                            job: { select: { title: true, companyName: true } },
+                            Candidate: { select: { firstName: true, lastName: true } },
+                            Job: { select: { title: true, companyName: true } },
                         },
                     },
-                    refund: true,
+                    Refund: true,
                 },
                 orderBy: { createdAt: 'desc' },
             }),
@@ -536,12 +536,12 @@ export class AdminService {
         return this.prisma.refund.findMany({
             where: { status: RefundStatus.REQUESTED },
             include: {
-                payment: {
+                Payment: {
                     include: {
                         application: {
                             include: {
-                                candidate: { select: { firstName: true, lastName: true } },
-                                job: { select: { title: true, companyName: true } },
+                                Candidate: { select: { firstName: true, lastName: true } },
+                                Job: { select: { title: true, companyName: true } },
                             },
                         },
                     },
@@ -554,7 +554,7 @@ export class AdminService {
     async approveRefund(refundId: string, adminId: string, notes?: string) {
         const refund = await this.prisma.refund.findUnique({
             where: { id: refundId },
-            include: { payment: true },
+            include: { Payment: true },
         });
 
         if (!refund) throw new NotFoundException('Refund not found');
@@ -645,7 +645,7 @@ export class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    user: { select: { email: true } },
+                    User: { select: { email: true } },
                 },
                 orderBy: { createdAt: 'desc' },
             }),
@@ -676,8 +676,8 @@ export class AdminService {
                 include: {
                     application: {
                         include: {
-                            candidate: { select: { firstName: true, lastName: true } },
-                            job: { select: { title: true, companyName: true } },
+                            Candidate: { select: { firstName: true, lastName: true } },
+                            Job: { select: { title: true, companyName: true } },
                         },
                     },
                 },
@@ -792,8 +792,8 @@ export class AdminService {
             include: {
                 application: {
                     include: {
-                        candidate: { select: { userId: true } },
-                        job: { include: { hr: { select: { userId: true } } } },
+                        Candidate: { select: { userId: true } },
+                        Job: { include: { HR: { select: { userId: true } } } },
                     },
                 },
             },
@@ -841,12 +841,12 @@ export class AdminService {
         return this.prisma.skillBucket.findMany({
             where: includeInactive ? {} : { isActive: true },
             include: {
-                test: {
+                Test: {
                     select: {
                         id: true,
                         title: true,
                         duration: true,
-                        totalQuestions: true,
+                        totalQuestionBank: true,
                     },
                 },
                 testTemplate: {
@@ -1017,7 +1017,7 @@ export class AdminService {
             },
             update: {},
             include: {
-                skillBucket: true,
+                SkillBucket: true,
             },
         });
 
@@ -1066,10 +1066,10 @@ export class AdminService {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
             include: {
-                skillBucket: true, // Legacy single bucket
-                requiredSkillBuckets: {
+                SkillBucket: true, // Legacy single bucket
+                requiredSkillBucket: {
                     include: {
-                        skillBucket: true,
+                        SkillBucket: true,
                     },
                     orderBy: { displayOrder: 'asc' },
                 },
@@ -1081,7 +1081,7 @@ export class AdminService {
         return {
             jobId: job.id,
             jobTitle: job.title,
-            legacySkillBucket: job.skillBucket,
+            legacySkillBucket: job.SkillBucket,
             compositeRequirements: job.requiredSkillBuckets,
         };
     }
@@ -1127,14 +1127,14 @@ export class AdminService {
     async issueManualRefund(paymentId: string, adminId: string, reason: string) {
         const payment = await this.prisma.payment.findUnique({
             where: { id: paymentId },
-            include: { refund: true },
+            include: { Refund: true },
         });
 
         if (!payment) throw new NotFoundException('Payment not found');
         if (payment.status !== PaymentStatus.SUCCESS) {
             throw new BadRequestException('Can only refund successful payments');
         }
-        if (payment.refund) {
+        if (payment.Refund) {
             throw new BadRequestException('Payment already has a refund request');
         }
 
@@ -1144,7 +1144,7 @@ export class AdminService {
                 data: {
                     paymentId,
                     amount: payment.amount,
-                    reason: `ADMIN REFUND: ${reason}`,
+                    reason: `ADMIN Refund: ${reason}`,
                     status: RefundStatus.APPROVED,
                     processedBy: adminId,
                     processedAt: new Date(),
@@ -1302,7 +1302,7 @@ export class AdminService {
                 scheduled: scheduledInterviews,
                 completionRate: `${interviewCompletionRate}%`,
             },
-            payments: {
+            Payment: {
                 total: totalPayments,
                 successful: successfulPayments,
                 refunded: refundedPayments,

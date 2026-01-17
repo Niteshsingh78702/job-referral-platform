@@ -43,7 +43,7 @@ export class SkillBucketService {
                 testId: dto.testId,
             },
             include: {
-                test: true,
+                Test: true,
             },
         });
     }
@@ -69,7 +69,7 @@ export class SkillBucketService {
                 testId: dto.testId,
             },
             include: {
-                test: true,
+                Test: true,
             },
         });
     }
@@ -78,12 +78,12 @@ export class SkillBucketService {
         return this.prisma.skillBucket.findMany({
             where: includeInactive ? {} : { isActive: true },
             include: {
-                test: {
+                Test: {
                     select: {
                         id: true,
                         title: true,
                         duration: true,
-                        totalQuestions: true,
+                        totalQuestionBank: true,
                     },
                 },
                 _count: {
@@ -101,7 +101,7 @@ export class SkillBucketService {
         const bucket = await this.prisma.skillBucket.findUnique({
             where: { id },
             include: {
-                test: true,
+                Test: true,
             },
         });
 
@@ -116,7 +116,7 @@ export class SkillBucketService {
         const bucket = await this.prisma.skillBucket.findUnique({
             where: { code },
             include: {
-                test: true,
+                Test: true,
             },
         });
 
@@ -128,7 +128,7 @@ export class SkillBucketService {
     }
 
     // ==========================================
-    // CANDIDATE: Skill Test Status Check
+    // Candidate: Skill Test Status Check
     // ==========================================
 
     /**
@@ -173,7 +173,7 @@ export class SkillBucketService {
                 isPassed: false,
                 isValid: false,
                 isFailed: false,
-                canRetest: true,
+                canReTest: true,
                 neverTaken: true,
             };
         }
@@ -198,7 +198,7 @@ export class SkillBucketService {
                 validTill,
                 validDaysRemaining: isValid ? daysRemaining : 0,
                 isFailed: false,
-                canRetest: !isValid, // Can retest if expired
+                canReTest: !isValid, // Can retest if expired
                 neverTaken: false,
             };
         }
@@ -315,7 +315,7 @@ export class SkillBucketService {
                 },
             },
             include: {
-                skillBucket: {
+                SkillBucket: {
                     select: {
                         code: true,
                         name: true,
@@ -364,9 +364,9 @@ export class SkillBucketService {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
             include: {
-                requiredSkillBuckets: {
+                requiredSkillBucket: {
                     include: {
-                        skillBucket: true,
+                        SkillBucket: true,
                     },
                     orderBy: { displayOrder: 'asc' },
                 },
@@ -498,7 +498,7 @@ export class SkillBucketService {
                 displayOrder,
             },
             include: {
-                skillBucket: true,
+                SkillBucket: true,
             },
         });
     }
@@ -525,10 +525,10 @@ export class SkillBucketService {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
             include: {
-                skillBucket: true, // Legacy single bucket
-                requiredSkillBuckets: {
+                SkillBucket: true, // Legacy single bucket
+                requiredSkillBucket: {
                     include: {
-                        skillBucket: true,
+                        SkillBucket: true,
                     },
                     orderBy: { displayOrder: 'asc' },
                 },
@@ -540,7 +540,7 @@ export class SkillBucketService {
         }
 
         return {
-            legacySkillBucket: job.skillBucket,
+            legacySkillBucket: job.SkillBucket,
             compositeRequirements: job.requiredSkillBuckets,
         };
     }

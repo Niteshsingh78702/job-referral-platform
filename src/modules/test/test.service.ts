@@ -129,8 +129,8 @@ export class TestService {
                 description: dto.description,
                 duration: dto.duration || 30,
                 passingScore: dto.passingScore || 70,
-                totalQuestions: dto.totalQuestions || 20,
-                shuffleQuestions: dto.shuffleQuestions ?? true,
+                totalQuestionBank: dto.totalQuestions || 20,
+                shuffleQuestionBank: dto.shuffleQuestions ?? true,
                 maxTabSwitches: dto.maxTabSwitches || 2,
                 difficulty: dto.difficulty || 'MEDIUM',
             },
@@ -140,7 +140,7 @@ export class TestService {
     async addQuestion(testId: string, dto: AddQuestionDto) {
         const test = await this.prisma.test.findUnique({
             where: { id: testId },
-            include: { questions: true },
+            include: { QuestionBank: true },
         });
 
         if (!test) {
@@ -164,7 +164,7 @@ export class TestService {
         const test = await this.prisma.test.findUnique({
             where: { id: testId },
             include: {
-                questions: {
+                QuestionBank: {
                     orderBy: { orderIndex: 'asc' },
                 },
             },
@@ -178,7 +178,7 @@ export class TestService {
     }
 
     // ===========================================
-    // CANDIDATE: Test Taking
+    // Candidate: Test Taking
     // ===========================================
 
     async startTest(applicationId: string, userId: string) {
@@ -186,9 +186,9 @@ export class TestService {
         const application = await this.prisma.jobApplication.findUnique({
             where: { id: applicationId },
             include: {
-                candidate: { include: { user: true } },
-                job: { include: { test: { include: { questions: true } } } },
-                testSessions: true,
+                Candidate: { include: { User: true } },
+                Job: { include: { Test: { include: { QuestionBank: true } } } },
+                TestSession: true,
             },
         });
 
@@ -204,7 +204,7 @@ export class TestService {
             throw new BadRequestException('Test not available for this application');
         }
 
-        if (!application.job.test) {
+        if (!application.job.Test) {
             throw new BadRequestException('No test configured for this job');
         }
 
@@ -221,7 +221,7 @@ export class TestService {
             throw new BadRequestException('Test already attempted for this application');
         }
 
-        const test = application.job.test;
+        const test = application.job.Test;
         const now = Date.now();
         const endsAt = now + test.duration * 60 * 1000;
 
@@ -239,7 +239,7 @@ export class TestService {
                 status: TestSessionStatus.ACTIVE,
                 startedAt: new Date(),
                 endsAt: new Date(endsAt),
-                totalQuestions: test.questions.length,
+                totalQuestionBank: test.questions.length,
                 questionOrder,
             },
         });
@@ -302,9 +302,9 @@ export class TestService {
         const session = await this.prisma.testSession.findUnique({
             where: { id: sessionId },
             include: {
-                test: {
+                Test: {
                     include: {
-                        questions: {
+                        QuestionBank: {
                             orderBy: { orderIndex: 'asc' },
                             select: {
                                 id: true,
@@ -325,22 +325,22 @@ export class TestService {
         }
 
         // Standard test - check that test relation exists
-        if (!session.test) {
+        if (!session.Test) {
             throw new BadRequestException('This is a rapid-fire test session. Use the rapid-fire endpoints.');
         }
 
         // Reorder questions based on shuffled order
         const orderedQuestions = sessionData.questionOrder.map(
-            (i) => session.test!.questions[i],
+            (i) => session.Test!.questions[i],
         );
 
         return {
             sessionId: session.id,
-            testTitle: session.test!.title,
-            duration: session.test!.duration,
-            totalQuestions: session.totalQuestions,
+            testTitle: session.Test!.title,
+            duration: session.Test!.duration,
+            totalQuestionBank: session.totalQuestions,
             remainingTime: Math.max(0, Math.floor((sessionData.endsAt - Date.now()) / 1000)),
-            questions: orderedQuestions,
+            QuestionBank: orderedQuestions,
             answers: session.answers.map((a) => ({
                 questionId: a.questionId,
                 selectedAnswer: a.selectedAnswer,
@@ -417,8 +417,8 @@ export class TestService {
         const session = await this.prisma.testSession.findUnique({
             where: { id: sessionId },
             include: {
-                application: { include: { candidate: true } },
-                test: true,
+                application: { include: { Candidate: true } },
+                Test: true,
                 answers: true,
             },
         });
@@ -512,8 +512,8 @@ export class TestService {
         const session = await this.prisma.testSession.findUnique({
             where: { id: sessionId },
             include: {
-                application: { include: { candidate: true } },
-                test: true,
+                application: { include: { Candidate: true } },
+                Test: true,
                 answers: true,
             },
         });
@@ -558,21 +558,21 @@ export class TestService {
             },
         });
 
-        // SKILL-BASED TEST: Record skill test attempt if job has a skill bucket
+        // SKILL-BASED Test: Record skill test attempt if job has a skill bucket
         try {
             const application = await this.prisma.jobApplication.findUnique({
                 where: { id: session.applicationId },
                 include: {
-                    candidate: true,
-                    job: {
+                    Candidate: true,
+                    Job: {
                         include: {
-                            skillBucket: true,
+                            SkillBucket: true,
                         },
                     },
                 },
             });
 
-            if (application?.job?.skillBucketId) {
+            if (application?.Job?.skillBucketId) {
                 await this.skillBucketService.recordSkillTestAttempt(
                     application.candidate.id,
                     application.job.skillBucketId,
@@ -622,7 +622,7 @@ export class TestService {
             score,
             isPassed,
             correctAnswers,
-            totalQuestions: session.totalQuestions,
+            totalQuestionBank: session.totalQuestions,
             isAutoSubmit,
         };
     }

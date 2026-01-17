@@ -58,7 +58,7 @@ export class JobService {
                     experienceMin: dto.experienceMin,
                     experienceMax: dto.experienceMax,
                     educationLevel: dto.educationLevel,
-                    maxApplications: dto.maxApplications || 100,
+                    maxJobApplication: dto.maxApplications || 100,
                     referralFee: dto.referralFee || 499,
                     testId: dto.testId,
                     hrId: hr.id,
@@ -67,9 +67,9 @@ export class JobService {
             });
 
             // Add skills if provided
-            if (dto.skills && dto.skills.length > 0) {
+            if (dto.JobSkill && dto.jobSkill.length > 0) {
                 await tx.jobSkill.createMany({
-                    data: dto.skills.map((skill) => ({
+                    data: dto.jobSkill.map((skill) => ({
                         jobId: newJob.id,
                         name: skill.name,
                         isRequired: skill.isRequired ?? true,
@@ -135,8 +135,8 @@ export class JobService {
                 skip,
                 take,
                 include: {
-                    skills: true,
-                    hr: {
+                    JobSkill: true,
+                    HR: {
                         select: {
                             companyName: true,
                         },
@@ -165,16 +165,16 @@ export class JobService {
                 OR: [{ id: idOrSlug }, { slug: idOrSlug }],
             },
             include: {
-                skills: true,
-                test: {
+                JobSkill: true,
+                Test: {
                     select: {
                         id: true,
                         title: true,
                         duration: true,
-                        totalQuestions: true,
+                        totalQuestionBank: true,
                     },
                 },
-                hr: {
+                HR: {
                     select: {
                         companyName: true,
                         companyWebsite: true,
@@ -194,7 +194,7 @@ export class JobService {
     async updateJob(jobId: string, hrId: string, dto: UpdateJobDto) {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
-            include: { hr: true },
+            include: { HR: true },
         });
 
         if (!job) {
@@ -202,19 +202,19 @@ export class JobService {
         }
 
         // Check if HR owns this job (skip for admin-created jobs with no HR)
-        if (job.hr && job.hr.userId !== hrId) {
+        if (job.HR && job.hR.userId !== hrId) {
             throw new ForbiddenException('Not authorized to update this job');
         }
 
         // If job has no HR and user is not the creator, deny access
-        if (!job.hr) {
+        if (!job.HR) {
             throw new ForbiddenException('Only admin can update admin-created jobs');
         }
 
         return this.prisma.job.update({
             where: { id: jobId },
             data: dto,
-            include: { skills: true },
+            include: { JobSkill: true },
         });
     }
 
@@ -233,7 +233,7 @@ export class JobService {
             throw new NotFoundException('Candidate profile not found');
         }
 
-        // Get job with SkillBucket
+        // Get job with skillBucket
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
             include: {
@@ -357,7 +357,7 @@ export class JobService {
         return {
             ...application,
             skillTestInfo: skillCheckResult?.hasRequirements ? {
-                passedSkills: skillCheckResult.passedTests.map(t => ({
+                passedJobSkill: skillCheckResult.passedTests.map(t => ({
                     skillBucketName: t.skillBucketName,
                     displayName: t.displayName,
                     score: t.score,
@@ -385,9 +385,9 @@ export class JobService {
                 ...(status && { status }),
             },
             include: {
-                skills: true,
+                JobSkill: true,
                 _count: {
-                    select: { applications: true },
+                    select: { JobApplication: true },
                 },
             },
             orderBy: { createdAt: 'desc' },

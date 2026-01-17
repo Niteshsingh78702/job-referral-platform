@@ -11,9 +11,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Serve static frontend files from /frontend folder FIRST
-  // __dirname when running from dist/src/main.js is /path/to/dist/src
-  // So we go up twice to reach project root, then into frontend
-  const frontendPath = join(__dirname, '..', '..', 'frontend');
+  // Use process.cwd() which works both with ts-node and compiled code
+  const frontendPath = join(process.cwd(), 'frontend');
   console.log('Serving static files from:', frontendPath);
 
   app.useStaticAssets(frontendPath, {

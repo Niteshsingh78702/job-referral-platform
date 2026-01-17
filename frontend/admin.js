@@ -2088,9 +2088,14 @@ function renderInterviewsTable() {
 function getInterviewStatusBadge(status) {
     const badges = {
         'PAYMENT_PENDING': 'warning',
+        'INTERVIEW_CONFIRMED': 'info',
+        'PAYMENT_SUCCESS': 'success',
         'READY_TO_SCHEDULE': 'info',
         'INTERVIEW_SCHEDULED': 'primary',
+        'INTERVIEW_COMPLETED': 'success',
         'COMPLETED': 'success',
+        'CANDIDATE_NO_SHOW': 'danger',
+        'HR_NO_SHOW': 'danger',
         'CANCELLED': 'danger',
     };
     return badges[status] || 'info';
@@ -2099,9 +2104,14 @@ function getInterviewStatusBadge(status) {
 function formatInterviewStatus(status) {
     const labels = {
         'PAYMENT_PENDING': 'Payment Pending',
+        'INTERVIEW_CONFIRMED': '📅 Confirmed - Awaiting Payment',
+        'PAYMENT_SUCCESS': '✅ Paid - Details Unlocked',
         'READY_TO_SCHEDULE': 'Ready to Schedule',
         'INTERVIEW_SCHEDULED': 'Scheduled',
-        'COMPLETED': 'Completed',
+        'INTERVIEW_COMPLETED': '✅ Completed',
+        'COMPLETED': '✅ Completed',
+        'CANDIDATE_NO_SHOW': '❌ Candidate No-Show',
+        'HR_NO_SHOW': '❌ HR No-Show',
         'CANCELLED': 'Cancelled',
     };
     return labels[status] || status;

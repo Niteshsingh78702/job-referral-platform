@@ -2020,7 +2020,7 @@ async function loadApplications() {
         const appliedDate = new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
         let actionButton = '';
-        if (app.status === 'TEST_PENDING') {
+        if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">Take Test</button>`;
         } else if (app.status === 'TEST_PASSED') {
             actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Awaiting Referral</button>`;
@@ -2031,14 +2031,23 @@ async function loadApplications() {
         } else if (app.status === 'REFERRAL_PENDING') {
             actionButton = `<button class="btn btn-outline btn-sm" disabled>Pending Referral</button>`;
         } else if (app.status === 'INTERVIEW_REQUESTED') {
-            // Interview requested by HR - Candidate needs to pay ₹99
+            // Old flow: Interview requested by HR - Candidate needs to pay ₹99
             actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #f59e0b, #d97706);">💳 Pay ₹99 for Interview</button>`;
+        } else if (app.status === 'INTERVIEW_CONFIRMED') {
+            // NEW: Confirmation-first flow - HR confirmed interview details, candidate pays to unlock
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
+        } else if (app.status === 'PAYMENT_SUCCESS' || (app.interview && app.interview.status === 'PAYMENT_SUCCESS')) {
+            // Payment successful - interview details unlocked
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview?.id || app.id}')">📅 View Interview Details</button>`;
         } else if (app.interview && app.interview.status === 'READY_TO_SCHEDULE') {
-            // Payment done - waiting for HR to schedule
+            // Old flow: Payment done - waiting for HR to schedule
             actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Paid - Awaiting Schedule</button>`;
         } else if (app.interview && app.interview.status === 'INTERVIEW_SCHEDULED') {
             // Interview scheduled
             actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview.id}')">📅 View Interview</button>`;
+        } else if (app.interview && app.interview.status === 'INTERVIEW_COMPLETED') {
+            // Interview completed
+            actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Interview Completed</button>`;
         } else {
             actionButton = `<button class="btn btn-outline btn-sm">View Details</button>`;
         }
@@ -2071,13 +2080,18 @@ async function loadApplications() {
 function getStatusLabel(status) {
     const labels = {
         'TEST_PENDING': 'Pending Test',
+        'TEST_REQUIRED': 'Test Required',
         'TEST_PASSED': 'Test Passed',
         'TEST_FAILED': 'Test Failed',
         'REFERRAL_PENDING': 'Pending Referral',
         'REFERRED': 'Referred',
         'APPLIED': 'Applied',
         'INTERVIEW_REQUESTED': 'Interview Request',
-        'REFERRAL_CONFIRMED': 'Referral Confirmed'
+        'INTERVIEW_CONFIRMED': '📅 Interview Confirmed - Pay to Unlock',
+        'PAYMENT_SUCCESS': '✅ Paid - View Details',
+        'REFERRAL_CONFIRMED': 'Referral Confirmed',
+        'INTERVIEW_COMPLETED': 'Interview Completed',
+        'REJECTED': 'Rejected'
     };
     return labels[status] || status;
 }
@@ -2085,13 +2099,18 @@ function getStatusLabel(status) {
 function getStatusClass(status) {
     const classes = {
         'TEST_PENDING': 'status-pending',
+        'TEST_REQUIRED': 'status-pending',
         'TEST_PASSED': 'status-passed',
         'TEST_FAILED': 'status-rejected',
         'REFERRAL_PENDING': 'status-pending',
         'REFERRED': 'status-referred',
         'APPLIED': 'status-pending',
         'INTERVIEW_REQUESTED': 'status-interview',
-        'REFERRAL_CONFIRMED': 'status-passed'
+        'INTERVIEW_CONFIRMED': 'status-interview',
+        'PAYMENT_SUCCESS': 'status-passed',
+        'REFERRAL_CONFIRMED': 'status-passed',
+        'INTERVIEW_COMPLETED': 'status-passed',
+        'REJECTED': 'status-rejected'
     };
     return classes[status] || 'status-pending';
 }

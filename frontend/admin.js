@@ -29,8 +29,57 @@ const adminState = {
     currentInterviewId: null,
 };
 
+// ==========================================
+// MODAL REQUIRED FIELD MANAGEMENT
+// Fix: Hidden modal forms have required fields that block submission
+// ==========================================
+
+/**
+ * Disable required attributes on all modal form fields
+ * Store original required state in data-required attribute
+ */
+function disableAllModalRequirements() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.querySelectorAll('[required]').forEach(field => {
+            field.setAttribute('data-required', 'true');
+            field.removeAttribute('required');
+        });
+    });
+}
+
+/**
+ * Enable required attributes only for a specific modal
+ * @param {string} modalId - The ID of the modal to enable required fields for
+ */
+function enableModalRequirements(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.querySelectorAll('[data-required="true"]').forEach(field => {
+        field.setAttribute('required', '');
+    });
+}
+
+/**
+ * Disable required attributes for a specific modal
+ * @param {string} modalId - The ID of the modal to disable required fields for
+ */
+function disableModalRequirements(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.querySelectorAll('[required]').forEach(field => {
+        field.setAttribute('data-required', 'true');
+        field.removeAttribute('required');
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Disable all modal required fields initially to prevent hidden form validation issues
+    disableAllModalRequirements();
+
     // Check if already logged in
     const savedToken = localStorage.getItem('adminToken');
     if (savedToken) {
@@ -397,10 +446,12 @@ function showCreateJobModal() {
     adminState.currentJobId = null;
     document.getElementById('jobModalTitle').textContent = 'Create New Job';
     document.getElementById('jobForm').reset();
+    enableModalRequirements('jobModal'); // Enable required fields for this modal
     document.getElementById('jobModal').classList.add('active');
 }
 
 function closeJobModal() {
+    disableModalRequirements('jobModal'); // Disable required fields when closing
     document.getElementById('jobModal').classList.remove('active');
 }
 
@@ -421,6 +472,7 @@ async function editJob(jobId) {
     document.getElementById('jobExpMax').value = job.experienceMax || '';
     document.getElementById('jobFee').value = job.referralFee || 499;
 
+    enableModalRequirements('jobModal'); // Enable required fields for this modal
     document.getElementById('jobModal').classList.add('active');
 }
 
@@ -1679,10 +1731,12 @@ function showCreateQuestionModal() {
     adminState.currentQuestionId = null;
     document.getElementById('questionModalTitle').textContent = 'Add New Question';
     document.getElementById('questionForm').reset();
+    enableModalRequirements('questionModal'); // Enable required fields for this modal
     document.getElementById('questionModal').classList.add('active');
 }
 
 function closeQuestionModal() {
+    disableModalRequirements('questionModal'); // Disable required fields when closing
     document.getElementById('questionModal').classList.remove('active');
 }
 
@@ -1705,6 +1759,7 @@ function viewQuestion(questionId) {
     document.getElementById('questionTags').value = (q.tags || []).join(', ');
     document.getElementById('questionExplanation').value = q.explanation || '';
 
+    enableModalRequirements('questionModal'); // Enable required fields for this modal
     document.getElementById('questionModal').classList.add('active');
 }
 
@@ -1864,10 +1919,12 @@ function showCreateSkillBucketModal() {
     document.getElementById('skillBucketModalTitle').textContent = 'Create Skill Cluster';
     document.getElementById('skillBucketForm').reset();
     document.getElementById('skillBucketId').value = '';
+    enableModalRequirements('skillBucketModal'); // Enable required fields for this modal
     document.getElementById('skillBucketModal').classList.add('active');
 }
 
 function closeSkillBucketModal() {
+    disableModalRequirements('skillBucketModal'); // Disable required fields when closing
     document.getElementById('skillBucketModal').classList.remove('active');
 }
 
@@ -1885,6 +1942,7 @@ function editSkillBucket(bucketId) {
     document.getElementById('skillBucketExpMin').value = bucket.experienceMin;
     document.getElementById('skillBucketExpMax').value = bucket.experienceMax;
 
+    enableModalRequirements('skillBucketModal'); // Enable required fields for this modal
     document.getElementById('skillBucketModal').classList.add('active');
 }
 

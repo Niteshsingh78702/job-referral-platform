@@ -228,13 +228,13 @@ export declare class EmployeeService {
             amount: number;
             paidAt: Date | null;
             processedAt: Date | null;
+            payoutMethod: string | null;
             bonusAmount: number;
             commissionRate: number | null;
             referralId: string;
             bonusReason: string | null;
             tierName: string | null;
             payoutReference: string | null;
-            payoutMethod: string | null;
         };
     }>;
     getEarnings(userId: string, filters: EarningsFiltersDto): Promise<{
@@ -286,13 +286,13 @@ export declare class EmployeeService {
             amount: number;
             paidAt: Date | null;
             processedAt: Date | null;
+            payoutMethod: string | null;
             bonusAmount: number;
             commissionRate: number | null;
             referralId: string;
             bonusReason: string | null;
             tierName: string | null;
             payoutReference: string | null;
-            payoutMethod: string | null;
         })[];
         pagination: {
             page: number;
@@ -381,8 +381,8 @@ export declare class EmployeeService {
         createdAt: Date;
         userId: string;
         title: string;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         type: import("@prisma/client").$Enums.NotificationType;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         message: string;
         isRead: boolean;
         readAt: Date | null;
@@ -392,8 +392,8 @@ export declare class EmployeeService {
         createdAt: Date;
         userId: string;
         title: string;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         type: import("@prisma/client").$Enums.NotificationType;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         message: string;
         isRead: boolean;
         readAt: Date | null;

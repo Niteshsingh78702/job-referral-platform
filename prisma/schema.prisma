@@ -1,6 +1,3 @@
-// Prisma Schema for Job Referral Platform
-// Database: PostgreSQL
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,94 +7,686 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ===========================================
-// ENUMS
-// ===========================================
+model AuditLog {
+  id         String      @id
+  userId     String?
+  action     AuditAction
+  entityType String
+  entityId   String
+  oldValue   Json?
+  newValue   Json?
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+  User       User?       @relation(fields: [userId], references: [id])
 
-enum UserRole {
-  CANDIDATE
-  HR
-  EMPLOYEE
-  ADMIN
+  @@index([action])
+  @@index([createdAt])
+  @@index([entityType])
+  @@index([userId])
 }
 
-enum UserStatus {
-  PENDING
-  ACTIVE
-  BLOCKED
-  DELETED
+model CMSPage {
+  id        String   @id
+  slug      String   @unique
+  title     String
+  content   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([slug])
 }
 
-enum JobStatus {
-  DRAFT
-  PENDING_APPROVAL
-  ACTIVE
-  EXPIRED
-  CLOSED
+model Candidate {
+  id                String             @id
+  userId            String             @unique
+  firstName         String
+  lastName          String
+  headline          String?
+  bio               String?
+  avatarUrl         String?
+  resumeUrl         String?
+  totalExperience   Float?
+  currentCompany    String?
+  currentRole       String?
+  expectedSalary    Float?
+  noticePeriod      Int?
+  city              String?
+  state             String?
+  country           String?
+  willingToRelocate Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  User              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  CandidateSkill    CandidateSkill[]
+  Education         Education[]
+  Experience        Experience[]
+  JobApplication    JobApplication[]
+  SkillTestAttempt  SkillTestAttempt[]
+
+  @@index([userId])
+}
+
+model CandidateSkill {
+  id          String    @id
+  candidateId String
+  name        String
+  level       Int       @default(1)
+  yearsOfExp  Float?
+  Candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, name])
+  @@index([candidateId])
+}
+
+model CommissionTier {
+  id                String   @id
+  name              String   @unique
+  minReferrals      Int
+  commissionPercent Float
+  bonusPerReferral  Float    @default(0)
+  description       String?
+  badgeIcon         String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+
+  @@index([minReferrals])
+}
+
+model DeviceLog {
+  id        String   @id
+  userId    String
+  deviceId  String
+  ipAddress String
+  userAgent String?
+  location  String?
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([userId])
+}
+
+model Education {
+  id          String    @id
+  candidateId String
+  institution String
+  degree      String
+  field       String?
+  grade       String?
+  startYear   Int
+  endYear     Int?
+  createdAt   DateTime  @default(now())
+  Candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Employee {
+  id                  String            @id
+  userId              String            @unique
+  companyName         String
+  companyEmail        String
+  designation         String?
+  employeeId          String?
+  linkedinUrl         String?
+  isVerified          Boolean           @default(false)
+  verifiedAt          DateTime?
+  referralCount       Int               @default(0)
+  successfulReferrals Int               @default(0)
+  badges              String[]          @default([])
+  points              Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime
+  User                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  EmployeeEarning     EmployeeEarning[]
+  Referral            Referral[]
+
+  @@index([companyEmail])
+  @@index([companyName])
+  @@index([userId])
+}
+
+model EmployeeEarning {
+  id              String        @id
+  employeeId      String
+  referralId      String        @unique
+  amount          Float
+  status          EarningStatus @default(PENDING)
+  bonusAmount     Float         @default(0)
+  bonusReason     String?
+  tierName        String?
+  commissionRate  Float?
+  processedAt     DateTime?
+  paidAt          DateTime?
+  payoutReference String?
+  payoutMethod    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  Employee        Employee      @relation(fields: [employeeId], references: [id])
+  Referral        Referral      @relation(fields: [referralId], references: [id])
+
+  @@index([createdAt])
+  @@index([employeeId])
+  @@index([status])
+}
+
+model Experience {
+  id          String    @id
+  candidateId String
+  company     String
+  role        String
+  description String?
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  Candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model HR {
+  id              String           @id
+  userId          String           @unique
+  companyName     String
+  companyEmail    String
+  companyWebsite  String?
+  designation     String?
+  linkedinUrl     String?
+  approvalStatus  HRApprovalStatus @default(PENDING)
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectionReason String?
+  totalJobsPosted Int              @default(0)
+  activeJobs      Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime
+  User            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Job             Job[]
+  Referral        Referral[]
+
+  @@index([approvalStatus])
+  @@index([companyEmail])
+  @@index([userId])
+}
+
+model Interview {
+  id                  String          @id
+  applicationId       String          @unique
+  mode                InterviewMode
+  preferredTimeWindow String?
+  hrNotes             String?
+  status              InterviewStatus @default(PAYMENT_PENDING)
+  paymentStatus       PaymentStatus   @default(ELIGIBLE)
+  scheduledDate       DateTime?
+  scheduledTime       String?
+  interviewLink       String?
+  callDetails         String?
+  requestedAt         DateTime        @default(now())
+  paidAt              DateTime?
+  scheduledAt         DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime
+  JobApplication      JobApplication  @relation(fields: [applicationId], references: [id])
+
+  @@index([applicationId])
+  @@index([paymentStatus])
+  @@index([status])
+}
+
+model Job {
+  id                     String                   @id
+  slug                   String                   @unique
+  title                  String
+  description            String
+  requirements           String?
+  responsibilities       String?
+  companyName            String
+  companyLogo            String?
+  location               String
+  isRemote               Boolean                  @default(false)
+  salaryMin              Float?
+  salaryMax              Float?
+  salaryCurrency         String                   @default("INR")
+  experienceMin          Float?
+  experienceMax          Float?
+  educationLevel         String?
+  status                 JobStatus                @default(DRAFT)
+  maxApplications        Int                      @default(100)
+  applicationCount       Int                      @default(0)
+  referralFee            Float                    @default(499)
+  testId                 String?
+  hrId                   String?
+  postedAt               DateTime?
+  expiresAt              DateTime?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  skillBucketId          String?
+  HR                     HR?                      @relation(fields: [hrId], references: [id])
+  SkillBucket            SkillBucket?             @relation(fields: [skillBucketId], references: [id])
+  Test                   Test?                    @relation(fields: [testId], references: [id])
+  JobApplication         JobApplication[]
+  JobRequiredSkillBucket JobRequiredSkillBucket[]
+  JobSkill               JobSkill[]
+
+  @@index([companyName])
+  @@index([hrId])
+  @@index([location])
+  @@index([skillBucketId])
+  @@index([slug])
+  @@index([status])
+}
+
+model JobApplication {
+  id                String            @id
+  candidateId       String
+  jobId             String
+  status            ApplicationStatus @default(APPLIED)
+  coverLetter       String?
+  testScore         Float?
+  testPassedAt      DateTime?
+  contactUnlockedAt DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime
+  Interview         Interview?
+  Candidate         Candidate         @relation(fields: [candidateId], references: [id])
+  Job               Job               @relation(fields: [jobId], references: [id])
+  Payment           Payment[]
+  Referral          Referral?
+  TestSession       TestSession[]
+
+  @@unique([candidateId, jobId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@index([status])
+}
+
+model JobRequiredSkillBucket {
+  id            String      @id
+  jobId         String
+  skillBucketId String
+  displayOrder  Int         @default(0)
+  createdAt     DateTime    @default(now())
+  Job           Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  SkillBucket   SkillBucket @relation(fields: [skillBucketId], references: [id])
+
+  @@unique([jobId, skillBucketId])
+  @@index([jobId])
+  @@index([skillBucketId])
+}
+
+model JobSkill {
+  id         String  @id
+  jobId      String
+  name       String
+  isRequired Boolean @default(true)
+  Job        Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, name])
+  @@index([jobId])
+}
+
+model Notification {
+  id        String           @id
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  User      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isRead])
+  @@index([userId])
+}
+
+model OTPToken {
+  id        String    @id
+  userId    String
+  otp       String
+  type      String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([otp, type])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Payment {
+  id                String         @id
+  applicationId     String
+  razorpayOrderId   String?        @unique
+  razorpayPaymentId String?        @unique
+  razorpaySignature String?
+  amount            Float
+  currency          String         @default("INR")
+  status            PaymentStatus  @default(ELIGIBLE)
+  failureReason     String?
+  webhookPayload    Json?
+  orderCreatedAt    DateTime?
+  paidAt            DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime
+  JobApplication    JobApplication @relation(fields: [applicationId], references: [id])
+  Refund            Refund?
+
+  @@index([applicationId])
+  @@index([razorpayOrderId])
+  @@index([status])
+}
+
+model QuestionBank {
+  id            String             @id
+  question      String
+  options       Json
+  correctAnswer Int
+  explanation   String?
+  difficulty    QuestionDifficulty @default(MEDIUM)
+  category      QuestionCategory   @default(TECHNICAL)
+  tags          String[]
+  roleType      String?
+  createdById   String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime
+  isActive      Boolean            @default(true)
+
+  @@index([category])
+  @@index([createdAt])
+  @@index([difficulty])
+  @@index([roleType, isActive])
+}
+
+model Referral {
+  id                String           @id
+  applicationId     String           @unique
+  type              ReferralType
+  status            ReferralStatus   @default(PENDING)
+  employeeId        String?
+  hrId              String?
+  confirmedAt       DateTime?
+  contactedAt       DateTime?
+  closedAt          DateTime?
+  expiresAt         DateTime?
+  hrFeedback        String?
+  candidateFeedback String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime
+  EmployeeEarning   EmployeeEarning?
+  JobApplication    JobApplication   @relation(fields: [applicationId], references: [id])
+  Employee          Employee?        @relation(fields: [employeeId], references: [id])
+  HR                HR?              @relation(fields: [hrId], references: [id])
+
+  @@index([applicationId])
+  @@index([employeeId])
+  @@index([hrId])
+  @@index([status])
+}
+
+model RefreshToken {
+  id        String    @id
+  userId    String
+  token     String    @unique
+  deviceId  String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Refund {
+  id               String       @id
+  paymentId        String       @unique
+  amount           Float
+  reason           String
+  status           RefundStatus @default(REQUESTED)
+  processedBy      String?
+  processedAt      DateTime?
+  adminNotes       String?
+  razorpayRefundId String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime
+  Payment          Payment      @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+  @@index([status])
+}
+
+model SkillBucket {
+  id                     String                   @id
+  code                   String                   @unique
+  name                   String
+  description            String?
+  displayName            String?
+  experienceMin          Float                    @default(0)
+  experienceMax          Float                    @default(3)
+  isActive               Boolean                  @default(true)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  testId                 String?                  @unique
+  testTemplateId         String?
+  Job                    Job[]
+  JobRequiredSkillBucket JobRequiredSkillBucket[]
+  Test                   Test?                    @relation(fields: [testId], references: [id])
+  TestTemplate           TestTemplate?            @relation(fields: [testTemplateId], references: [id])
+  SkillTestAttempt       SkillTestAttempt[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model SkillTestAttempt {
+  id              String      @id
+  candidateId     String
+  skillBucketId   String
+  isPassed        Boolean
+  score           Float
+  attemptedAt     DateTime    @default(now())
+  validTill       DateTime?
+  retestAllowedAt DateTime?
+  testSessionId   String?
+  Candidate       Candidate   @relation(fields: [candidateId], references: [id])
+  SkillBucket     SkillBucket @relation(fields: [skillBucketId], references: [id])
+
+  @@index([candidateId])
+  @@index([candidateId, skillBucketId])
+  @@index([skillBucketId])
+  @@index([validTill])
+}
+
+model SystemConfig {
+  id        String   @id
+  key       String   @unique
+  value     String
+  type      String   @default("string")
+  updatedAt DateTime
+
+  @@index([key])
+}
+
+model Test {
+  id               String         @id
+  title            String
+  description      String?
+  duration         Int            @default(30)
+  passingScore     Float          @default(70)
+  totalQuestions   Int            @default(20)
+  shuffleQuestions Boolean        @default(true)
+  maxTabSwitches   Int            @default(2)
+  difficulty       String         @default("MEDIUM")
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  Job              Job[]
+  SkillBucket      SkillBucket?
+  TestQuestion     TestQuestion[]
+  TestSession      TestSession[]
+
+  @@index([isActive])
+}
+
+model TestAnswer {
+  id             String       @id
+  sessionId      String
+  questionId     String
+  selectedAnswer Int?
+  isCorrect      Boolean?
+  answeredAt     DateTime     @default(now())
+  TestQuestion   TestQuestion @relation(fields: [questionId], references: [id])
+  TestSession    TestSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@index([sessionId])
+}
+
+model TestEvent {
+  id          String      @id
+  sessionId   String
+  eventType   String
+  eventData   Json?
+  createdAt   DateTime    @default(now())
+  TestSession TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([eventType])
+  @@index([sessionId])
+}
+
+model TestQuestion {
+  id            String       @id
+  testId        String
+  question      String
+  options       Json
+  correctAnswer Int
+  explanation   String?
+  points        Int          @default(1)
+  orderIndex    Int
+  createdAt     DateTime     @default(now())
+  TestAnswer    TestAnswer[]
+  Test          Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+}
+
+model TestSession {
+  id                  String            @id
+  applicationId       String?
+  testId              String?
+  testTemplateId      String?
+  status              TestSessionStatus @default(ACTIVE)
+  startedAt           DateTime          @default(now())
+  endsAt              DateTime
+  submittedAt         DateTime?
+  score               Float?
+  totalQuestions      Int
+  correctAnswers      Int               @default(0)
+  isPassed            Boolean?
+  tabSwitchCount      Int               @default(0)
+  warningCount        Int               @default(0)
+  questionOrder       Int[]
+  selectedQuestionIds String[]
+  answeredCount       Int               @default(0)
+  createdAt           DateTime          @default(now())
+  TestAnswer          TestAnswer[]
+  TestEvent           TestEvent[]
+  JobApplication      JobApplication?   @relation(fields: [applicationId], references: [id])
+  Test                Test?             @relation(fields: [testId], references: [id])
+  TestTemplate        TestTemplate?     @relation(fields: [testTemplateId], references: [id])
+
+  @@index([applicationId])
+  @@index([status])
+  @@index([testId])
+  @@index([testTemplateId])
+}
+
+model TestTemplate {
+  id                String        @id
+  name              String
+  description       String?
+  testType          TestType      @default(RAPID_FIRE)
+  duration          Int           @default(20)
+  passingCriteria   Float         @default(70.0)
+  questionPoolSize  Int           @default(100)
+  autoSelect        Boolean       @default(true)
+  selectionTags     String[]
+  selectionRoleType String?
+  allowSkip         Boolean       @default(true)
+  showLiveScore     Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  isActive          Boolean       @default(true)
+  SkillBucket       SkillBucket[]
+  TestSession       TestSession[]
+
+  @@index([isActive])
+  @@index([testType])
+}
+
+model User {
+  id                 String               @id
+  email              String               @unique
+  phone              String?              @unique
+  passwordHash       String?
+  role               UserRole             @default(CANDIDATE)
+  status             UserStatus           @default(PENDING)
+  emailVerified      Boolean              @default(false)
+  phoneVerified      Boolean              @default(false)
+  googleId           String?              @unique
+  authProvider       String               @default("email")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  lastLoginAt        DateTime?
+  AuditLog           AuditLog[]
+  Candidate          Candidate?
+  DeviceLog          DeviceLog[]
+  Employee           Employee?
+  HR                 HR?
+  Notification       Notification[]
+  OTPToken           OTPToken[]
+  PasswordResetToken PasswordResetToken[]
+  RefreshToken       RefreshToken[]
+
+  @@index([email])
+  @@index([googleId])
+  @@index([phone])
+  @@index([role])
+  @@index([status])
 }
 
 enum ApplicationStatus {
-  TEST_PENDING            // Legacy - for existing records
-  TEST_REQUIRED           // Skill test not yet passed
-  TEST_IN_PROGRESS        // Currently taking test
-  TEST_FAILED             // Test failed - retry after 24hrs
-  APPLIED                 // Test passed, application submitted
-  INTERVIEW_CONFIRMED     // HR has confirmed interview with date/time/mode
-  PAYMENT_PENDING         // Waiting for candidate to pay ₹99
-  PAYMENT_SUCCESS         // Payment done, details unlocked
-  INTERVIEW_COMPLETED     // Interview was conducted
-  CANDIDATE_NO_SHOW       // Candidate missed interview
-  HR_NO_SHOW              // HR missed/cancelled interview
-  REJECTED                // Application rejected
-}
-
-enum TestSessionStatus {
-  ACTIVE
-  SUBMITTED
-  AUTO_SUBMITTED
-  EXPIRED
-}
-
-enum ReferralStatus {
-  PENDING
-  CONFIRMED
+  APPLIED
+  TEST_PENDING
+  TEST_PASSED
+  TEST_FAILED
+  REFERRAL_PENDING
+  REFERRAL_CONFIRMED
+  INTERVIEW_REQUESTED
   PAYMENT_PENDING
-  CONTACTED
+  CONTACT_UNLOCKED
   CLOSED
   EXPIRED
-}
-
-enum ReferralType {
-  EMPLOYEE
-  HR_DIRECT
-}
-
-enum PaymentStatus {
-  ELIGIBLE
-  ORDER_CREATED
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
-enum RefundStatus {
-  REQUESTED
-  APPROVED
-  REJECTED
-  PROCESSED
-}
-
-enum HRApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum NotificationType {
-  EMAIL
-  SMS
-  PUSH
 }
 
 enum AuditAction {
@@ -118,17 +707,54 @@ enum AuditAction {
 }
 
 enum EarningStatus {
-  PENDING // Referral confirmed, awaiting hire completion
-  ELIGIBLE // Hire confirmed, payment eligible
-  PROCESSING // Payout initiated
-  PAID // Payout completed
-  CANCELLED // Referral cancelled/expired
+  PENDING
+  ELIGIBLE
+  PROCESSING
+  PAID
+  CANCELLED
 }
 
-enum QuestionDifficulty {
-  EASY
-  MEDIUM
-  HARD
+enum HRApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InterviewMode {
+  CALL
+  VIDEO
+  ONSITE
+}
+
+enum InterviewStatus {
+  PAYMENT_PENDING
+  READY_TO_SCHEDULE
+  INTERVIEW_SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  EXPIRED
+  CLOSED
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum PaymentStatus {
+  ELIGIBLE
+  ORDER_CREATED
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
 }
 
 enum QuestionCategory {
@@ -138,1005 +764,55 @@ enum QuestionCategory {
   DOMAIN_SPECIFIC
 }
 
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ReferralStatus {
+  PENDING
+  CONFIRMED
+  PAYMENT_PENDING
+  CONTACTED
+  CLOSED
+  EXPIRED
+}
+
+enum ReferralType {
+  EMPLOYEE
+  HR_DIRECT
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+enum TestSessionStatus {
+  ACTIVE
+  SUBMITTED
+  AUTO_SUBMITTED
+  EXPIRED
+}
+
 enum TestType {
   STANDARD
   RAPID_FIRE
 }
 
-enum InterviewStatus {
-  INTERVIEW_CONFIRMED   // HR has set date/time/mode (awaiting payment)
-  PAYMENT_PENDING       // Alias - waiting for candidate payment
-  PAYMENT_SUCCESS       // Candidate paid, details unlocked
-  INTERVIEW_COMPLETED   // Interview was conducted
-  CANDIDATE_NO_SHOW     // Candidate missed interview
-  HR_NO_SHOW            // HR missed/cancelled interview  
-  CANCELLED             // Interview was cancelled
+enum UserRole {
+  CANDIDATE
+  HR
+  EMPLOYEE
+  ADMIN
 }
 
-enum InterviewMode {
-  CALL
-  VIDEO
-  ONSITE
-}
-
-// ===========================================
-// QUESTION BANK & TEST TEMPLATE MODELS
-// ===========================================
-
-model QuestionBank {
-  id            String   @id @default(uuid())
-  question      String   @db.Text
-  options       Json     // ["Option A", "Option B", "Option C", "Option D"]
-  correctAnswer Int      // 0, 1, 2, or 3
-  explanation   String?  @db.Text
-  
-  // Categorization
-  difficulty    QuestionDifficulty @default(MEDIUM)
-  category      QuestionCategory   @default(TECHNICAL)
-  tags          String[]           // ["Java", "DSA", "Backend"]
-  roleType      String?            // "JAVA_BACKEND_0_3", etc.
-  
-  // Metadata
-  createdById   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  isActive      Boolean  @default(true)
-  
-  // Performance indexes
-  @@index([roleType, isActive])
-  @@index([difficulty])
-  @@index([category])
-  @@index([createdAt])
-}
-
-model TestTemplate {
-  id               String   @id @default(uuid())
-  name             String   // "Java Backend - Rapid Fire"
-  description      String?
-  testType         TestType @default(RAPID_FIRE)
-  
-  // Test parameters
-  duration         Int      @default(20) // minutes
-  passingCriteria  Float    @default(70.0) // percentage
-  questionPoolSize Int      @default(100)
-  
-  // Question selection
-  autoSelect       Boolean  @default(true)
-  selectionTags    String[] // ["Java", "DSA"] for auto
-  selectionRoleType String? // Role type for auto-select
-  
-  // Rapid fire settings
-  allowSkip        Boolean  @default(true)
-  showLiveScore    Boolean  @default(false)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  isActive         Boolean  @default(true)
-  
-  // Relations
-  skillBuckets     SkillBucket[]
-  testSessions     TestSession[]
-  
-  @@index([isActive])
-  @@index([testType])
-}
-
-// ===========================================
-// SKILL BUCKET MODELS (Skill-Based Test System)
-// ===========================================
-
-model SkillBucket {
-
-  id String @id @default(uuid())
-
-  code        String  @unique // e.g., JAVA_BACKEND_0_3, REACT_FRONTEND_0_3
-  name        String // e.g., "Java Basics Test"
-  description String?
-  displayName String? // "HR Shortlisting Check - Java"
-
-  // Experience range this bucket targets
-  experienceMin Float @default(0)
-  experienceMax Float @default(3)
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations - Legacy standard test
-  test     Test?              @relation(fields: [testId], references: [id])
-  testId   String?            @unique
-  
-  // Relations - New test template for rapid fire
-  testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
-  testTemplateId String?
-  
-  jobs     Job[]
-  attempts SkillTestAttempt[]
-  
-  // Relation for jobs requiring this skill (composite requirements)
-  jobRequirements JobRequiredSkillBucket[]
-
-  @@index([code])
-  @@index([isActive])
-}
-
-
-model SkillTestAttempt {
-  id String @id @default(uuid())
-
-  candidateId String
-  candidate   Candidate @relation(fields: [candidateId], references: [id])
-
-  skillBucketId String
-  skillBucket   SkillBucket @relation(fields: [skillBucketId], references: [id])
-
-  // Result
-  isPassed Boolean
-  score    Float
-
-  // Timestamps
-  attemptedAt DateTime @default(now())
-
-  // Validity (only for passed attempts)
-  validTill DateTime? // attemptedAt + 7 days if passed
-
-  // Cooldown (only for failed attempts)
-  retestAllowedAt DateTime? // attemptedAt + 24 hours if failed
-
-  // Test session reference
-  testSessionId String?
-
-  @@index([candidateId])
-  @@index([skillBucketId])
-  @@index([candidateId, skillBucketId])
-  @@index([validTill])
-}
-
-// ===========================================
-// JOB REQUIRED SKILL BUCKETS (Composite Skill Requirements)
-// ===========================================
-
-// Allows jobs to require multiple skill buckets
-// Example: Full Stack job requires both JAVA_BACKEND_0_3 and REACT_FRONTEND_0_3
-model JobRequiredSkillBucket {
-  id            String      @id @default(uuid())
-  
-  jobId         String
-  job           Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  
-  skillBucketId String
-  skillBucket   SkillBucket @relation(fields: [skillBucketId], references: [id])
-  
-  // Order for display purposes
-  displayOrder  Int         @default(0)
-  
-  createdAt     DateTime    @default(now())
-  
-  @@unique([jobId, skillBucketId])
-  @@index([jobId])
-  @@index([skillBucketId])
-}
-
-// ===========================================
-// USER & AUTH MODELS
-// ===========================================
-
-model User {
-  id            String     @id @default(uuid())
-  email         String     @unique
-  phone         String?    @unique
-  passwordHash  String?
-  role          UserRole   @default(CANDIDATE)
-  status        UserStatus @default(PENDING)
-  emailVerified Boolean    @default(false)
-  phoneVerified Boolean    @default(false)
-
-  // OAuth provider fields
-  googleId     String? @unique
-  authProvider String  @default("email") // email, google
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  lastLoginAt DateTime?
-
-  // Relations
-  candidate Candidate?
-  hr        HR?
-  employee  Employee?
-
-  otpTokens           OTPToken[]
-  refreshTokens       RefreshToken[]
-  deviceLogs          DeviceLog[]
-  auditLogs           AuditLog[]
-  notifications       Notification[]
-  passwordResetTokens PasswordResetToken[]
-
-  @@index([email])
-  @@index([phone])
-  @@index([role])
-  @@index([status])
-  @@index([googleId])
-}
-
-model PasswordResetToken {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  token     String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([token])
-}
-
-model OTPToken {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  otp       String
-  type      String // email_verify, phone_verify, login
-  expiresAt DateTime
-  usedAt    DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([otp, type])
-}
-
-model RefreshToken {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  token     String    @unique
-  deviceId  String?
-  expiresAt DateTime
-  revokedAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([token])
-}
-
-model DeviceLog {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  deviceId  String
-  ipAddress String
-  userAgent String?
-  location  String?
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([deviceId])
-}
-
-// ===========================================
-// CANDIDATE MODELS
-// ===========================================
-
-model Candidate {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Profile
-  firstName String
-  lastName  String
-  headline  String?
-  bio       String?
-  avatarUrl String?
-  resumeUrl String?
-
-  // Experience
-  totalExperience Float? // in years
-  currentCompany  String?
-  currentRole     String?
-  expectedSalary  Float?
-  noticePeriod    Int? // in days
-
-  // Location
-  city              String?
-  state             String?
-  country           String?
-  willingToRelocate Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  skills            CandidateSkill[]
-  experiences       Experience[]
-  educations        Education[]
-  applications      JobApplication[]
-  skillTestAttempts SkillTestAttempt[]
-
-  @@index([userId])
-}
-
-model CandidateSkill {
-  id          String    @id @default(uuid())
-  candidateId String
-  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  name       String
-  level      Int    @default(1) // 1-5 proficiency
-  yearsOfExp Float?
-
-  @@unique([candidateId, name])
-  @@index([candidateId])
-}
-
-model Experience {
-  id          String    @id @default(uuid())
-  candidateId String
-  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  company     String
-  role        String
-  description String?
-  location    String?
-  startDate   DateTime
-  endDate     DateTime?
-  isCurrent   Boolean   @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@index([candidateId])
-}
-
-model Education {
-  id          String    @id @default(uuid())
-  candidateId String
-  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  institution String
-  degree      String
-  field       String?
-  grade       String?
-  startYear   Int
-  endYear     Int?
-
-  createdAt DateTime @default(now())
-
-  @@index([candidateId])
-}
-
-// ===========================================
-// HR / RECRUITER MODELS
-// ===========================================
-
-model HR {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Company Details
-  companyName    String
-  companyEmail   String
-  companyWebsite String?
-  designation    String?
-  linkedinUrl    String?
-
-  // Verification
-  approvalStatus  HRApprovalStatus @default(PENDING)
-  approvedBy      String?
-  approvedAt      DateTime?
-  rejectionReason String?
-
-  // Stats
-  totalJobsPosted Int @default(0)
-  activeJobs      Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  jobs      Job[]
-  referrals Referral[]
-
-  @@index([userId])
-  @@index([companyEmail])
-  @@index([approvalStatus])
-}
-
-// ===========================================
-// EMPLOYEE REFERRAL MODELS
-// ===========================================
-
-model Employee {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Company Details
-  companyName  String
-  companyEmail String
-  designation  String?
-  employeeId   String? // Internal employee ID
-  linkedinUrl  String?
-
-  // Verification
-  isVerified Boolean   @default(false)
-  verifiedAt DateTime?
-
-  // Gamification
-  referralCount       Int      @default(0)
-  successfulReferrals Int      @default(0)
-  badges              String[] @default([])
-  points              Int      @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  referrals Referral[]
-  earnings  EmployeeEarning[]
-
-  @@index([userId])
-  @@index([companyEmail])
-  @@index([companyName])
-}
-
-// ===========================================
-// JOB MODELS
-// ===========================================
-
-model Job {
-  id   String @id @default(uuid())
-  slug String @unique // SEO-friendly URL
-
-  // Basic Info
-  title            String
-  description      String
-  requirements     String?
-  responsibilities String?
-
-  // Company
-  companyName String
-  companyLogo String?
-  location    String
-  isRemote    Boolean @default(false)
-
-  // Compensation
-  salaryMin      Float?
-  salaryMax      Float?
-  salaryCurrency String @default("INR")
-
-  // Requirements
-  experienceMin  Float? // in years
-  experienceMax  Float?
-  educationLevel String?
-
-  // Job Settings
-  status           JobStatus @default(DRAFT)
-  maxApplications  Int       @default(100)
-  applicationCount Int       @default(0)
-
-  // Payment for candidates
-  referralFee Float @default(499)
-
-  // Test Configuration
-  testId String?
-  test   Test?   @relation(fields: [testId], references: [id])
-
-  // HR who posted (optional for admin-created jobs)
-  hrId String?
-  hr   HR?     @relation(fields: [hrId], references: [id])
-
-  // Timestamps
-  postedAt  DateTime?
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  // Skill Bucket for test requirement (replaces direct testId for skill-based testing)
-  skillBucketId String?
-  skillBucket   SkillBucket? @relation(fields: [skillBucketId], references: [id])
-
-  // Relations
-  skills       JobSkill[]
-  applications JobApplication[]
-  
-  // Multiple skill bucket requirements (for Full Stack etc.)
-  requiredSkillBuckets JobRequiredSkillBucket[]
-
-  @@index([slug])
-  @@index([status])
-  @@index([hrId])
-  @@index([skillBucketId])
-  @@index([companyName])
-  @@index([location])
-}
-
-model JobSkill {
-  id    String @id @default(uuid())
-  jobId String
-  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  name       String
-  isRequired Boolean @default(true)
-
-  @@unique([jobId, name])
-  @@index([jobId])
-}
-
-// ===========================================
-// APPLICATION MODELS
-// ===========================================
-
-model JobApplication {
-  id String @id @default(uuid())
-
-  candidateId String
-  candidate   Candidate @relation(fields: [candidateId], references: [id])
-
-  jobId String
-  job   Job    @relation(fields: [jobId], references: [id])
-
-  status ApplicationStatus @default(APPLIED)
-
-  // Cover letter
-  coverLetter String?
-
-  // Test info
-  testScore    Float?
-  testPassedAt DateTime?
-
-  // Contact unlocked
-  contactUnlockedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  testSessions TestSession[]
-  referral     Referral?
-  payments     Payment[]
-  interview    Interview?
-
-  @@unique([candidateId, jobId])
-  @@index([candidateId])
-  @@index([jobId])
-  @@index([status])
-}
-
-// ===========================================
-// TEST ENGINE MODELS
-// ===========================================
-
-model Test {
-  id String @id @default(uuid())
-
-  title       String
-  description String?
-
-  // Configuration
-  duration         Int     @default(30) // minutes
-  passingScore     Float   @default(70) // percentage
-  totalQuestions   Int     @default(20)
-  shuffleQuestions Boolean @default(true)
-  maxTabSwitches   Int     @default(2)
-
-  // Difficulty
-  difficulty String @default("MEDIUM") // EASY, MEDIUM, HARD
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  questions   TestQuestion[]
-  jobs        Job[]
-  sessions    TestSession[]
-  skillBucket SkillBucket? // Reverse relation to SkillBucket
-
-  @@index([isActive])
-}
-
-model TestQuestion {
-  id     String @id @default(uuid())
-  testId String
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
-
-  question      String
-  options       Json // Array of options
-  correctAnswer Int // Index of correct option
-  explanation   String?
-  points        Int     @default(1)
-
-  // Ordering
-  orderIndex Int
-
-  createdAt DateTime @default(now())
-
-  // Relations
-  answers TestAnswer[]
-
-  @@index([testId])
-}
-
-model TestSession {
-  id String @id @default(uuid())
-
-  // Optional for rapid fire tests (which don't require job application)
-  applicationId String?
-  application   JobApplication? @relation(fields: [applicationId], references: [id])
-
-  testId String?
-  test   Test?   @relation(fields: [testId], references: [id])
-  
-  // Rapid fire test template support
-  testTemplateId String?
-  testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
-
-  status TestSessionStatus @default(ACTIVE)
-
-  // Timing
-  startedAt   DateTime  @default(now())
-  endsAt      DateTime
-  submittedAt DateTime?
-
-  // Results
-  score          Float?
-  totalQuestions Int
-  correctAnswers Int      @default(0)
-  isPassed       Boolean?
-
-  // Anti-cheat
-  tabSwitchCount Int @default(0)
-  warningCount   Int @default(0)
-
-  // Question order (shuffled indices for standard tests)
-  questionOrder Int[]
-  
-  // Rapid fire: store selected question IDs from QuestionBank
-  selectedQuestionIds String[]
-  // Track how many questions answered (for rapid fire progress)
-  answeredCount Int @default(0)
-
-  createdAt DateTime @default(now())
-
-  // Relations
-  answers TestAnswer[]
-  events  TestEvent[]
-
-  @@index([applicationId])
-  @@index([testId])
-  @@index([testTemplateId])
-  @@index([status])
-}
-
-
-model TestAnswer {
-  id String @id @default(uuid())
-
-  sessionId String
-  session   TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  questionId String
-  question   TestQuestion @relation(fields: [questionId], references: [id])
-
-  selectedAnswer Int?
-  isCorrect      Boolean?
-  answeredAt     DateTime @default(now())
-
-  @@unique([sessionId, questionId])
-  @@index([sessionId])
-}
-
-model TestEvent {
-  id String @id @default(uuid())
-
-  sessionId String
-  session   TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  eventType String // TAB_SWITCH, COPY_ATTEMPT, PASTE_ATTEMPT, RIGHT_CLICK, WARNING_ISSUED
-  eventData Json?
-
-  createdAt DateTime @default(now())
-
-  @@index([sessionId])
-  @@index([eventType])
-}
-
-// ===========================================
-// REFERRAL MODELS
-// ===========================================
-
-model Referral {
-  id String @id @default(uuid())
-
-  applicationId String         @unique
-  application   JobApplication @relation(fields: [applicationId], references: [id])
-
-  type   ReferralType
-  status ReferralStatus @default(PENDING)
-
-  // If employee referral
-  employeeId String?
-  employee   Employee? @relation(fields: [employeeId], references: [id])
-
-  // If HR direct
-  hrId String?
-  hr   HR?     @relation(fields: [hrId], references: [id])
-
-  // Timestamps
-  confirmedAt DateTime?
-  contactedAt DateTime?
-  closedAt    DateTime?
-  expiresAt   DateTime?
-
-  // Feedback
-  hrFeedback        String?
-  candidateFeedback String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Earning relation
-  earning EmployeeEarning?
-
-  @@index([applicationId])
-  @@index([employeeId])
-  @@index([hrId])
-  @@index([status])
-}
-
-// ===========================================
-// PAYMENT MODELS
-// ===========================================
-
-model Payment {
-  id String @id @default(uuid())
-
-  applicationId String
-  application   JobApplication @relation(fields: [applicationId], references: [id])
-
-  // Razorpay
-  razorpayOrderId   String? @unique
-  razorpayPaymentId String? @unique
-  razorpaySignature String?
-
-  // Amount
-  amount   Float
-  currency String @default("INR")
-
-  status PaymentStatus @default(ELIGIBLE)
-
-  // Metadata
-  failureReason  String?
-  webhookPayload Json?
-
-  // Timestamps
-  orderCreatedAt DateTime?
-  paidAt         DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  refund Refund?
-
-  @@index([applicationId])
-  @@index([razorpayOrderId])
-  @@index([status])
-}
-
-model Refund {
-  id String @id @default(uuid())
-
-  paymentId String  @unique
-  payment   Payment @relation(fields: [paymentId], references: [id])
-
-  amount Float
-  reason String
-  status RefundStatus @default(REQUESTED)
-
-  // Admin handling
-  processedBy String?
-  processedAt DateTime?
-  adminNotes  String?
-
-  // Razorpay refund
-  razorpayRefundId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([paymentId])
-  @@index([status])
-}
-
-// ===========================================
-// NOTIFICATION MODELS
-// ===========================================
-
-model Notification {
-  id String @id @default(uuid())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type    NotificationType
-  title   String
-  message String
-  data    Json?
-
-  isRead Boolean   @default(false)
-  readAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([isRead])
-}
-
-// ===========================================
-// AUDIT LOG MODELS
-// ===========================================
-
-model AuditLog {
-  id String @id @default(uuid())
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id])
-
-  action     AuditAction
-  entityType String // User, Job, Payment, etc.
-  entityId   String
-
-  oldValue Json?
-  newValue Json?
-  metadata Json? // IP, user agent, etc.
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([action])
-  @@index([entityType])
-  @@index([createdAt])
-}
-
-// ===========================================
-// EMPLOYEE EARNING MODELS
-// ===========================================
-
-model EmployeeEarning {
-  id String @id @default(uuid())
-
-  employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id])
-
-  referralId String   @unique
-  referral   Referral @relation(fields: [referralId], references: [id])
-
-  // Amount earned
-  amount Float
-  status EarningStatus @default(PENDING)
-
-  // Bonus support
-  bonusAmount Float   @default(0)
-  bonusReason String?
-
-  // Tier at time of earning
-  tierName       String?
-  commissionRate Float? // Percentage applied
-
-  // Payout tracking
-  processedAt     DateTime?
-  paidAt          DateTime?
-  payoutReference String? // UPI/Bank transaction reference
-  payoutMethod    String? // UPI, BANK, etc.
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([employeeId])
-  @@index([status])
-  @@index([createdAt])
-}
-
-model CommissionTier {
-  id String @id @default(uuid())
-
-  name              String @unique // e.g., "Bronze", "Silver", "Gold", "Platinum"
-  minReferrals      Int // Minimum referrals to reach this tier
-  commissionPercent Float // Percentage of referral fee
-  bonusPerReferral  Float  @default(0) // Additional bonus per referral
-
-  // Tier benefits
-  description String?
-  badgeIcon   String?
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([minReferrals])
-}
-
-// ===========================================
-// CMS / ADMIN MODELS
-// ===========================================
-
-model CMSPage {
-  id String @id @default(uuid())
-
-  slug    String @unique
-  title   String
-  content String
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([slug])
-}
-
-model SystemConfig {
-  id String @id @default(uuid())
-
-  key   String @unique
-  value String
-  type  String @default("string") // string, number, boolean, json
-
-  updatedAt DateTime @updatedAt
-
-  @@index([key])
-}
-
-// ===========================================
-// INTERVIEW MODELS
-// ===========================================
-
-model Interview {
-  id              String          @id @default(uuid())
-  
-  applicationId   String          @unique
-  application     JobApplication  @relation(fields: [applicationId], references: [id])
-  
-  // Interview request details (set by HR initially)
-  mode            InterviewMode
-  preferredTimeWindow String?     // e.g., "next 3 days"
-  hrNotes         String?
-  
-  // Status tracking
-  status          InterviewStatus @default(PAYMENT_PENDING)
-  paymentStatus   PaymentStatus   @default(ELIGIBLE)
-  
-  // Scheduling details (set by HR after payment)
-  scheduledDate   DateTime?
-  scheduledTime   String?         // e.g., "10:00 AM IST"
-  interviewLink   String?         // Video call link
-  callDetails     String?         // Phone number or onsite address
-  
-  // Timestamps
-  requestedAt     DateTime        @default(now())
-  paidAt          DateTime?
-  scheduledAt     DateTime?
-  completedAt     DateTime?
-  
-  // Audit
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  @@index([applicationId])
-  @@index([status])
-  @@index([paymentStatus])
+enum UserStatus {
+  PENDING
+  ACTIVE
+  BLOCKED
+  DELETED
 }

@@ -25,8 +25,8 @@ export declare class CandidateService {
             description: string | null;
             location: string | null;
             candidateId: string;
-            startDate: Date;
             company: string;
+            startDate: Date;
             endDate: Date | null;
             isCurrent: boolean;
         }[];
@@ -34,11 +34,11 @@ export declare class CandidateService {
             id: string;
             createdAt: Date;
             candidateId: string;
-            startYear: number;
             institution: string;
             degree: string;
             field: string | null;
             grade: string | null;
+            startYear: number;
             endYear: number | null;
         }[];
     } & {
@@ -77,8 +77,8 @@ export declare class CandidateService {
             description: string | null;
             location: string | null;
             candidateId: string;
-            startDate: Date;
             company: string;
+            startDate: Date;
             endDate: Date | null;
             isCurrent: boolean;
         }[];
@@ -86,11 +86,11 @@ export declare class CandidateService {
             id: string;
             createdAt: Date;
             candidateId: string;
-            startYear: number;
             institution: string;
             degree: string;
             field: string | null;
             grade: string | null;
+            startYear: number;
             endYear: number | null;
         }[];
     } & {
@@ -157,8 +157,8 @@ export declare class CandidateService {
             description: string | null;
             location: string | null;
             candidateId: string;
-            startDate: Date;
             company: string;
+            startDate: Date;
             endDate: Date | null;
             isCurrent: boolean;
         }[];
@@ -166,11 +166,11 @@ export declare class CandidateService {
             id: string;
             createdAt: Date;
             candidateId: string;
-            startYear: number;
             institution: string;
             degree: string;
             field: string | null;
             grade: string | null;
+            startYear: number;
             endYear: number | null;
         }[];
     } & {
@@ -215,8 +215,8 @@ export declare class CandidateService {
         description: string | null;
         location: string | null;
         candidateId: string;
-        startDate: Date;
         company: string;
+        startDate: Date;
         endDate: Date | null;
         isCurrent: boolean;
     }>;
@@ -227,8 +227,8 @@ export declare class CandidateService {
         description: string | null;
         location: string | null;
         candidateId: string;
-        startDate: Date;
         company: string;
+        startDate: Date;
         endDate: Date | null;
         isCurrent: boolean;
     }>;
@@ -236,22 +236,22 @@ export declare class CandidateService {
         id: string;
         createdAt: Date;
         candidateId: string;
-        startYear: number;
         institution: string;
         degree: string;
         field: string | null;
         grade: string | null;
+        startYear: number;
         endYear: number | null;
     }>;
     removeEducation(userId: string, educationId: string): Promise<{
         id: string;
         createdAt: Date;
         candidateId: string;
-        startYear: number;
         institution: string;
         degree: string;
         field: string | null;
         grade: string | null;
+        startYear: number;
         endYear: number | null;
     }>;
     getApplications(userId: string, status?: ApplicationStatus): Promise<({
@@ -337,9 +337,9 @@ export declare class CandidateService {
             amount: number;
             paymentId: string;
             reason: string;
+            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
-            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {

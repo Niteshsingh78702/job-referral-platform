@@ -18,6 +18,7 @@ export declare enum JobStatus {
     CLOSED = "CLOSED"
 }
 export declare enum ApplicationStatus {
+    TEST_PENDING = "TEST_PENDING",
     TEST_REQUIRED = "TEST_REQUIRED",
     TEST_IN_PROGRESS = "TEST_IN_PROGRESS",
     TEST_FAILED = "TEST_FAILED",

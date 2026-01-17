@@ -27,6 +27,7 @@ export enum JobStatus {
 }
 
 export enum ApplicationStatus {
+  TEST_PENDING = 'TEST_PENDING', // Legacy - for existing records
   TEST_REQUIRED = 'TEST_REQUIRED',
   TEST_IN_PROGRESS = 'TEST_IN_PROGRESS',
   TEST_FAILED = 'TEST_FAILED',

@@ -36,9 +36,9 @@ export declare class PaymentController {
             amount: number;
             paymentId: string;
             reason: string;
-            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
+            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {
@@ -83,9 +83,9 @@ export declare class PaymentController {
             amount: number;
             paymentId: string;
             reason: string;
-            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
+            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {
@@ -175,9 +175,9 @@ export declare class PaymentController {
         amount: number;
         paymentId: string;
         reason: string;
-        adminNotes: string | null;
         processedBy: string | null;
         processedAt: Date | null;
+        adminNotes: string | null;
         razorpayRefundId: string | null;
     }>;
     createInterviewOrder(userId: string, dto: {

@@ -296,9 +296,9 @@ export declare class AdminService {
                 amount: number;
                 paymentId: string;
                 reason: string;
-                adminNotes: string | null;
                 processedBy: string | null;
                 processedAt: Date | null;
+                adminNotes: string | null;
                 razorpayRefundId: string | null;
             } | null;
             application: {
@@ -392,9 +392,9 @@ export declare class AdminService {
         amount: number;
         paymentId: string;
         reason: string;
-        adminNotes: string | null;
         processedBy: string | null;
         processedAt: Date | null;
+        adminNotes: string | null;
         razorpayRefundId: string | null;
     })[]>;
     approveRefund(refundId: string, adminId: string, notes?: string): Promise<{

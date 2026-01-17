@@ -29,8 +29,8 @@ export declare class CandidateController {
             description: string | null;
             location: string | null;
             candidateId: string;
-            company: string;
             startDate: Date;
+            company: string;
             endDate: Date | null;
             isCurrent: boolean;
         }[];
@@ -38,11 +38,11 @@ export declare class CandidateController {
             id: string;
             createdAt: Date;
             candidateId: string;
+            startYear: number;
             institution: string;
             degree: string;
             field: string | null;
             grade: string | null;
-            startYear: number;
             endYear: number | null;
         }[];
     } & {
@@ -81,8 +81,8 @@ export declare class CandidateController {
             description: string | null;
             location: string | null;
             candidateId: string;
-            company: string;
             startDate: Date;
+            company: string;
             endDate: Date | null;
             isCurrent: boolean;
         }[];
@@ -90,11 +90,11 @@ export declare class CandidateController {
             id: string;
             createdAt: Date;
             candidateId: string;
+            startYear: number;
             institution: string;
             degree: string;
             field: string | null;
             grade: string | null;
-            startYear: number;
             endYear: number | null;
         }[];
     } & {
@@ -144,8 +144,8 @@ export declare class CandidateController {
                 description: string | null;
                 location: string | null;
                 candidateId: string;
-                company: string;
                 startDate: Date;
+                company: string;
                 endDate: Date | null;
                 isCurrent: boolean;
             }[];
@@ -153,11 +153,11 @@ export declare class CandidateController {
                 id: string;
                 createdAt: Date;
                 candidateId: string;
+                startYear: number;
                 institution: string;
                 degree: string;
                 field: string | null;
                 grade: string | null;
-                startYear: number;
                 endYear: number | null;
             }[];
         } & {
@@ -203,8 +203,8 @@ export declare class CandidateController {
         description: string | null;
         location: string | null;
         candidateId: string;
-        company: string;
         startDate: Date;
+        company: string;
         endDate: Date | null;
         isCurrent: boolean;
     }>;
@@ -215,8 +215,8 @@ export declare class CandidateController {
         description: string | null;
         location: string | null;
         candidateId: string;
-        company: string;
         startDate: Date;
+        company: string;
         endDate: Date | null;
         isCurrent: boolean;
     }>;
@@ -224,22 +224,22 @@ export declare class CandidateController {
         id: string;
         createdAt: Date;
         candidateId: string;
+        startYear: number;
         institution: string;
         degree: string;
         field: string | null;
         grade: string | null;
-        startYear: number;
         endYear: number | null;
     }>;
     removeEducation(userId: string, educationId: string): Promise<{
         id: string;
         createdAt: Date;
         candidateId: string;
+        startYear: number;
         institution: string;
         degree: string;
         field: string | null;
         grade: string | null;
-        startYear: number;
         endYear: number | null;
     }>;
     getApplications(userId: string, status?: ApplicationStatus): Promise<({
@@ -325,9 +325,9 @@ export declare class CandidateController {
             amount: number;
             paymentId: string;
             reason: string;
-            adminNotes: string | null;
             processedBy: string | null;
             processedAt: Date | null;
+            adminNotes: string | null;
             razorpayRefundId: string | null;
         } | null;
         application: {

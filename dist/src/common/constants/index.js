@@ -25,6 +25,7 @@ var JobStatus;
 })(JobStatus || (exports.JobStatus = JobStatus = {}));
 var ApplicationStatus;
 (function (ApplicationStatus) {
+    ApplicationStatus["TEST_PENDING"] = "TEST_PENDING";
     ApplicationStatus["TEST_REQUIRED"] = "TEST_REQUIRED";
     ApplicationStatus["TEST_IN_PROGRESS"] = "TEST_IN_PROGRESS";
     ApplicationStatus["TEST_FAILED"] = "TEST_FAILED";

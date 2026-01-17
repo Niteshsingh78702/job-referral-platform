@@ -37,6 +37,7 @@ enum JobStatus {
 }
 
 enum ApplicationStatus {
+  TEST_PENDING            // Legacy - for existing records
   TEST_REQUIRED           // Skill test not yet passed
   TEST_IN_PROGRESS        // Currently taking test
   TEST_FAILED             // Test failed - retry after 24hrs

@@ -151,9 +151,9 @@ export class AuthService {
         const user = await this.prisma.user.findUnique({
             where: { email: dto.email },
             include: {
-                candidate: true,
-                hr: true,
-                employee: true,
+                Candidate: true,
+                HR: true,
+                Employee: true,
             },
         });
 
@@ -438,9 +438,9 @@ export class AuthService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                candidate: true,
-                hr: true,
-                employee: true,
+                Candidate: true,
+                HR: true,
+                Employee: true,
             },
         });
 
@@ -461,7 +461,7 @@ export class AuthService {
     async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
         const user = await this.prisma.user.findUnique({
             where: { email: dto.email },
-            include: { candidate: true },
+            include: { Candidate: true },
         });
 
         // Always return success message to prevent email enumeration
@@ -505,7 +505,7 @@ export class AuthService {
     async resetPasswordWithToken(dto: ResetPasswordWithTokenDto): Promise<{ message: string }> {
         const resetToken = await this.prisma.passwordResetToken.findUnique({
             where: { token: dto.token },
-            include: { user: true },
+            include: { User: true },
         });
 
         if (!resetToken) {
@@ -553,9 +553,9 @@ export class AuthService {
         let user = await this.prisma.user.findUnique({
             where: { googleId: googlePayload.sub },
             include: {
-                candidate: true,
-                hr: true,
-                employee: true,
+                Candidate: true,
+                HR: true,
+                Employee: true,
             },
         });
 
@@ -566,9 +566,9 @@ export class AuthService {
             const existingEmailUser = await this.prisma.user.findUnique({
                 where: { email: googlePayload.email },
                 include: {
-                    candidate: true,
-                    hr: true,
-                    employee: true,
+                    Candidate: true,
+                    HR: true,
+                    Employee: true,
                 },
             });
 
@@ -582,9 +582,9 @@ export class AuthService {
                         emailVerified: true, // Google verifies email
                     },
                     include: {
-                        candidate: true,
-                        hr: true,
-                        employee: true,
+                        Candidate: true,
+                        HR: true,
+                        Employee: true,
                     },
                 });
                 this.logger.log(`Linked Google account to existing user: ${user.email}`);
@@ -649,9 +649,9 @@ export class AuthService {
                     return tx.user.findUnique({
                         where: { id: newUser.id },
                         include: {
-                            candidate: true,
-                            hr: true,
-                            employee: true,
+                            Candidate: true,
+                            HR: true,
+                            Employee: true,
                         },
                     });
                 });

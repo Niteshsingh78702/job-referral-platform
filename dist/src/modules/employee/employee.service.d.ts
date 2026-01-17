@@ -32,14 +32,6 @@ export declare class EmployeeService {
             } | null;
             referralsToNextTier: number | null;
         } | null;
-        user: {
-            email: string;
-            phone: string | null;
-            role: import("@prisma/client").$Enums.UserRole;
-            emailVerified: boolean;
-            phoneVerified: boolean;
-            lastLoginAt: Date | null;
-        };
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -98,42 +90,7 @@ export declare class EmployeeService {
     }>;
     getAvailableReferrals(userId: string, search?: string): Promise<{
         potentialEarning: number;
-        candidateTestScore: number | null;
-        application: {
-            candidate: {
-                id: string;
-                skills: {
-                    name: string;
-                    level: number;
-                }[];
-                firstName: string;
-                lastName: string;
-                headline: string | null;
-                totalExperience: number | null;
-                currentCompany: string | null;
-            };
-            job: {
-                id: string;
-                companyName: string;
-                title: string;
-                location: string;
-                referralFee: number;
-            };
-            testSessions: {
-                score: number | null;
-            }[];
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            jobId: string;
-            candidateId: string;
-            coverLetter: string | null;
-            testScore: number | null;
-            testPassedAt: Date | null;
-            contactUnlockedAt: Date | null;
-        };
+        candidateTestScore: any;
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
@@ -150,36 +107,7 @@ export declare class EmployeeService {
         candidateFeedback: string | null;
     }[]>;
     getMyReferrals(userId: string, filters: ReferralFiltersDto): Promise<{
-        data: ({
-            application: {
-                candidate: {
-                    firstName: string;
-                    lastName: string;
-                    headline: string | null;
-                };
-                job: {
-                    companyName: string;
-                    title: string;
-                    referralFee: number;
-                };
-            } & {
-                id: string;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
-                createdAt: Date;
-                updatedAt: Date;
-                jobId: string;
-                candidateId: string;
-                coverLetter: string | null;
-                testScore: number | null;
-                testPassedAt: Date | null;
-                contactUnlockedAt: Date | null;
-            };
-            earning: {
-                status: import("@prisma/client").$Enums.EarningStatus;
-                amount: number;
-                paidAt: Date | null;
-            } | null;
-        } & {
+        data: {
             id: string;
             status: import("@prisma/client").$Enums.ReferralStatus;
             createdAt: Date;
@@ -194,7 +122,7 @@ export declare class EmployeeService {
             closedAt: Date | null;
             hrFeedback: string | null;
             candidateFeedback: string | null;
-        })[];
+        }[];
         pagination: {
             page: number;
             limit: number;
@@ -231,53 +159,14 @@ export declare class EmployeeService {
             payoutMethod: string | null;
             bonusAmount: number;
             commissionRate: number | null;
-            referralId: string;
             bonusReason: string | null;
             tierName: string | null;
             payoutReference: string | null;
+            referralId: string;
         };
     }>;
     getEarnings(userId: string, filters: EarningsFiltersDto): Promise<{
-        data: ({
-            referral: {
-                application: {
-                    candidate: {
-                        firstName: string;
-                        lastName: string;
-                    };
-                    job: {
-                        companyName: string;
-                        title: string;
-                    };
-                } & {
-                    id: string;
-                    status: import("@prisma/client").$Enums.ApplicationStatus;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    jobId: string;
-                    candidateId: string;
-                    coverLetter: string | null;
-                    testScore: number | null;
-                    testPassedAt: Date | null;
-                    contactUnlockedAt: Date | null;
-                };
-            } & {
-                id: string;
-                status: import("@prisma/client").$Enums.ReferralStatus;
-                createdAt: Date;
-                updatedAt: Date;
-                hrId: string | null;
-                expiresAt: Date | null;
-                employeeId: string | null;
-                type: import("@prisma/client").$Enums.ReferralType;
-                applicationId: string;
-                confirmedAt: Date | null;
-                contactedAt: Date | null;
-                closedAt: Date | null;
-                hrFeedback: string | null;
-                candidateFeedback: string | null;
-            };
-        } & {
+        data: {
             id: string;
             status: import("@prisma/client").$Enums.EarningStatus;
             createdAt: Date;
@@ -289,11 +178,11 @@ export declare class EmployeeService {
             payoutMethod: string | null;
             bonusAmount: number;
             commissionRate: number | null;
-            referralId: string;
             bonusReason: string | null;
             tierName: string | null;
             payoutReference: string | null;
-        })[];
+            referralId: string;
+        }[];
         pagination: {
             page: number;
             limit: number;
@@ -312,9 +201,9 @@ export declare class EmployeeService {
         leaderboard: {
             rank: number;
             employeeId: string;
-            email: string;
+            email: any;
             designation: string | null;
-            referralCount: number;
+            referralCount: any;
             successfulReferrals: number;
             points: number;
             badges: string[];

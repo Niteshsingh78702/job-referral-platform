@@ -29,18 +29,6 @@ export declare class TestController {
         orderIndex: number;
     }>;
     getTest(testId: string): Promise<{
-        questions: {
-            id: string;
-            createdAt: Date;
-            testId: string;
-            question: string;
-            options: import("@prisma/client/runtime/library").JsonValue;
-            correctAnswer: number;
-            explanation: string | null;
-            points: number;
-            orderIndex: number;
-        }[];
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -56,39 +44,23 @@ export declare class TestController {
     }>;
     startTest(applicationId: string, userId: string): Promise<{
         sessionId: string;
-        testTitle: string;
-        duration: number;
+        testTitle: any;
+        duration: any;
         totalQuestions: number;
         remainingTime: number;
-        questions: {
-            id: string;
-            question: string;
-            options: import("@prisma/client/runtime/library").JsonValue;
-            points: number;
-        }[];
-        answers: {
-            questionId: string;
-            selectedAnswer: number | null;
-        }[];
+        questions: any[];
+        answers: any;
         tabSwitchCount: number;
         maxTabSwitches: number;
     }>;
     getSession(sessionId: string, userId: string): Promise<{
         sessionId: string;
-        testTitle: string;
-        duration: number;
+        testTitle: any;
+        duration: any;
         totalQuestions: number;
         remainingTime: number;
-        questions: {
-            id: string;
-            question: string;
-            options: import("@prisma/client/runtime/library").JsonValue;
-            points: number;
-        }[];
-        answers: {
-            questionId: string;
-            selectedAnswer: number | null;
-        }[];
+        questions: any[];
+        answers: any;
         tabSwitchCount: number;
         maxTabSwitches: number;
     }>;

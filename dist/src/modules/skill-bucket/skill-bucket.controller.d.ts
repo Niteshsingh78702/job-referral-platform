@@ -5,18 +5,7 @@ export declare class SkillBucketController {
     constructor(skillBucketService: SkillBucketService);
     getSkillBuckets(includeInactive?: string): Promise<{
         success: boolean;
-        data: ({
-            test: {
-                id: string;
-                title: string;
-                duration: number;
-                totalQuestions: number;
-            } | null;
-            _count: {
-                jobs: number;
-                attempts: number;
-            };
-        } & {
+        data: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -29,26 +18,11 @@ export declare class SkillBucketController {
             testTemplateId: string | null;
             code: string;
             displayName: string | null;
-        })[];
+        }[];
     }>;
     getSkillBucketById(id: string): Promise<{
         success: boolean;
         data: {
-            test: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                title: string;
-                description: string | null;
-                duration: number;
-                passingScore: number;
-                totalQuestions: number;
-                shuffleQuestions: boolean;
-                maxTabSwitches: number;
-                difficulty: string;
-                isActive: boolean;
-            } | null;
-        } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -67,21 +41,6 @@ export declare class SkillBucketController {
         success: boolean;
         message: string;
         data: {
-            test: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                title: string;
-                description: string | null;
-                duration: number;
-                passingScore: number;
-                totalQuestions: number;
-                shuffleQuestions: boolean;
-                maxTabSwitches: number;
-                difficulty: string;
-                isActive: boolean;
-            } | null;
-        } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -100,21 +59,6 @@ export declare class SkillBucketController {
         success: boolean;
         message: string;
         data: {
-            test: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                title: string;
-                description: string | null;
-                duration: number;
-                passingScore: number;
-                totalQuestions: number;
-                shuffleQuestions: boolean;
-                maxTabSwitches: number;
-                difficulty: string;
-                isActive: boolean;
-            } | null;
-        } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -141,9 +85,9 @@ export declare class SkillBucketController {
     getValidPasses(candidateId: string): Promise<{
         success: boolean;
         data: {
-            skillBucketCode: string;
-            skillBucketName: string;
-            displayName: string;
+            skillBucketCode: any;
+            skillBucketName: any;
+            displayName: any;
             score: number;
             validTill: Date | null;
             daysRemaining: number;

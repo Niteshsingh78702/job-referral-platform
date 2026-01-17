@@ -3,39 +3,7 @@ import { ConfirmReferralDto } from './dto';
 export declare class ReferralService {
     private prisma;
     constructor(prisma: PrismaService);
-    getPendingReferralsForHR(hrUserId: string): Promise<({
-        application: {
-            candidate: {
-                skills: {
-                    id: string;
-                    name: string;
-                    candidateId: string;
-                    level: number;
-                    yearsOfExp: number | null;
-                }[];
-                firstName: string;
-                lastName: string;
-                headline: string | null;
-                totalExperience: number | null;
-                currentCompany: string | null;
-            };
-            job: {
-                companyName: string;
-                title: string;
-            };
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            jobId: string;
-            candidateId: string;
-            coverLetter: string | null;
-            testScore: number | null;
-            testPassedAt: Date | null;
-            contactUnlockedAt: Date | null;
-        };
-    } & {
+    getPendingReferralsForHR(hrUserId: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
@@ -50,40 +18,8 @@ export declare class ReferralService {
         closedAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
-    })[]>;
-    getPendingReferralsForEmployee(employeeUserId: string): Promise<({
-        application: {
-            candidate: {
-                skills: {
-                    id: string;
-                    name: string;
-                    candidateId: string;
-                    level: number;
-                    yearsOfExp: number | null;
-                }[];
-                firstName: string;
-                lastName: string;
-                headline: string | null;
-                totalExperience: number | null;
-            };
-            job: {
-                companyName: string;
-                title: string;
-                location: string;
-            };
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            jobId: string;
-            candidateId: string;
-            coverLetter: string | null;
-            testScore: number | null;
-            testPassedAt: Date | null;
-            contactUnlockedAt: Date | null;
-        };
-    } & {
+    }[]>;
+    getPendingReferralsForEmployee(employeeUserId: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
@@ -98,7 +34,7 @@ export declare class ReferralService {
         closedAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
-    })[]>;
+    }[]>;
     confirmReferral(referralId: string, userId: string, userRole: string, dto: ConfirmReferralDto): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
@@ -134,28 +70,7 @@ export declare class ReferralService {
     closeReferral(referralId: string, userId: string, feedback?: string): Promise<{
         success: boolean;
     }>;
-    getReferralHistory(userId: string, userRole: string): Promise<({
-        application: {
-            candidate: {
-                firstName: string;
-                lastName: string;
-            };
-            job: {
-                title: string;
-            };
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            jobId: string;
-            candidateId: string;
-            coverLetter: string | null;
-            testScore: number | null;
-            testPassedAt: Date | null;
-            contactUnlockedAt: Date | null;
-        };
-    } & {
+    getReferralHistory(userId: string, userRole: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.ReferralStatus;
         createdAt: Date;
@@ -170,5 +85,5 @@ export declare class ReferralService {
         closedAt: Date | null;
         hrFeedback: string | null;
         candidateFeedback: string | null;
-    })[]>;
+    }[]>;
 }

@@ -21,16 +21,7 @@ export declare class TestTemplateService {
         showLiveScore: boolean;
     }>;
     getTemplates(filters: TemplateFiltersDto): Promise<{
-        templates: ({
-            _count: {
-                testSessions: number;
-            };
-            skillBuckets: {
-                id: string;
-                name: string;
-                code: string;
-            }[];
-        } & {
+        templates: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -46,7 +37,7 @@ export declare class TestTemplateService {
             selectionRoleType: string | null;
             allowSkip: boolean;
             showLiveScore: boolean;
-        })[];
+        }[];
         pagination: {
             page: number;
             limit: number;
@@ -56,11 +47,6 @@ export declare class TestTemplateService {
     }>;
     getTemplateById(id: string): Promise<{
         availableQuestions: number;
-        skillBuckets: {
-            id: string;
-            name: string;
-            code: string;
-        }[];
         id: string;
         createdAt: Date;
         updatedAt: Date;

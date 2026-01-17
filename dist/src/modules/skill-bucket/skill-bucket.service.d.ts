@@ -5,21 +5,6 @@ export declare class SkillBucketService {
     private readonly logger;
     constructor(prisma: PrismaService);
     createSkillBucket(dto: CreateSkillBucketDto): Promise<{
-        test: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            title: string;
-            description: string | null;
-            duration: number;
-            passingScore: number;
-            totalQuestions: number;
-            shuffleQuestions: boolean;
-            maxTabSwitches: number;
-            difficulty: string;
-            isActive: boolean;
-        } | null;
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -34,21 +19,6 @@ export declare class SkillBucketService {
         displayName: string | null;
     }>;
     updateSkillBucket(id: string, dto: UpdateSkillBucketDto): Promise<{
-        test: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            title: string;
-            description: string | null;
-            duration: number;
-            passingScore: number;
-            totalQuestions: number;
-            shuffleQuestions: boolean;
-            maxTabSwitches: number;
-            difficulty: string;
-            isActive: boolean;
-        } | null;
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -62,18 +32,7 @@ export declare class SkillBucketService {
         code: string;
         displayName: string | null;
     }>;
-    getSkillBuckets(includeInactive?: boolean): Promise<({
-        test: {
-            id: string;
-            title: string;
-            duration: number;
-            totalQuestions: number;
-        } | null;
-        _count: {
-            jobs: number;
-            attempts: number;
-        };
-    } & {
+    getSkillBuckets(includeInactive?: boolean): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -86,23 +45,8 @@ export declare class SkillBucketService {
         testTemplateId: string | null;
         code: string;
         displayName: string | null;
-    })[]>;
+    }[]>;
     getSkillBucketById(id: string): Promise<{
-        test: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            title: string;
-            description: string | null;
-            duration: number;
-            passingScore: number;
-            totalQuestions: number;
-            shuffleQuestions: boolean;
-            maxTabSwitches: number;
-            difficulty: string;
-            isActive: boolean;
-        } | null;
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -117,21 +61,6 @@ export declare class SkillBucketService {
         displayName: string | null;
     }>;
     getSkillBucketByCode(code: string): Promise<{
-        test: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            title: string;
-            description: string | null;
-            duration: number;
-            passingScore: number;
-            totalQuestions: number;
-            shuffleQuestions: boolean;
-            maxTabSwitches: number;
-            difficulty: string;
-            isActive: boolean;
-        } | null;
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -159,9 +88,9 @@ export declare class SkillBucketService {
         testSessionId: string | null;
     }>;
     getCandidateValidPasses(candidateId: string): Promise<{
-        skillBucketCode: string;
-        skillBucketName: string;
-        displayName: string;
+        skillBucketCode: any;
+        skillBucketName: any;
+        displayName: any;
         score: number;
         validTill: Date | null;
         daysRemaining: number;
@@ -187,21 +116,6 @@ export declare class SkillBucketService {
         displayName: string | null;
     }>;
     addSkillRequirementToJob(jobId: string, skillBucketId: string, displayOrder?: number): Promise<{
-        skillBucket: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            isActive: boolean;
-            testId: string | null;
-            experienceMin: number;
-            experienceMax: number;
-            testTemplateId: string | null;
-            code: string;
-            displayName: string | null;
-        };
-    } & {
         id: string;
         createdAt: Date;
         skillBucketId: string;
@@ -216,41 +130,7 @@ export declare class SkillBucketService {
         displayOrder: number;
     }>;
     getJobSkillRequirements(jobId: string): Promise<{
-        legacySkillBucket: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            isActive: boolean;
-            testId: string | null;
-            experienceMin: number;
-            experienceMax: number;
-            testTemplateId: string | null;
-            code: string;
-            displayName: string | null;
-        } | null;
-        compositeRequirements: ({
-            skillBucket: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                description: string | null;
-                isActive: boolean;
-                testId: string | null;
-                experienceMin: number;
-                experienceMax: number;
-                testTemplateId: string | null;
-                code: string;
-                displayName: string | null;
-            };
-        } & {
-            id: string;
-            createdAt: Date;
-            skillBucketId: string;
-            jobId: string;
-            displayOrder: number;
-        })[];
+        legacySkillBucket: any;
+        compositeRequirements: any;
     }>;
 }

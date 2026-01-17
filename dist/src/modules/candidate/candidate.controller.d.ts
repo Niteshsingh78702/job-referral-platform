@@ -9,43 +9,6 @@ export declare class CandidateController {
     private readonly resumeParserService;
     constructor(candidateService: CandidateService, cloudinaryService: CloudinaryService, resumeParserService: ResumeParserService);
     getProfile(userId: string): Promise<{
-        user: {
-            email: string;
-            phone: string | null;
-            emailVerified: boolean;
-            phoneVerified: boolean;
-        };
-        skills: {
-            id: string;
-            name: string;
-            candidateId: string;
-            level: number;
-            yearsOfExp: number | null;
-        }[];
-        experiences: {
-            id: string;
-            role: string;
-            createdAt: Date;
-            description: string | null;
-            location: string | null;
-            candidateId: string;
-            company: string;
-            startDate: Date;
-            endDate: Date | null;
-            isCurrent: boolean;
-        }[];
-        educations: {
-            id: string;
-            createdAt: Date;
-            candidateId: string;
-            institution: string;
-            degree: string;
-            field: string | null;
-            grade: string | null;
-            startYear: number;
-            endYear: number | null;
-        }[];
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -67,37 +30,6 @@ export declare class CandidateController {
         willingToRelocate: boolean;
     }>;
     updateProfile(userId: string, dto: UpdateCandidateProfileDto): Promise<{
-        skills: {
-            id: string;
-            name: string;
-            candidateId: string;
-            level: number;
-            yearsOfExp: number | null;
-        }[];
-        experiences: {
-            id: string;
-            role: string;
-            createdAt: Date;
-            description: string | null;
-            location: string | null;
-            candidateId: string;
-            company: string;
-            startDate: Date;
-            endDate: Date | null;
-            isCurrent: boolean;
-        }[];
-        educations: {
-            id: string;
-            createdAt: Date;
-            candidateId: string;
-            institution: string;
-            degree: string;
-            field: string | null;
-            grade: string | null;
-            startYear: number;
-            endYear: number | null;
-        }[];
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -129,38 +61,7 @@ export declare class CandidateController {
             };
             education: string[];
         };
-        candidate: ({
-            skills: {
-                id: string;
-                name: string;
-                candidateId: string;
-                level: number;
-                yearsOfExp: number | null;
-            }[];
-            experiences: {
-                id: string;
-                role: string;
-                createdAt: Date;
-                description: string | null;
-                location: string | null;
-                candidateId: string;
-                company: string;
-                startDate: Date;
-                endDate: Date | null;
-                isCurrent: boolean;
-            }[];
-            educations: {
-                id: string;
-                createdAt: Date;
-                candidateId: string;
-                institution: string;
-                degree: string;
-                field: string | null;
-                grade: string | null;
-                startYear: number;
-                endYear: number | null;
-            }[];
-        } & {
+        candidate: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -180,7 +81,7 @@ export declare class CandidateController {
             state: string | null;
             country: string | null;
             willingToRelocate: boolean;
-        }) | null;
+        } | null;
     }>;
     addSkill(userId: string, dto: AddSkillDto): Promise<{
         id: string;
@@ -242,26 +143,7 @@ export declare class CandidateController {
         startYear: number;
         endYear: number | null;
     }>;
-    getApplications(userId: string, status?: ApplicationStatus): Promise<({
-        job: {
-            id: string;
-            status: import("@prisma/client").$Enums.JobStatus;
-            companyName: string;
-            title: string;
-            location: string;
-            salaryMin: number | null;
-            salaryMax: number | null;
-        };
-        referral: {
-            status: import("@prisma/client").$Enums.ReferralStatus;
-            type: import("@prisma/client").$Enums.ReferralType;
-        } | null;
-        payments: {
-            status: import("@prisma/client").$Enums.PaymentStatus;
-            amount: number;
-            paidAt: Date | null;
-        }[];
-    } & {
+    getApplications(userId: string, status?: ApplicationStatus): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.ApplicationStatus;
         createdAt: Date;
@@ -272,31 +154,8 @@ export declare class CandidateController {
         testScore: number | null;
         testPassedAt: Date | null;
         contactUnlockedAt: Date | null;
-    })[]>;
-    getTestHistory(userId: string): Promise<({
-        test: {
-            title: string;
-            duration: number;
-            passingScore: number;
-        } | null;
-        application: ({
-            job: {
-                companyName: string;
-                title: string;
-            };
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            jobId: string;
-            candidateId: string;
-            coverLetter: string | null;
-            testScore: number | null;
-            testPassedAt: Date | null;
-            contactUnlockedAt: Date | null;
-        }) | null;
-    } & {
+    }[]>;
+    getTestHistory(userId: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.TestSessionStatus;
         createdAt: Date;
@@ -315,39 +174,8 @@ export declare class CandidateController {
         questionOrder: number[];
         selectedQuestionIds: string[];
         answeredCount: number;
-    })[]>;
-    getPaymentHistory(userId: string): Promise<({
-        refund: {
-            id: string;
-            status: import("@prisma/client").$Enums.RefundStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            amount: number;
-            paymentId: string;
-            reason: string;
-            adminNotes: string | null;
-            processedBy: string | null;
-            processedAt: Date | null;
-            razorpayRefundId: string | null;
-        } | null;
-        application: {
-            job: {
-                companyName: string;
-                title: string;
-            };
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            jobId: string;
-            candidateId: string;
-            coverLetter: string | null;
-            testScore: number | null;
-            testPassedAt: Date | null;
-            contactUnlockedAt: Date | null;
-        };
-    } & {
+    }[]>;
+    getPaymentHistory(userId: string): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.PaymentStatus;
         createdAt: Date;
@@ -362,5 +190,5 @@ export declare class CandidateController {
         webhookPayload: import("@prisma/client/runtime/library").JsonValue | null;
         orderCreatedAt: Date | null;
         paidAt: Date | null;
-    })[]>;
+    }[]>;
 }

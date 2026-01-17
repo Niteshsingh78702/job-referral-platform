@@ -24,20 +24,7 @@ export declare class AdminController {
         };
     }>;
     getUsers(page?: number, limit?: number, role?: UserRole, status?: UserStatus): Promise<{
-        data: ({
-            candidate: {
-                firstName: string;
-                lastName: string;
-            } | null;
-            hr: {
-                companyName: string;
-                approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
-            } | null;
-            employee: {
-                companyName: string;
-                referralCount: number;
-            } | null;
-        } & {
+        data: {
             id: string;
             email: string;
             phone: string | null;
@@ -51,7 +38,7 @@ export declare class AdminController {
             createdAt: Date;
             updatedAt: Date;
             lastLoginAt: Date | null;
-        })[];
+        }[];
         meta: {
             page: number;
             limit: number;
@@ -67,12 +54,7 @@ export declare class AdminController {
         success: boolean;
         message: string;
     }>;
-    getPendingHRs(): Promise<({
-        user: {
-            email: string;
-            createdAt: Date;
-        };
-    } & {
+    getPendingHRs(): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -88,7 +70,7 @@ export declare class AdminController {
         rejectionReason: string | null;
         totalJobsPosted: number;
         activeJobs: number;
-    })[]>;
+    }[]>;
     approveHR(hrId: string, adminId: string): Promise<{
         success: boolean;
         message: string;
@@ -98,14 +80,7 @@ export declare class AdminController {
         message: string;
     }>;
     getJobs(page?: number, limit?: number, status?: JobStatus): Promise<{
-        data: ({
-            hr: {
-                companyName: string;
-            } | null;
-            _count: {
-                applications: number;
-            };
-        } & {
+        data: {
             id: string;
             status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
@@ -133,7 +108,7 @@ export declare class AdminController {
             postedAt: Date | null;
             expiresAt: Date | null;
             skillBucketId: string | null;
-        })[];
+        }[];
         meta: {
             page: number;
             limit: number;
@@ -220,47 +195,7 @@ export declare class AdminController {
         message: string;
     }>;
     getCandidates(page?: number, limit?: number, search?: string): Promise<{
-        data: ({
-            candidate: ({
-                applications: ({
-                    job: {
-                        companyName: string;
-                        title: string;
-                    };
-                } & {
-                    id: string;
-                    status: import("@prisma/client").$Enums.ApplicationStatus;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    jobId: string;
-                    candidateId: string;
-                    coverLetter: string | null;
-                    testScore: number | null;
-                    testPassedAt: Date | null;
-                    contactUnlockedAt: Date | null;
-                })[];
-            } & {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                userId: string;
-                firstName: string;
-                lastName: string;
-                headline: string | null;
-                bio: string | null;
-                avatarUrl: string | null;
-                resumeUrl: string | null;
-                totalExperience: number | null;
-                currentCompany: string | null;
-                currentRole: string | null;
-                expectedSalary: number | null;
-                noticePeriod: number | null;
-                city: string | null;
-                state: string | null;
-                country: string | null;
-                willingToRelocate: boolean;
-            }) | null;
-        } & {
+        data: {
             id: string;
             email: string;
             phone: string | null;
@@ -274,7 +209,7 @@ export declare class AdminController {
             createdAt: Date;
             updatedAt: Date;
             lastLoginAt: Date | null;
-        })[];
+        }[];
         meta: {
             page: number;
             limit: number;
@@ -287,42 +222,7 @@ export declare class AdminController {
         message: string;
     }>;
     getPayments(page?: number, limit?: number, status?: PaymentStatus): Promise<{
-        data: ({
-            refund: {
-                id: string;
-                status: import("@prisma/client").$Enums.RefundStatus;
-                createdAt: Date;
-                updatedAt: Date;
-                amount: number;
-                paymentId: string;
-                reason: string;
-                adminNotes: string | null;
-                processedBy: string | null;
-                processedAt: Date | null;
-                razorpayRefundId: string | null;
-            } | null;
-            application: {
-                candidate: {
-                    firstName: string;
-                    lastName: string;
-                };
-                job: {
-                    companyName: string;
-                    title: string;
-                };
-            } & {
-                id: string;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
-                createdAt: Date;
-                updatedAt: Date;
-                jobId: string;
-                candidateId: string;
-                coverLetter: string | null;
-                testScore: number | null;
-                testPassedAt: Date | null;
-                contactUnlockedAt: Date | null;
-            };
-        } & {
+        data: {
             id: string;
             status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
@@ -337,7 +237,7 @@ export declare class AdminController {
             webhookPayload: import("@prisma/client/runtime/library").JsonValue | null;
             orderCreatedAt: Date | null;
             paidAt: Date | null;
-        })[];
+        }[];
         meta: {
             page: number;
             limit: number;
@@ -345,46 +245,7 @@ export declare class AdminController {
             totalPages: number;
         };
     }>;
-    getPendingRefunds(): Promise<({
-        payment: {
-            application: {
-                candidate: {
-                    firstName: string;
-                    lastName: string;
-                };
-                job: {
-                    companyName: string;
-                    title: string;
-                };
-            } & {
-                id: string;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
-                createdAt: Date;
-                updatedAt: Date;
-                jobId: string;
-                candidateId: string;
-                coverLetter: string | null;
-                testScore: number | null;
-                testPassedAt: Date | null;
-                contactUnlockedAt: Date | null;
-            };
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.PaymentStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            applicationId: string;
-            razorpayOrderId: string | null;
-            razorpayPaymentId: string | null;
-            razorpaySignature: string | null;
-            amount: number;
-            currency: string;
-            failureReason: string | null;
-            webhookPayload: import("@prisma/client/runtime/library").JsonValue | null;
-            orderCreatedAt: Date | null;
-            paidAt: Date | null;
-        };
-    } & {
+    getPendingRefunds(): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.RefundStatus;
         createdAt: Date;
@@ -396,7 +257,7 @@ export declare class AdminController {
         processedBy: string | null;
         processedAt: Date | null;
         razorpayRefundId: string | null;
-    })[]>;
+    }[]>;
     approveRefund(refundId: string, adminId: string, notes?: string): Promise<{
         success: boolean;
         message: string;
@@ -406,11 +267,7 @@ export declare class AdminController {
         message: string;
     }>;
     getAuditLogs(page?: number, limit?: number, action?: AuditAction): Promise<{
-        data: ({
-            user: {
-                email: string;
-            } | null;
-        } & {
+        data: {
             id: string;
             createdAt: Date;
             userId: string | null;
@@ -420,7 +277,7 @@ export declare class AdminController {
             oldValue: import("@prisma/client/runtime/library").JsonValue | null;
             newValue: import("@prisma/client/runtime/library").JsonValue | null;
             metadata: import("@prisma/client/runtime/library").JsonValue | null;
-        })[];
+        }[];
         meta: {
             page: number;
             limit: number;
@@ -429,29 +286,7 @@ export declare class AdminController {
         };
     }>;
     getInterviews(page?: number, limit?: number, status?: string): Promise<{
-        data: ({
-            application: {
-                candidate: {
-                    firstName: string;
-                    lastName: string;
-                };
-                job: {
-                    companyName: string;
-                    title: string;
-                };
-            } & {
-                id: string;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
-                createdAt: Date;
-                updatedAt: Date;
-                jobId: string;
-                candidateId: string;
-                coverLetter: string | null;
-                testScore: number | null;
-                testPassedAt: Date | null;
-                contactUnlockedAt: Date | null;
-            };
-        } & {
+        data: {
             id: string;
             status: import("@prisma/client").$Enums.InterviewStatus;
             createdAt: Date;
@@ -469,7 +304,7 @@ export declare class AdminController {
             requestedAt: Date;
             scheduledAt: Date | null;
             completedAt: Date | null;
-        })[];
+        }[];
         meta: {
             page: number;
             limit: number;
@@ -502,25 +337,7 @@ export declare class AdminController {
         success: boolean;
         message: string;
     }>;
-    getSkillBuckets(includeInactive?: string): Promise<({
-        test: {
-            id: string;
-            title: string;
-            duration: number;
-            totalQuestions: number;
-        } | null;
-        _count: {
-            jobs: number;
-            attempts: number;
-            jobRequirements: number;
-        };
-        testTemplate: {
-            id: string;
-            name: string;
-            duration: number;
-            passingCriteria: number;
-        } | null;
-    } & {
+    getSkillBuckets(includeInactive?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -533,7 +350,7 @@ export declare class AdminController {
         testTemplateId: string | null;
         code: string;
         displayName: string | null;
-    })[]>;
+    }[]>;
     createSkillBucket(data: {
         code: string;
         name: string;
@@ -586,62 +403,13 @@ export declare class AdminController {
     getJobSkillRequirements(jobId: string): Promise<{
         jobId: string;
         jobTitle: string;
-        legacySkillBucket: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            isActive: boolean;
-            testId: string | null;
-            experienceMin: number;
-            experienceMax: number;
-            testTemplateId: string | null;
-            code: string;
-            displayName: string | null;
-        } | null;
-        compositeRequirements: ({
-            skillBucket: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                description: string | null;
-                isActive: boolean;
-                testId: string | null;
-                experienceMin: number;
-                experienceMax: number;
-                testTemplateId: string | null;
-                code: string;
-                displayName: string | null;
-            };
-        } & {
-            id: string;
-            createdAt: Date;
-            skillBucketId: string;
-            jobId: string;
-            displayOrder: number;
-        })[];
+        legacySkillBucket: any;
+        compositeRequirements: any;
     }>;
     addSkillRequirementToJob(jobId: string, skillBucketId: string, adminId: string): Promise<{
         success: boolean;
         message: string;
         data: {
-            skillBucket: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                description: string | null;
-                isActive: boolean;
-                testId: string | null;
-                experienceMin: number;
-                experienceMax: number;
-                testTemplateId: string | null;
-                code: string;
-                displayName: string | null;
-            };
-        } & {
             id: string;
             createdAt: Date;
             skillBucketId: string;

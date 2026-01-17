@@ -39,11 +39,7 @@ export declare class InterviewService {
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
+        job: any;
         createdAt: Date;
     } | {
         message: string;
@@ -52,11 +48,7 @@ export declare class InterviewService {
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
+        job: any;
         createdAt: Date;
     } | {
         scheduledDate: Date | null;
@@ -68,11 +60,7 @@ export declare class InterviewService {
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
+        job: any;
         createdAt: Date;
     } | {
         message: string;
@@ -80,11 +68,7 @@ export declare class InterviewService {
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
+        job: any;
         createdAt: Date;
     }>;
     getCandidateInterviews(userId: string): Promise<({
@@ -95,11 +79,7 @@ export declare class InterviewService {
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
+        job: any;
         createdAt: Date;
         paidAt: Date | null;
     } | {
@@ -108,44 +88,14 @@ export declare class InterviewService {
         mode: import("@prisma/client").$Enums.InterviewMode;
         status: import("@prisma/client").$Enums.InterviewStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
-        job: {
-            id: string;
-            companyName: string;
-            title: string;
-        };
+        job: any;
         createdAt: Date;
         paidAt: Date | null;
     })[]>;
     getHRInterviews(userId: string, filters?: {
         status?: string;
         jobId?: string;
-    }): Promise<({
-        application: {
-            candidate: {
-                id: string;
-                user: {
-                    email: string;
-                };
-                firstName: string;
-                lastName: string;
-            };
-            job: {
-                id: string;
-                title: string;
-            };
-        } & {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            jobId: string;
-            candidateId: string;
-            coverLetter: string | null;
-            testScore: number | null;
-            testPassedAt: Date | null;
-            contactUnlockedAt: Date | null;
-        };
-    } & {
+    }): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.InterviewStatus;
         createdAt: Date;
@@ -163,7 +113,7 @@ export declare class InterviewService {
         requestedAt: Date;
         scheduledAt: Date | null;
         completedAt: Date | null;
-    })[]>;
+    }[]>;
     getAdminInterviewStats(): Promise<{
         total: number;
         byStatus: {
@@ -176,32 +126,7 @@ export declare class InterviewService {
         flaggedHRs: unknown;
     }>;
     getAdminInterviews(page?: number, limit?: number, status?: string): Promise<{
-        interviews: ({
-            application: {
-                candidate: {
-                    firstName: string;
-                    lastName: string;
-                };
-                job: {
-                    hr: {
-                        companyName: string;
-                    } | null;
-                    companyName: string;
-                    title: string;
-                };
-            } & {
-                id: string;
-                status: import("@prisma/client").$Enums.ApplicationStatus;
-                createdAt: Date;
-                updatedAt: Date;
-                jobId: string;
-                candidateId: string;
-                coverLetter: string | null;
-                testScore: number | null;
-                testPassedAt: Date | null;
-                contactUnlockedAt: Date | null;
-            };
-        } & {
+        interviews: {
             id: string;
             status: import("@prisma/client").$Enums.InterviewStatus;
             createdAt: Date;
@@ -219,7 +144,7 @@ export declare class InterviewService {
             requestedAt: Date;
             scheduledAt: Date | null;
             completedAt: Date | null;
-        })[];
+        }[];
         pagination: {
             page: number;
             limit: number;

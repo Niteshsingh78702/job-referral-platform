@@ -34,23 +34,7 @@ export declare class RapidFireController {
         } | {
             canTake: boolean;
             status: string;
-            testTemplate: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                description: string | null;
-                duration: number;
-                isActive: boolean;
-                testType: import("@prisma/client").$Enums.TestType;
-                passingCriteria: number;
-                questionPoolSize: number;
-                autoSelect: boolean;
-                selectionTags: string[];
-                selectionRoleType: string | null;
-                allowSkip: boolean;
-                showLiveScore: boolean;
-            } | null;
+            testTemplate: any;
             skillBucket: {
                 id: string;
                 name: string;
@@ -67,8 +51,8 @@ export declare class RapidFireController {
         message: string;
         data: {
             sessionId: string;
-            testName: string;
-            duration: number;
+            testName: any;
+            duration: any;
             totalQuestions: number;
             remainingTime: number;
             startedAt: string;
@@ -132,11 +116,7 @@ export declare class RapidFireController {
         success: boolean;
         data: {
             id: string;
-            skillBucket: {
-                id: string;
-                name: string;
-                displayName: string | null;
-            };
+            skillBucket: any;
             score: number;
             isPassed: boolean;
             attemptedAt: Date;

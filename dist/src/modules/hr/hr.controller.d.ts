@@ -24,9 +24,9 @@ export declare class HRController {
             email: string;
             role: "HR";
             hr: {
-                id: string;
-                companyName: string;
-                designation: string | null;
+                id: any;
+                companyName: any;
+                designation: any;
             };
         };
         accessToken: string;
@@ -34,30 +34,6 @@ export declare class HRController {
         expiresIn: number;
     }>;
     getProfile(userId: string): Promise<{
-        hr: ({
-            jobs: {
-                id: string;
-                status: import("@prisma/client").$Enums.JobStatus;
-                title: string;
-                applicationCount: number;
-            }[];
-        } & {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            companyName: string;
-            companyEmail: string;
-            companyWebsite: string | null;
-            designation: string | null;
-            linkedinUrl: string | null;
-            approvalStatus: import("@prisma/client").$Enums.HRApprovalStatus;
-            approvedBy: string | null;
-            approvedAt: Date | null;
-            rejectionReason: string | null;
-            totalJobsPosted: number;
-            activeJobs: number;
-        }) | null;
         id: string;
         email: string;
         phone: string | null;
@@ -91,8 +67,8 @@ export declare class HRController {
     getDashboardStats(userId: string): Promise<{
         totalJobs: number;
         activeJobs: number;
-        totalApplications: number;
-        recentApplications: number;
+        totalApplications: any;
+        recentApplications: any;
         pendingReferrals: number;
         confirmedReferrals: number;
         jobsByStatus: {
@@ -106,22 +82,12 @@ export declare class HRController {
         id: string;
         type: string;
         candidate: string;
-        jobTitle: string;
+        jobTitle: any;
         status: import("@prisma/client").$Enums.ApplicationStatus;
         createdAt: Date;
     }[]>;
     getJobs(userId: string, status?: string, page?: number, limit?: number): Promise<{
-        jobs: ({
-            skills: {
-                id: string;
-                name: string;
-                jobId: string;
-                isRequired: boolean;
-            }[];
-            _count: {
-                applications: number;
-            };
-        } & {
+        jobs: {
             id: string;
             status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
@@ -149,7 +115,7 @@ export declare class HRController {
             postedAt: Date | null;
             expiresAt: Date | null;
             skillBucketId: string | null;
-        })[];
+        }[];
         pagination: {
             page: number;
             limit: number;
@@ -187,18 +153,6 @@ export declare class HRController {
         skillBucketId: string | null;
     }>;
     getJobById(userId: string, jobId: string): Promise<{
-        skills: {
-            id: string;
-            name: string;
-            jobId: string;
-            isRequired: boolean;
-        }[];
-        applications: {
-            id: string;
-            status: import("@prisma/client").$Enums.ApplicationStatus;
-            createdAt: Date;
-        }[];
-    } & {
         id: string;
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
@@ -228,13 +182,6 @@ export declare class HRController {
         skillBucketId: string | null;
     }>;
     updateJob(userId: string, jobId: string, dto: UpdateJobDto): Promise<{
-        skills: {
-            id: string;
-            name: string;
-            jobId: string;
-            isRequired: boolean;
-        }[];
-    } & {
         id: string;
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
@@ -296,24 +243,7 @@ export declare class HRController {
         skillBucketId: string | null;
     }>;
     getApplications(userId: string, jobId?: string, status?: string, page?: number, limit?: number): Promise<{
-        applications: ({
-            candidate: {
-                skills: {
-                    name: string;
-                    level: number;
-                }[];
-                firstName: string;
-                lastName: string;
-                headline: string | null;
-                totalExperience: number | null;
-                currentCompany: string | null;
-            };
-            job: {
-                id: string;
-                companyName: string;
-                title: string;
-            };
-        } & {
+        applications: {
             id: string;
             status: import("@prisma/client").$Enums.ApplicationStatus;
             createdAt: Date;
@@ -324,7 +254,7 @@ export declare class HRController {
             testScore: number | null;
             testPassedAt: Date | null;
             contactUnlockedAt: Date | null;
-        })[];
+        }[];
         pagination: {
             page: number;
             limit: number;

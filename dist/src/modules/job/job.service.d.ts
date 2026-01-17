@@ -7,23 +7,6 @@ export declare class JobService {
     private skillBucketService;
     constructor(prisma: PrismaService, skillBucketService: SkillBucketService);
     createJob(hrId: string, dto: CreateJobDto): Promise<{
-        hr: {
-            companyName: string;
-            companyWebsite: string | null;
-        } | null;
-        test: {
-            id: string;
-            title: string;
-            duration: number;
-            totalQuestions: number;
-        } | null;
-        skills: {
-            id: string;
-            name: string;
-            jobId: string;
-            isRequired: boolean;
-        }[];
-    } & {
         id: string;
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
@@ -53,17 +36,7 @@ export declare class JobService {
         skillBucketId: string | null;
     }>;
     getActiveJobs(query: JobQueryDto): Promise<{
-        data: ({
-            hr: {
-                companyName: string;
-            } | null;
-            skills: {
-                id: string;
-                name: string;
-                jobId: string;
-                isRequired: boolean;
-            }[];
-        } & {
+        data: {
             id: string;
             status: import("@prisma/client").$Enums.JobStatus;
             createdAt: Date;
@@ -91,7 +64,7 @@ export declare class JobService {
             postedAt: Date | null;
             expiresAt: Date | null;
             skillBucketId: string | null;
-        })[];
+        }[];
         meta: {
             page: number;
             limit: number;
@@ -100,23 +73,6 @@ export declare class JobService {
         };
     }>;
     getJobById(idOrSlug: string): Promise<{
-        hr: {
-            companyName: string;
-            companyWebsite: string | null;
-        } | null;
-        test: {
-            id: string;
-            title: string;
-            duration: number;
-            totalQuestions: number;
-        } | null;
-        skills: {
-            id: string;
-            name: string;
-            jobId: string;
-            isRequired: boolean;
-        }[];
-    } & {
         id: string;
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
@@ -146,13 +102,6 @@ export declare class JobService {
         skillBucketId: string | null;
     }>;
     updateJob(jobId: string, hrId: string, dto: UpdateJobDto): Promise<{
-        skills: {
-            id: string;
-            name: string;
-            jobId: string;
-            isRequired: boolean;
-        }[];
-    } & {
         id: string;
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
@@ -203,17 +152,7 @@ export declare class JobService {
         testPassedAt: Date | null;
         contactUnlockedAt: Date | null;
     }>;
-    getHRJobs(hrId: string, status?: JobStatus): Promise<({
-        skills: {
-            id: string;
-            name: string;
-            jobId: string;
-            isRequired: boolean;
-        }[];
-        _count: {
-            applications: number;
-        };
-    } & {
+    getHRJobs(hrId: string, status?: JobStatus): Promise<{
         id: string;
         status: import("@prisma/client").$Enums.JobStatus;
         createdAt: Date;
@@ -241,6 +180,6 @@ export declare class JobService {
         postedAt: Date | null;
         expiresAt: Date | null;
         skillBucketId: string | null;
-    })[]>;
+    }[]>;
     private generateSlug;
 }

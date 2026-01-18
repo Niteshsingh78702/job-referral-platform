@@ -247,7 +247,7 @@ export class AdminService {
                 take: limit,
                 include: {
                     HR: { select: { companyName: true } },
-                    _count: { select: { JobApplication: true } },
+                    _count: { select: { application: true } },
                 },
                 orderBy: { createdAt: 'desc' },
             }),
@@ -372,7 +372,7 @@ export class AdminService {
     async deleteJob(jobId: string, adminId: string) {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
-            include: { _count: { select: { JobApplication: true } } },
+            include: { _count: { select: { application: true } } },
         });
 
         if (!job) throw new NotFoundException('Job not found');
@@ -426,7 +426,7 @@ export class AdminService {
                 include: {
                     Candidate: {
                         include: {
-                            JobApplication: {
+                            application: {
                                 include: {
                                     Job: { select: { title: true, companyName: true } },
                                 },
@@ -451,7 +451,7 @@ export class AdminService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                Candidate: { include: { _count: { select: { JobApplication: true } } } },
+                Candidate: { include: { _count: { select: { application: true } } } },
                 HR: true,
                 Employee: true,
             },
@@ -463,7 +463,7 @@ export class AdminService {
         }
 
         // Check for active applications
-        if (user.Candidate && user.candidate._count.JobApplication > 0) {
+        if (user.Candidate && user.Candidate._count.JobApplication > 0) {
             throw new BadRequestException(
                 'Cannot delete user with active applications. Please block the user instead.'
             );
@@ -1310,3 +1310,5 @@ export class AdminService {
         };
     }
 }
+
+

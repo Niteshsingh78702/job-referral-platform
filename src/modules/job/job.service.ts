@@ -202,7 +202,7 @@ export class JobService {
         }
 
         // Check if HR owns this job (skip for admin-created jobs with no HR)
-        if (job.HR && job.hR.userId !== hrId) {
+        if (job.HR && job.hr.userId !== hrId) {
             throw new ForbiddenException('Not authorized to update this job');
         }
 
@@ -404,3 +404,4 @@ export class JobService {
         return `${base}-${timestamp}`;
     }
 }
+

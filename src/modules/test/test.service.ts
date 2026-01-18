@@ -129,8 +129,8 @@ export class TestService {
                 description: dto.description,
                 duration: dto.duration || 30,
                 passingScore: dto.passingScore || 70,
-                totalQuestionBank: dto.totalQuestions || 20,
-                shuffleQuestionBank: dto.shuffleQuestions ?? true,
+                totalTestQuestion: dto.totalQuestions || 20,
+                shuffleTestQuestion: dto.shuffleQuestions ?? true,
                 maxTabSwitches: dto.maxTabSwitches || 2,
                 difficulty: dto.difficulty || 'MEDIUM',
             },
@@ -140,7 +140,7 @@ export class TestService {
     async addQuestion(testId: string, dto: AddQuestionDto) {
         const test = await this.prisma.test.findUnique({
             where: { id: testId },
-            include: { QuestionBank: true },
+            include: { TestQuestion: true },
         });
 
         if (!test) {
@@ -155,7 +155,7 @@ export class TestService {
                 correctAnswer: dto.correctAnswer,
                 explanation: dto.explanation,
                 points: dto.points || 1,
-                orderIndex: test.questions.length,
+                orderIndex: test.TestQuestion.length,
             },
         });
     }
@@ -164,7 +164,7 @@ export class TestService {
         const test = await this.prisma.test.findUnique({
             where: { id: testId },
             include: {
-                QuestionBank: {
+                TestQuestion: {
                     orderBy: { orderIndex: 'asc' },
                 },
             },
@@ -187,7 +187,7 @@ export class TestService {
             where: { id: applicationId },
             include: {
                 Candidate: { include: { User: true } },
-                Job: { include: { Test: { include: { QuestionBank: true } } } },
+                Job: { include: { Test: { include: { TestQuestion: true } } } },
                 TestSession: true,
             },
         });
@@ -226,7 +226,7 @@ export class TestService {
         const endsAt = now + test.duration * 60 * 1000;
 
         // Shuffle questions if enabled
-        let questionOrder = test.questions.map((_, i) => i);
+        let questionOrder = test.TestQuestion.map((_, i) => i);
         if (test.shuffleQuestions) {
             questionOrder = this.shuffleArray([...questionOrder]);
         }
@@ -239,7 +239,7 @@ export class TestService {
                 status: TestSessionStatus.ACTIVE,
                 startedAt: new Date(),
                 endsAt: new Date(endsAt),
-                totalQuestionBank: test.questions.length,
+                totalTestQuestion: test.TestQuestion.length,
                 questionOrder,
             },
         });
@@ -304,7 +304,7 @@ export class TestService {
             include: {
                 Test: {
                     include: {
-                        QuestionBank: {
+                        TestQuestion: {
                             orderBy: { orderIndex: 'asc' },
                             select: {
                                 id: true,
@@ -325,22 +325,22 @@ export class TestService {
         }
 
         // Standard test - check that test relation exists
-        if (!session.Test) {
+        if (!session.test) {
             throw new BadRequestException('This is a rapid-fire test session. Use the rapid-fire endpoints.');
         }
 
         // Reorder questions based on shuffled order
         const orderedQuestions = sessionData.questionOrder.map(
-            (i) => session.Test!.questions[i],
+            (i) => session.test!.questions[i],
         );
 
         return {
             sessionId: session.id,
-            testTitle: session.Test!.title,
-            duration: session.Test!.duration,
-            totalQuestionBank: session.totalQuestions,
+            testTitle: session.test!.title,
+            duration: session.test!.duration,
+            totalTestQuestion: session.totalQuestions,
             remainingTime: Math.max(0, Math.floor((sessionData.endsAt - Date.now()) / 1000)),
-            QuestionBank: orderedQuestions,
+            TestQuestion: orderedQuestions,
             answers: session.answers.map((a) => ({
                 questionId: a.questionId,
                 selectedAnswer: a.selectedAnswer,
@@ -622,7 +622,7 @@ export class TestService {
             score,
             isPassed,
             correctAnswers,
-            totalQuestionBank: session.totalQuestions,
+            totalTestQuestion: session.totalQuestions,
             isAutoSubmit,
         };
     }
@@ -635,3 +635,4 @@ export class TestService {
         return array;
     }
 }
+

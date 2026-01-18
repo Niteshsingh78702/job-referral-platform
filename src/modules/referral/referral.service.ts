@@ -142,7 +142,7 @@ export class ReferralService {
 
         // Verify authorization
         if (userRole === 'HR') {
-            if (!referral.application.job.HR || referral.application.job.hR.userId !== userId) {
+            if (!referral.application.job.HR || referral.application.job.hr.userId !== userId) {
                 throw new ForbiddenException('Not authorized to confirm this referral');
             }
         } else if (userRole === 'EMPLOYEE') {
@@ -214,7 +214,7 @@ export class ReferralService {
         }
 
         // Only HR can mark as contacted
-        if (!referral.application.job.HR || referral.application.job.hR.userId !== userId) {
+        if (!referral.application.job.HR || referral.application.job.hr.userId !== userId) {
             throw new ForbiddenException('Only HR can mark as contacted');
         }
 
@@ -245,7 +245,7 @@ export class ReferralService {
             throw new NotFoundException('Referral not found');
         }
 
-        if (!referral.application.job.HR || referral.application.job.hR.userId !== userId) {
+        if (!referral.application.job.HR || referral.application.job.hr.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -332,3 +332,4 @@ export class ReferralService {
         throw new BadRequestException('Invalid user role for referral history');
     }
 }
+

@@ -132,9 +132,9 @@ export class HRService {
                 email: result.user.email,
                 role: result.user.role,
                 HR: {
-                    id: result.hR.id,
-                    companyName: result.hR.companyName,
-                    approvalStatus: result.hR.approvalStatus,
+                    id: result.HR.id,
+                    companyName: result.HR.companyName,
+                    approvalStatus: result.HR.approvalStatus,
                 },
             },
         };
@@ -168,12 +168,12 @@ export class HRService {
             throw new BadRequestException('HR profile not found');
         }
 
-        if (user.hR.approvalStatus === HRApprovalStatus.PENDING) {
+        if (user.HR.approvalStatus === HRApprovalStatus.PENDING) {
             throw new ForbiddenException('Your account is pending approval. Please wait for admin verification.');
         }
 
-        if (user.hR.approvalStatus === HRApprovalStatus.REJECTED) {
-            throw new ForbiddenException(`Account rejected: ${user.hR.rejectionReason || 'Please contact support.'}`);
+        if (user.HR.approvalStatus === HRApprovalStatus.REJECTED) {
+            throw new ForbiddenException(`Account rejected: ${user.HR.rejectionReason || 'Please contact support.'}`);
         }
 
         // Verify password
@@ -229,9 +229,9 @@ export class HRService {
                 email: user.email,
                 role: user.role,
                 HR: {
-                    id: user.hR.id,
-                    companyName: user.hR.companyName,
-                    designation: user.hR.designation,
+                    id: user.HR.id,
+                    companyName: user.HR.companyName,
+                    designation: user.HR.designation,
                 },
             },
         };
@@ -281,7 +281,7 @@ export class HRService {
         }
 
         const updated = await this.prisma.hR.update({
-            where: { id: user.hR.id },
+            where: { id: user.HR.id },
             data: {
                 companyName: dto.companyName,
                 companyWebsite: dto.companyWebsite,
@@ -306,7 +306,7 @@ export class HRService {
             throw new NotFoundException('HR profile not found');
         }
 
-        const hrId = user.hR.id;
+        const hrId = user.HR.id;
 
         // Get job stats
         const jobs = await this.prisma.job.findMany({
@@ -377,7 +377,7 @@ export class HRService {
         // Get recent applications on HR's jobs
         const recentApplications = await this.prisma.jobApplication.findMany({
             where: {
-                Job: { hrId: user.hR.id },
+                Job: { hrId: user.HR.id },
             },
             orderBy: { createdAt: 'desc' },
             take: limit,
@@ -424,7 +424,7 @@ export class HRService {
         const limit = filters?.limit || 10;
         const skip = (page - 1) * limit;
 
-        const where: any = { hrId: user.hR.id };
+        const where: any = { hrId: user.HR.id };
         if (filters?.status) {
             where.status = filters.status;
         }
@@ -554,7 +554,7 @@ export class HRService {
             throw new NotFoundException('Job not found');
         }
 
-        if (job.hrId !== user.hR.id) {
+        if (job.hrId !== user.HR.id) {
             throw new ForbiddenException('You can only modify your own jobs');
         }
 
@@ -632,7 +632,7 @@ export class HRService {
             throw new NotFoundException('Job not found');
         }
 
-        if (job.hrId !== user.hR.id) {
+        if (job.hrId !== user.HR.id) {
             throw new ForbiddenException('You can only view your own jobs');
         }
 
@@ -661,7 +661,7 @@ export class HRService {
             throw new NotFoundException('Job not found');
         }
 
-        if (existingJob.hrId !== user.hR.id) {
+        if (existingJob.hrId !== user.HR.id) {
             throw new ForbiddenException('You can only modify your own jobs');
         }
 
@@ -743,7 +743,7 @@ export class HRService {
             throw new NotFoundException('Job not found');
         }
 
-        if (job.hrId !== user.hR.id) {
+        if (job.hrId !== user.HR.id) {
             throw new ForbiddenException('You can only delete your own jobs');
         }
 
@@ -797,7 +797,7 @@ export class HRService {
         const skip = (page - 1) * limit;
 
         const where: any = {
-            Job: { hrId: user.hR.id },
+            Job: { hrId: user.HR.id },
         };
 
         if (filters?.jobId) {
@@ -853,3 +853,4 @@ export class HRService {
         };
     }
 }
+

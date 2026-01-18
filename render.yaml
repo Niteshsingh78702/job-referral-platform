@@ -1,6 +1,6 @@
 # Build configuration for Render.com
 
-# Build command for backend
+# Build command for backend (includes SWC dependencies)
 buildCommand: npm install && npx prisma generate && npm run build
 
 # Start command

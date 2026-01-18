@@ -144,7 +144,7 @@ export class CandidateController {
     @Get('applications')
     async getApplications(
         @CurrentUser('sub') userId: string,
-        @Query('status') status?: ApplicationStatus,
+        @Query('status') status?: string,
     ) {
         return this.candidateService.getApplications(userId, status);
     }

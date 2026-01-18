@@ -118,7 +118,7 @@ _ts_decorate([
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
         String,
-        typeof _constants.JobStatus === "undefined" ? Object : _constants.JobStatus
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], JobController.prototype, "getMyJobs", null);

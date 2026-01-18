@@ -34,8 +34,8 @@ export class AdminController {
     async getUsers(
         @Query('page') page?: number,
         @Query('limit') limit?: number,
-        @Query('role') role?: UserRole,
-        @Query('status') status?: UserStatus,
+        @Query('role') role?: string,
+        @Query('status') status?: string,
     ) {
         return this.adminService.getAllUsers(page, limit, role, status);
     }
@@ -84,7 +84,7 @@ export class AdminController {
     async getJobs(
         @Query('page') page?: number,
         @Query('limit') limit?: number,
-        @Query('status') status?: JobStatus,
+        @Query('status') status?: string,
     ) {
         return this.adminService.getAllJobs(page, limit, status);
     }
@@ -153,7 +153,7 @@ export class AdminController {
     async getPayments(
         @Query('page') page?: number,
         @Query('limit') limit?: number,
-        @Query('status') status?: PaymentStatus,
+        @Query('status') status?: string,
     ) {
         return this.adminService.getAllPayments(page, limit, status);
     }
@@ -187,7 +187,7 @@ export class AdminController {
     async getAuditLogs(
         @Query('page') page?: number,
         @Query('limit') limit?: number,
-        @Query('action') action?: AuditAction,
+        @Query('action') action?: string,
     ) {
         return this.adminService.getAuditLogs(page, limit, action);
     }
@@ -316,7 +316,7 @@ export class AdminController {
     @Patch('payments/:id/status')
     async updatePaymentStatus(
         @Param('id') paymentId: string,
-        @Body('status') newStatus: PaymentStatus,
+        @Body('status') newStatus: string,
         @Body('reason') reason: string,
         @CurrentUser('sub') adminId: string,
     ) {

@@ -62,7 +62,7 @@ export class JobController {
     @Roles(UserRole.HR)
     async getMyJobs(
         @CurrentUser('sub') userId: string,
-        @Query('status') status?: JobStatus,
+        @Query('status') status?: string,
     ) {
         return this.jobService.getHRJobs(userId, status);
     }

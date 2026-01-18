@@ -178,8 +178,8 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", [
         Number,
         Number,
-        typeof _constants.UserRole === "undefined" ? Object : _constants.UserRole,
-        typeof _constants.UserStatus === "undefined" ? Object : _constants.UserStatus
+        String,
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "getUsers", null);
@@ -244,7 +244,7 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", [
         Number,
         Number,
-        typeof _constants.JobStatus === "undefined" ? Object : _constants.JobStatus
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "getJobs", null);
@@ -338,7 +338,7 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", [
         Number,
         Number,
-        typeof _constants.PaymentStatus === "undefined" ? Object : _constants.PaymentStatus
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "getPayments", null);
@@ -383,7 +383,7 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", [
         Number,
         Number,
-        typeof _constants.AuditAction === "undefined" ? Object : _constants.AuditAction
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "getAuditLogs", null);
@@ -537,7 +537,7 @@ _ts_decorate([
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
         String,
-        typeof _constants.PaymentStatus === "undefined" ? Object : _constants.PaymentStatus,
+        String,
         String,
         String
     ]),

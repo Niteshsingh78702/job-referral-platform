@@ -212,7 +212,7 @@ _ts_decorate([
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
         String,
-        typeof _constants.ApplicationStatus === "undefined" ? Object : _constants.ApplicationStatus
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CandidateController.prototype, "getApplications", null);

@@ -10,6 +10,7 @@ Object.defineProperty(exports, "AppController", {
 });
 const _common = require("@nestjs/common");
 const _appservice = require("./app.service");
+const _decorators = require("./common/decorators");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -23,6 +24,13 @@ let AppController = class AppController {
     getHello() {
         return this.appService.getHello();
     }
+    getHealth() {
+        return {
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime()
+        };
+    }
     constructor(appService){
         this.appService = appService;
     }
@@ -33,6 +41,13 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", String)
 ], AppController.prototype, "getHello", null);
+_ts_decorate([
+    (0, _decorators.Public)(),
+    (0, _common.Get)('health'),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", void 0)
+], AppController.prototype, "getHealth", null);
 AppController = _ts_decorate([
     (0, _common.Controller)(),
     _ts_metadata("design:type", Function),

@@ -8,7 +8,7 @@ datasource db {
 }
 
 model AuditLog {
-  id         String      @id @default(uuid())
+  id         String      @id
   userId     String?
   action     AuditAction
   entityType String
@@ -26,19 +26,19 @@ model AuditLog {
 }
 
 model CMSPage {
-  id         String      @id @default(uuid())
+  id        String   @id
   slug      String   @unique
   title     String
   content   String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
 
   @@index([slug])
 }
 
 model Candidate {
-  id         String      @id @default(uuid())
+  id                String             @id
   userId            String             @unique
   firstName         String
   lastName          String
@@ -56,7 +56,7 @@ model Candidate {
   country           String?
   willingToRelocate Boolean            @default(false)
   createdAt         DateTime           @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt         DateTime
   User              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   CandidateSkill    CandidateSkill[]
   Education         Education[]
@@ -68,7 +68,7 @@ model Candidate {
 }
 
 model CandidateSkill {
-  id         String      @id @default(uuid())
+  id          String    @id
   candidateId String
   name        String
   level       Int       @default(1)
@@ -80,7 +80,7 @@ model CandidateSkill {
 }
 
 model CommissionTier {
-  id         String      @id @default(uuid())
+  id                String   @id
   name              String   @unique
   minReferrals      Int
   commissionPercent Float
@@ -89,13 +89,13 @@ model CommissionTier {
   badgeIcon         String?
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt         DateTime
 
   @@index([minReferrals])
 }
 
 model DeviceLog {
-  id         String      @id @default(uuid())
+  id        String   @id
   userId    String
   deviceId  String
   ipAddress String
@@ -109,7 +109,7 @@ model DeviceLog {
 }
 
 model Education {
-  id         String      @id @default(uuid())
+  id          String    @id
   candidateId String
   institution String
   degree      String
@@ -124,7 +124,7 @@ model Education {
 }
 
 model Employee {
-  id         String      @id @default(uuid())
+  id                  String            @id
   userId              String            @unique
   companyName         String
   companyEmail        String
@@ -138,7 +138,7 @@ model Employee {
   badges              String[]          @default([])
   points              Int               @default(0)
   createdAt           DateTime          @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt           DateTime
   User                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   EmployeeEarning     EmployeeEarning[]
   Referral            Referral[]
@@ -149,7 +149,7 @@ model Employee {
 }
 
 model EmployeeEarning {
-  id         String      @id @default(uuid())
+  id              String        @id
   employeeId      String
   referralId      String        @unique
   amount          Float
@@ -163,7 +163,7 @@ model EmployeeEarning {
   payoutReference String?
   payoutMethod    String?
   createdAt       DateTime      @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt       DateTime
   Employee        Employee      @relation(fields: [employeeId], references: [id])
   Referral        Referral      @relation(fields: [referralId], references: [id])
 
@@ -173,7 +173,7 @@ model EmployeeEarning {
 }
 
 model Experience {
-  id         String      @id @default(uuid())
+  id          String    @id
   candidateId String
   company     String
   role        String
@@ -189,7 +189,7 @@ model Experience {
 }
 
 model HR {
-  id         String      @id @default(uuid())
+  id              String           @id
   userId          String           @unique
   companyName     String
   companyEmail    String
@@ -203,7 +203,7 @@ model HR {
   totalJobsPosted Int              @default(0)
   activeJobs      Int              @default(0)
   createdAt       DateTime         @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt       DateTime
   User            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   Job             Job[]
   Referral        Referral[]
@@ -214,7 +214,7 @@ model HR {
 }
 
 model Interview {
-  id         String      @id @default(uuid())
+  id                  String          @id
   applicationId       String          @unique
   mode                InterviewMode
   preferredTimeWindow String?
@@ -230,8 +230,8 @@ model Interview {
   scheduledAt         DateTime?
   completedAt         DateTime?
   createdAt           DateTime        @default(now())
-  updatedAt DateTime @updatedAt
-  application        JobApplication  @relation(fields: [applicationId], references: [id])
+  updatedAt           DateTime
+  JobApplication      JobApplication  @relation(fields: [applicationId], references: [id])
 
   @@index([applicationId])
   @@index([paymentStatus])
@@ -239,7 +239,7 @@ model Interview {
 }
 
 model Job {
-  id         String      @id @default(uuid())
+  id                     String                   @id
   slug                   String                   @unique
   title                  String
   description            String
@@ -264,12 +264,12 @@ model Job {
   postedAt               DateTime?
   expiresAt              DateTime?
   createdAt              DateTime                 @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt              DateTime
   skillBucketId          String?
-  hr                     HR?                      @relation(fields: [hrId], references: [id])
-  skillBucket            SkillBucket?             @relation(fields: [skillBucketId], references: [id])
-  test                   Test?                    @relation(fields: [testId], references: [id])
-  applications           JobApplication[]
+  HR                     HR?                      @relation(fields: [hrId], references: [id])
+  SkillBucket            SkillBucket?             @relation(fields: [skillBucketId], references: [id])
+  Test                   Test?                    @relation(fields: [testId], references: [id])
+  JobApplication         JobApplication[]
   JobRequiredSkillBucket JobRequiredSkillBucket[]
   JobSkill               JobSkill[]
 
@@ -282,7 +282,7 @@ model Job {
 }
 
 model JobApplication {
-  id         String      @id @default(uuid())
+  id                String            @id
   candidateId       String
   jobId             String
   status            ApplicationStatus @default(APPLIED)
@@ -291,13 +291,13 @@ model JobApplication {
   testPassedAt      DateTime?
   contactUnlockedAt DateTime?
   createdAt         DateTime          @default(now())
-  updatedAt DateTime @updatedAt
-  interview         Interview?
-  candidate         Candidate         @relation(fields: [candidateId], references: [id])
-  job               Job               @relation(fields: [jobId], references: [id])
-  payment           Payment[]
-  referral          Referral?
-  testSessions      TestSession[]
+  updatedAt         DateTime
+  Interview         Interview?
+  Candidate         Candidate         @relation(fields: [candidateId], references: [id])
+  Job               Job               @relation(fields: [jobId], references: [id])
+  Payment           Payment[]
+  Referral          Referral?
+  TestSession       TestSession[]
 
   @@unique([candidateId, jobId])
   @@index([candidateId])
@@ -306,7 +306,7 @@ model JobApplication {
 }
 
 model JobRequiredSkillBucket {
-  id         String      @id @default(uuid())
+  id            String      @id
   jobId         String
   skillBucketId String
   displayOrder  Int         @default(0)
@@ -320,7 +320,7 @@ model JobRequiredSkillBucket {
 }
 
 model JobSkill {
-  id         String      @id @default(uuid())
+  id         String  @id
   jobId      String
   name       String
   isRequired Boolean @default(true)
@@ -331,7 +331,7 @@ model JobSkill {
 }
 
 model Notification {
-  id         String      @id @default(uuid())
+  id        String           @id
   userId    String
   type      NotificationType
   title     String
@@ -347,7 +347,7 @@ model Notification {
 }
 
 model OTPToken {
-  id         String      @id @default(uuid())
+  id        String    @id
   userId    String
   otp       String
   type      String
@@ -361,7 +361,7 @@ model OTPToken {
 }
 
 model PasswordResetToken {
-  id         String      @id @default(uuid())
+  id        String    @id
   userId    String
   token     String    @unique
   expiresAt DateTime
@@ -374,7 +374,7 @@ model PasswordResetToken {
 }
 
 model Payment {
-  id         String      @id @default(uuid())
+  id                String         @id
   applicationId     String
   razorpayOrderId   String?        @unique
   razorpayPaymentId String?        @unique
@@ -387,8 +387,8 @@ model Payment {
   orderCreatedAt    DateTime?
   paidAt            DateTime?
   createdAt         DateTime       @default(now())
-  updatedAt DateTime @updatedAt
-  application      JobApplication @relation(fields: [applicationId], references: [id])
+  updatedAt         DateTime
+  JobApplication    JobApplication @relation(fields: [applicationId], references: [id])
   Refund            Refund?
 
   @@index([applicationId])
@@ -397,7 +397,7 @@ model Payment {
 }
 
 model QuestionBank {
-  id         String      @id @default(uuid())
+  id            String             @id
   question      String
   options       Json
   correctAnswer Int
@@ -408,7 +408,7 @@ model QuestionBank {
   roleType      String?
   createdById   String
   createdAt     DateTime           @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt     DateTime
   isActive      Boolean            @default(true)
 
   @@index([category])
@@ -418,7 +418,7 @@ model QuestionBank {
 }
 
 model Referral {
-  id         String      @id @default(uuid())
+  id                String           @id
   applicationId     String           @unique
   type              ReferralType
   status            ReferralStatus   @default(PENDING)
@@ -431,11 +431,11 @@ model Referral {
   hrFeedback        String?
   candidateFeedback String?
   createdAt         DateTime         @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt         DateTime
   EmployeeEarning   EmployeeEarning?
-  application      JobApplication   @relation(fields: [applicationId], references: [id])
-  employee          Employee?        @relation(fields: [employeeId], references: [id])
-  hr                HR?              @relation(fields: [hrId], references: [id])
+  JobApplication    JobApplication   @relation(fields: [applicationId], references: [id])
+  Employee          Employee?        @relation(fields: [employeeId], references: [id])
+  HR                HR?              @relation(fields: [hrId], references: [id])
 
   @@index([applicationId])
   @@index([employeeId])
@@ -444,7 +444,7 @@ model Referral {
 }
 
 model RefreshToken {
-  id         String      @id @default(uuid())
+  id        String    @id
   userId    String
   token     String    @unique
   deviceId  String?
@@ -458,7 +458,7 @@ model RefreshToken {
 }
 
 model Refund {
-  id         String      @id @default(uuid())
+  id               String       @id
   paymentId        String       @unique
   amount           Float
   reason           String
@@ -468,7 +468,7 @@ model Refund {
   adminNotes       String?
   razorpayRefundId String?
   createdAt        DateTime     @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt        DateTime
   Payment          Payment      @relation(fields: [paymentId], references: [id])
 
   @@index([paymentId])
@@ -476,7 +476,7 @@ model Refund {
 }
 
 model SkillBucket {
-  id         String      @id @default(uuid())
+  id                     String                   @id
   code                   String                   @unique
   name                   String
   description            String?
@@ -485,12 +485,12 @@ model SkillBucket {
   experienceMax          Float                    @default(3)
   isActive               Boolean                  @default(true)
   createdAt              DateTime                 @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt              DateTime
   testId                 String?                  @unique
   testTemplateId         String?
   Job                    Job[]
   JobRequiredSkillBucket JobRequiredSkillBucket[]
-  test                   Test?                    @relation(fields: [testId], references: [id])
+  Test                   Test?                    @relation(fields: [testId], references: [id])
   TestTemplate           TestTemplate?            @relation(fields: [testTemplateId], references: [id])
   SkillTestAttempt       SkillTestAttempt[]
 
@@ -499,7 +499,7 @@ model SkillBucket {
 }
 
 model SkillTestAttempt {
-  id         String      @id @default(uuid())
+  id              String      @id
   candidateId     String
   skillBucketId   String
   isPassed        Boolean
@@ -518,17 +518,17 @@ model SkillTestAttempt {
 }
 
 model SystemConfig {
-  id         String      @id @default(uuid())
+  id        String   @id
   key       String   @unique
   value     String
   type      String   @default("string")
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
 
   @@index([key])
 }
 
 model Test {
-  id         String      @id @default(uuid())
+  id               String         @id
   title            String
   description      String?
   duration         Int            @default(30)
@@ -539,7 +539,7 @@ model Test {
   difficulty       String         @default("MEDIUM")
   isActive         Boolean        @default(true)
   createdAt        DateTime       @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt        DateTime
   Job              Job[]
   SkillBucket      SkillBucket?
   TestQuestion     TestQuestion[]
@@ -549,7 +549,7 @@ model Test {
 }
 
 model TestAnswer {
-  id         String      @id @default(uuid())
+  id             String       @id
   sessionId      String
   questionId     String
   selectedAnswer Int?
@@ -563,7 +563,7 @@ model TestAnswer {
 }
 
 model TestEvent {
-  id         String      @id @default(uuid())
+  id          String      @id
   sessionId   String
   eventType   String
   eventData   Json?
@@ -575,7 +575,7 @@ model TestEvent {
 }
 
 model TestQuestion {
-  id         String      @id @default(uuid())
+  id            String       @id
   testId        String
   question      String
   options       Json
@@ -591,7 +591,7 @@ model TestQuestion {
 }
 
 model TestSession {
-  id         String      @id @default(uuid())
+  id                  String            @id
   applicationId       String?
   testId              String?
   testTemplateId      String?
@@ -609,11 +609,11 @@ model TestSession {
   selectedQuestionIds String[]
   answeredCount       Int               @default(0)
   createdAt           DateTime          @default(now())
-  answers             TestAnswer[]
-  events              TestEvent[]
-  application        JobApplication?   @relation(fields: [applicationId], references: [id])
-  test                Test?             @relation(fields: [testId], references: [id])
-  testTemplate        TestTemplate?     @relation(fields: [testTemplateId], references: [id])
+  TestAnswer          TestAnswer[]
+  TestEvent           TestEvent[]
+  JobApplication      JobApplication?   @relation(fields: [applicationId], references: [id])
+  Test                Test?             @relation(fields: [testId], references: [id])
+  TestTemplate        TestTemplate?     @relation(fields: [testTemplateId], references: [id])
 
   @@index([applicationId])
   @@index([status])
@@ -622,7 +622,7 @@ model TestSession {
 }
 
 model TestTemplate {
-  id         String      @id @default(uuid())
+  id                String        @id
   name              String
   description       String?
   testType          TestType      @default(RAPID_FIRE)
@@ -635,17 +635,17 @@ model TestTemplate {
   allowSkip         Boolean       @default(true)
   showLiveScore     Boolean       @default(false)
   createdAt         DateTime      @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt         DateTime
   isActive          Boolean       @default(true)
   SkillBucket       SkillBucket[]
-  testSessions      TestSession[]
+  TestSession       TestSession[]
 
   @@index([isActive])
   @@index([testType])
 }
 
 model User {
-  id         String      @id @default(uuid())
+  id                 String               @id
   email              String               @unique
   phone              String?              @unique
   passwordHash       String?
@@ -656,7 +656,7 @@ model User {
   googleId           String?              @unique
   authProvider       String               @default("email")
   createdAt          DateTime             @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt          DateTime
   lastLoginAt        DateTime?
   AuditLog           AuditLog[]
   Candidate          Candidate?
@@ -816,8 +816,3 @@ enum UserStatus {
   BLOCKED
   DELETED
 }
-
-
-
-
-

@@ -1,10 +1,11 @@
 # Render.com deployment configuration
 
-# Build command - includes Prisma migration
-buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+# Build command - includes Prisma migration and seed
+# Using 'prisma db seed' which uses the seed config from package.json
+buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build && npx prisma db seed
 
 # Start command  
 startCommand: npm run start:prod
 
-# Health check endpoint
+# Health check endpoint (matches the /api/v1/health route in app.controller.ts)
 healthCheckPath: /api/v1/health

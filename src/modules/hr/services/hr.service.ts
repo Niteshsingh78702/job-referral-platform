@@ -132,9 +132,9 @@ export class HRService {
                 email: result.user.email,
                 role: result.user.role,
                 HR: {
-                    id: result.HR.id,
-                    companyName: result.HR.companyName,
-                    approvalStatus: result.HR.approvalStatus,
+                    id: result.hr.id,
+                    companyName: result.hr.companyName,
+                    approvalStatus: result.hr.approvalStatus,
                 },
             },
         };
@@ -327,9 +327,9 @@ export class HRService {
 
         const totalJobs = jobs.length;
         const activeJobs = jobs.filter(j => j.status === PrismaJobStatus.ACTIVE).length;
-        const totalApplications = jobs.reduce((acc, j) => acc + j.jobApplication.length, 0);
+        const totalApplications = jobs.reduce((acc, j) => acc + j.JobApplication.length, 0);
         const recentApplications = jobs.reduce((acc, j) =>
-            acc + j.jobApplication.filter(a => a.createdAt >= thirtyDaysAgo).length, 0);
+            acc + j.JobApplication.filter(a => a.createdAt >= thirtyDaysAgo).length, 0);
 
         const pendingReferrals = await this.prisma.referral.count({
             where: {
@@ -400,8 +400,8 @@ export class HRService {
         return recentApplications.map(app => ({
             id: app.id,
             type: 'application',
-            Candidate: `${app.candidate.firstName} ${app.candidate.lastName}`,
-            jobTitle: app.job.title,
+            Candidate: `${app.Candidate.firstName} ${app.Candidate.lastName}`,
+            jobTitle: app.Job.title,
             status: app.status,
             createdAt: app.createdAt,
         }));

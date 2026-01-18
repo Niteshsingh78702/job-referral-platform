@@ -1,9 +1,9 @@
-# Build configuration for Render.com
+# Render.com deployment configuration
 
-# Build command for backend (includes SWC dependencies)
-buildCommand: npm install && npx prisma generate && npm run build
+# Build command - includes Prisma migration
+buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
 
-# Start command
+# Start command  
 startCommand: npm run start:prod
 
 # Health check endpoint

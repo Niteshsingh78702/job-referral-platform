@@ -8,7 +8,7 @@ datasource db {
 }
 
 model AuditLog {
-  id         String      @id
+  id         String      @id @default(cuid())
   userId     String?
   action     AuditAction
   entityType String

@@ -331,7 +331,7 @@ let AdminService = class AdminService {
                     },
                     _count: {
                         select: {
-                            application: true
+                            JobApplication: true
                         }
                     }
                 },
@@ -488,7 +488,7 @@ let AdminService = class AdminService {
             include: {
                 _count: {
                     select: {
-                        application: true
+                        JobApplication: true
                     }
                 }
             }
@@ -564,7 +564,7 @@ let AdminService = class AdminService {
                 include: {
                     Candidate: {
                         include: {
-                            application: {
+                            JobApplication: {
                                 include: {
                                     Job: {
                                         select: {
@@ -609,7 +609,7 @@ let AdminService = class AdminService {
                     include: {
                         _count: {
                             select: {
-                                application: true
+                                JobApplication: true
                             }
                         }
                     }
@@ -686,7 +686,7 @@ let AdminService = class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {
@@ -730,7 +730,7 @@ let AdminService = class AdminService {
             include: {
                 Payment: {
                     include: {
-                        application: {
+                        JobApplication: {
                             include: {
                                 Candidate: {
                                     select: {
@@ -896,7 +896,7 @@ let AdminService = class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {
@@ -1037,7 +1037,7 @@ let AdminService = class AdminService {
                 id: interviewId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {

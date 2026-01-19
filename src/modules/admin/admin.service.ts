@@ -247,7 +247,7 @@ export class AdminService {
                 take: limit,
                 include: {
                     HR: { select: { companyName: true } },
-                    _count: { select: { application: true } },
+                    _count: { select: { JobApplication: true } },
                 },
                 orderBy: { createdAt: 'desc' },
             }),
@@ -372,7 +372,7 @@ export class AdminService {
     async deleteJob(jobId: string, adminId: string) {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
-            include: { _count: { select: { application: true } } },
+            include: { _count: { select: { JobApplication: true } } },
         });
 
         if (!job) throw new NotFoundException('Job not found');
@@ -426,7 +426,7 @@ export class AdminService {
                 include: {
                     Candidate: {
                         include: {
-                            application: {
+                            JobApplication: {
                                 include: {
                                     Job: { select: { title: true, companyName: true } },
                                 },
@@ -451,7 +451,7 @@ export class AdminService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                Candidate: { include: { _count: { select: { application: true } } } },
+                Candidate: { include: { _count: { select: { JobApplication: true } } } },
                 HR: true,
                 Employee: true,
             },
@@ -513,7 +513,7 @@ export class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: { select: { firstName: true, lastName: true } },
                             Job: { select: { title: true, companyName: true } },
@@ -538,7 +538,7 @@ export class AdminService {
             include: {
                 Payment: {
                     include: {
-                        application: {
+                        JobApplication: {
                             include: {
                                 Candidate: { select: { firstName: true, lastName: true } },
                                 Job: { select: { title: true, companyName: true } },
@@ -674,7 +674,7 @@ export class AdminService {
                 skip,
                 take: limit,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: { select: { firstName: true, lastName: true } },
                             Job: { select: { title: true, companyName: true } },
@@ -790,7 +790,7 @@ export class AdminService {
         const interview = await this.prisma.interview.findUnique({
             where: { id: interviewId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: { select: { userId: true } },
                         Job: { include: { HR: { select: { userId: true } } } },

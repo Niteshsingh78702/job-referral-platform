@@ -1253,7 +1253,7 @@
         }
 
         function updateUserUI(profile) {
-            const hr = profile.hr || {};
+            const hr = profile.HR || {};
             document.getElementById('userName').textContent = hr.companyName || 'HR User';
             document.getElementById('userCompany').textContent = hr.designation || 'Recruiter';
             document.getElementById('userAvatar').textContent = (hr.companyName || 'H')[0].toUpperCase();

@@ -246,7 +246,7 @@ export class HRService {
             include: {
                 HR: {
                     include: {
-                        jobs: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true,
@@ -437,7 +437,7 @@ export class HRService {
                 orderBy: { createdAt: 'desc' },
                 include: {
                     _count: {
-                        select: { JobApplication: true },
+                        select: { jobApplication: true },
                     },
                     JobSkill: true,
                 },

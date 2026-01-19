@@ -95,7 +95,7 @@ model CommissionTier {
 }
 
 model DeviceLog {
-  id        String   @id
+  id        String   @id @default(cuid())
   userId    String
   deviceId  String
   ipAddress String

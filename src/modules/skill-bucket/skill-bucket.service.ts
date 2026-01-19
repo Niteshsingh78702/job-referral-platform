@@ -364,7 +364,7 @@ export class SkillBucketService {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId },
             include: {
-                requiredSkillBucket: {
+                JobRequiredSkillBucket: {
                     include: {
                         SkillBucket: true,
                     },
@@ -386,7 +386,7 @@ export class SkillBucketService {
         }
 
         // 2. Check new composite skill requirements
-        for (const req of job.requiredSkillBuckets) {
+        for (const req of job.JobRequiredSkillBucket) {
             if (!requiredSkillBucketIds.includes(req.skillBucketId)) {
                 requiredSkillBucketIds.push(req.skillBucketId);
             }
@@ -526,7 +526,7 @@ export class SkillBucketService {
             where: { id: jobId },
             include: {
                 SkillBucket: true, // Legacy single bucket
-                requiredSkillBucket: {
+                JobRequiredSkillBucket: {
                     include: {
                         SkillBucket: true,
                     },
@@ -541,7 +541,7 @@ export class SkillBucketService {
 
         return {
             legacySkillBucket: job.SkillBucket,
-            compositeRequirements: job.requiredSkillBuckets,
+            compositeRequirements: job.JobRequiredSkillBucket,
         };
     }
 }

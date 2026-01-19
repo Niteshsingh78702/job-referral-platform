@@ -325,7 +325,7 @@ let SkillBucketService = class SkillBucketService {
                 id: jobId
             },
             include: {
-                requiredSkillBucket: {
+                JobRequiredSkillBucket: {
                     include: {
                         SkillBucket: true
                     },
@@ -345,7 +345,7 @@ let SkillBucketService = class SkillBucketService {
             requiredSkillBucketIds.push(job.skillBucketId);
         }
         // 2. Check new composite skill requirements
-        for (const req of job.requiredSkillBuckets){
+        for (const req of job.JobRequiredSkillBucket){
             if (!requiredSkillBucketIds.includes(req.skillBucketId)) {
                 requiredSkillBucketIds.push(req.skillBucketId);
             }
@@ -491,7 +491,7 @@ let SkillBucketService = class SkillBucketService {
             },
             include: {
                 SkillBucket: true,
-                requiredSkillBucket: {
+                JobRequiredSkillBucket: {
                     include: {
                         SkillBucket: true
                     },
@@ -506,7 +506,7 @@ let SkillBucketService = class SkillBucketService {
         }
         return {
             legacySkillBucket: job.SkillBucket,
-            compositeRequirements: job.requiredSkillBuckets
+            compositeRequirements: job.JobRequiredSkillBucket
         };
     }
     constructor(prisma){

@@ -790,7 +790,7 @@ export class AdminService {
         const interview = await this.prisma.interview.findUnique({
             where: { id: interviewId },
             include: {
-                JobApplication: {
+                application: {
                     include: {
                         Candidate: { select: { userId: true } },
                         Job: { include: { HR: { select: { userId: true } } } },
@@ -820,8 +820,8 @@ export class AdminService {
                         action: 'no_show',
                         noShowType,
                         notes,
-                        candidateId: interview.application.candidateId,
-                        jobId: interview.application.jobId,
+                        candidateId: interview.application?.candidateId || null,
+                        jobId: interview.application?.jobId || null,
                     },
                 },
             });

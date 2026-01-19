@@ -1037,7 +1037,7 @@ let AdminService = class AdminService {
                 id: interviewId
             },
             include: {
-                JobApplication: {
+                application: {
                     include: {
                         Candidate: {
                             select: {
@@ -1080,8 +1080,8 @@ let AdminService = class AdminService {
                         action: 'no_show',
                         noShowType,
                         notes,
-                        candidateId: interview.application.candidateId,
-                        jobId: interview.application.jobId
+                        candidateId: interview.application?.candidateId || null,
+                        jobId: interview.application?.jobId || null
                     }
                 }
             });

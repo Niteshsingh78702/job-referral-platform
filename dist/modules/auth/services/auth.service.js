@@ -96,20 +96,24 @@ let AuthService = class AuthService {
         const result = await this.prisma.$transaction(async (tx)=>{
             const user = await tx.user.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     email: dto.email,
                     phone: dto.phone,
                     passwordHash,
                     role: dto.role || _constants.UserRole.CANDIDATE,
-                    status: _constants.UserStatus.PENDING
+                    status: _constants.UserStatus.PENDING,
+                    updatedAt: new Date()
                 }
             });
             // Create candidate profile if role is CANDIDATE
             if (user.role === _constants.UserRole.CANDIDATE) {
                 await tx.candidate.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         firstName: dto.firstName,
-                        lastName: dto.lastName
+                        lastName: dto.lastName,
+                        updatedAt: new Date()
                     }
                 });
             }
@@ -117,11 +121,13 @@ let AuthService = class AuthService {
             if (user.role === _constants.UserRole.EMPLOYEE) {
                 await tx.employee.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         companyName: dto.companyName || 'Unknown Company',
                         companyEmail: dto.email,
                         designation: dto.designation,
-                        isVerified: false
+                        isVerified: false,
+                        updatedAt: new Date()
                     }
                 });
             }
@@ -129,10 +135,12 @@ let AuthService = class AuthService {
             if (user.role === _constants.UserRole.HR) {
                 await tx.hR.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         companyName: dto.companyName || 'Unknown Company',
                         companyEmail: dto.email,
-                        designation: dto.designation
+                        designation: dto.designation,
+                        updatedAt: new Date()
                     }
                 });
             }
@@ -140,6 +148,7 @@ let AuthService = class AuthService {
             if (deviceInfo) {
                 await tx.deviceLog.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         deviceId: deviceInfo.deviceId || 'unknown',
                         ipAddress: deviceInfo.ip || 'unknown',
@@ -150,6 +159,7 @@ let AuthService = class AuthService {
             // Create audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.CREATE,
                     entityType: 'User',
@@ -206,6 +216,7 @@ let AuthService = class AuthService {
             if (deviceInfo) {
                 await tx.deviceLog.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         deviceId: deviceInfo.deviceId || 'unknown',
                         ipAddress: deviceInfo.ip || 'unknown',
@@ -216,6 +227,7 @@ let AuthService = class AuthService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.LOGIN,
                     entityType: 'User',
@@ -259,6 +271,7 @@ let AuthService = class AuthService {
         if (user) {
             await this.prisma.oTPToken.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     otp,
                     type: dto.type,
@@ -371,6 +384,7 @@ let AuthService = class AuthService {
         await this.tokenService.revokeRefreshToken(userId);
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId,
                 action: _constants.AuditAction.LOGOUT,
                 entityType: 'User',
@@ -492,13 +506,14 @@ let AuthService = class AuthService {
         // Create new reset token
         await this.prisma.passwordResetToken.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId: user.id,
                 token: resetToken,
                 expiresAt
             }
         });
         // Get user name for email
-        const userName = user.candidate?.firstName || 'User';
+        const userName = user.Candidate?.firstName || 'User';
         // Send reset email
         await this.emailService.sendPasswordResetEmail(user.email, resetToken, userName);
         return {
@@ -606,46 +621,55 @@ let AuthService = class AuthService {
                 user = await this.prisma.$transaction(async (tx)=>{
                     const newUser = await tx.user.create({
                         data: {
+                            id: _crypto.randomUUID(),
                             email: googlePayload.email,
                             googleId: googlePayload.sub,
                             authProvider: 'google',
                             role,
                             status: _constants.UserStatus.ACTIVE,
-                            emailVerified: true
+                            emailVerified: true,
+                            updatedAt: new Date()
                         }
                     });
                     // Create role-specific profile
                     if (role === _constants.UserRole.CANDIDATE) {
                         await tx.candidate.create({
                             data: {
+                                id: _crypto.randomUUID(),
                                 userId: newUser.id,
                                 firstName: googlePayload.given_name || googlePayload.name?.split(' ')[0] || 'User',
                                 lastName: googlePayload.family_name || googlePayload.name?.split(' ').slice(1).join(' ') || '',
-                                avatarUrl: googlePayload.picture
+                                avatarUrl: googlePayload.picture,
+                                updatedAt: new Date()
                             }
                         });
                     } else if (role === _constants.UserRole.EMPLOYEE) {
                         await tx.employee.create({
                             data: {
+                                id: _crypto.randomUUID(),
                                 userId: newUser.id,
                                 companyName: dto.companyName || 'Unknown Company',
                                 companyEmail: googlePayload.email,
-                                designation: dto.designation
+                                designation: dto.designation,
+                                updatedAt: new Date()
                             }
                         });
                     } else if (role === _constants.UserRole.HR) {
                         await tx.hR.create({
                             data: {
+                                id: _crypto.randomUUID(),
                                 userId: newUser.id,
                                 companyName: dto.companyName || 'Unknown Company',
                                 companyEmail: googlePayload.email,
-                                designation: dto.designation
+                                designation: dto.designation,
+                                updatedAt: new Date()
                             }
                         });
                     }
                     // Audit log
                     await tx.auditLog.create({
                         data: {
+                            id: _crypto.randomUUID(),
                             userId: newUser.id,
                             action: _constants.AuditAction.CREATE,
                             entityType: 'User',
@@ -688,6 +712,7 @@ let AuthService = class AuthService {
             if (deviceInfo) {
                 await tx.deviceLog.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         deviceId: deviceInfo.deviceId || 'unknown',
                         ipAddress: deviceInfo.ip || 'unknown',
@@ -698,6 +723,7 @@ let AuthService = class AuthService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.LOGIN,
                     entityType: 'User',

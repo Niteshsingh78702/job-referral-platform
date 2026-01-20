@@ -4,6 +4,7 @@ import {
     BadRequestException,
     Logger,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSkillBucketDto, UpdateSkillBucketDto, SkillTestStatusDto } from './dto';
 
@@ -34,13 +35,14 @@ export class SkillBucketService {
 
         return this.prisma.skillBucket.create({
             data: {
+                id: crypto.randomUUID(),
                 code: dto.code,
                 name: dto.name,
                 description: dto.description,
                 displayName: dto.displayName || `HR Shortlisting Check - ${dto.name}`,
                 experienceMin: dto.experienceMin ?? 0,
                 experienceMax: dto.experienceMax ?? 3,
-                testId: dto.testId,
+                updatedAt: new Date(),
             },
             include: {
                 Test: true,
@@ -83,13 +85,13 @@ export class SkillBucketService {
                         id: true,
                         title: true,
                         duration: true,
-                        totalQuestionBank: true,
+                        totalQuestions: true,
                     },
                 },
                 _count: {
                     select: {
-                        jobs: true,
-                        attempts: true,
+                        Job: true,
+                        SkillTestAttempt: true,
                     },
                 },
             },
@@ -292,6 +294,7 @@ export class SkillBucketService {
 
         const attempt = await this.prisma.skillTestAttempt.create({
             data: {
+                id: crypto.randomUUID(),
                 candidateId,
                 skillBucketId,
                 isPassed,
@@ -338,9 +341,9 @@ export class SkillBucketService {
         });
 
         return validAttempts.map(attempt => ({
-            skillBucketCode: attempt.skillBucket.code,
-            skillBucketName: attempt.skillBucket.name,
-            displayName: attempt.skillBucket.displayName || attempt.skillBucket.name,
+            skillBucketCode: attempt.SkillBucket.code,
+            skillBucketName: attempt.SkillBucket.name,
+            displayName: attempt.SkillBucket.displayName || attempt.SkillBucket.name,
             score: attempt.score,
             validTill: attempt.validTill,
             daysRemaining: Math.ceil(
@@ -445,9 +448,9 @@ export class SkillBucketService {
             include: {
                 _count: {
                     select: {
-                        jobs: true,
-                        attempts: true,
-                        jobRequirements: true,
+                        Job: true,
+                        SkillTestAttempt: true,
+                        JobRequiredSkillBucket: true,
                     },
                 },
             },
@@ -458,14 +461,14 @@ export class SkillBucketService {
         }
 
         // Check if skill bucket is in use
-        if (bucket._count.jobs > 0 || bucket._count.jobRequirements > 0) {
+        if (bucket._count.Job > 0 || bucket._count.JobRequiredSkillBucket > 0) {
             throw new BadRequestException(
-                `Cannot delete skill bucket: it is assigned to ${bucket._count.jobs + bucket._count.jobRequirements} job(s). Deactivate it instead.`
+                `Cannot delete skill bucket: it is assigned to ${bucket._count.Job + bucket._count.JobRequiredSkillBucket} job(s). Deactivate it instead.`
             );
         }
 
         // If there are attempts, just deactivate instead of hard delete
-        if (bucket._count.attempts > 0) {
+        if (bucket._count.SkillTestAttempt > 0) {
             return this.prisma.skillBucket.update({
                 where: { id },
                 data: { isActive: false },
@@ -501,6 +504,7 @@ export class SkillBucketService {
                 jobId_skillBucketId: { jobId, skillBucketId },
             },
             create: {
+                id: crypto.randomUUID(),
                 jobId,
                 skillBucketId,
                 displayOrder,

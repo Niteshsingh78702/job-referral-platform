@@ -40,6 +40,9 @@ let JobController = class JobController {
     async updateJob(jobId, userId, dto) {
         return this.jobService.updateJob(jobId, userId, dto);
     }
+    async getApplyEligibility(jobId, userId) {
+        return this.jobService.getApplyEligibility(jobId, userId);
+    }
     async applyForJob(jobId, userId, dto) {
         return this.jobService.applyForJob(jobId, userId, dto);
     }
@@ -96,6 +99,18 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], JobController.prototype, "updateJob", null);
+_ts_decorate([
+    (0, _common.Get)(':id/apply-eligibility'),
+    (0, _decorators.Roles)(_constants.UserRole.CANDIDATE),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_param(1, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], JobController.prototype, "getApplyEligibility", null);
 _ts_decorate([
     (0, _common.Post)(':id/apply'),
     (0, _decorators.Roles)(_constants.UserRole.CANDIDATE),

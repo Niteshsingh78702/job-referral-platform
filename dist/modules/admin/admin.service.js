@@ -674,6 +674,141 @@ let AdminService = class AdminService {
         };
     }
     // ===========================================
+    // APPLICATION MANAGEMENT
+    // ===========================================
+    async getAllApplications(page = 1, limit = 20, status, jobId, search) {
+        const where = {};
+        if (status) where.status = status;
+        if (jobId) where.jobId = jobId;
+        if (search) {
+            where.OR = [
+                {
+                    Candidate: {
+                        firstName: {
+                            contains: search,
+                            mode: 'insensitive'
+                        }
+                    }
+                },
+                {
+                    Candidate: {
+                        lastName: {
+                            contains: search,
+                            mode: 'insensitive'
+                        }
+                    }
+                },
+                {
+                    Job: {
+                        title: {
+                            contains: search,
+                            mode: 'insensitive'
+                        }
+                    }
+                },
+                {
+                    Job: {
+                        companyName: {
+                            contains: search,
+                            mode: 'insensitive'
+                        }
+                    }
+                }
+            ];
+        }
+        const skip = (page - 1) * limit;
+        const [applications, total] = await Promise.all([
+            this.prisma.jobApplication.findMany({
+                where,
+                skip,
+                take: limit,
+                include: {
+                    Candidate: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            headline: true,
+                            totalExperience: true
+                        }
+                    },
+                    Job: {
+                        select: {
+                            id: true,
+                            title: true,
+                            companyName: true,
+                            status: true
+                        }
+                    },
+                    Interview: {
+                        select: {
+                            id: true,
+                            status: true,
+                            paymentStatus: true,
+                            scheduledDate: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            }),
+            this.prisma.jobApplication.count({
+                where
+            })
+        ]);
+        return {
+            data: applications,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+    }
+    async updateApplicationStatus(applicationId, newStatus, adminId, reason) {
+        const application = await this.prisma.jobApplication.findUnique({
+            where: {
+                id: applicationId
+            }
+        });
+        if (!application) throw new _common.NotFoundException('Application not found');
+        const oldStatus = application.status;
+        await this.prisma.$transaction(async (tx)=>{
+            await tx.jobApplication.update({
+                where: {
+                    id: applicationId
+                },
+                data: {
+                    status: newStatus
+                }
+            });
+            await tx.auditLog.create({
+                data: {
+                    userId: adminId,
+                    action: _constants.AuditAction.ADMIN_OVERRIDE,
+                    entityType: 'JobApplication',
+                    entityId: applicationId,
+                    oldValue: {
+                        status: oldStatus
+                    },
+                    newValue: {
+                        status: newStatus
+                    },
+                    metadata: {
+                        action: 'status_override',
+                        reason
+                    }
+                }
+            });
+        });
+        return {
+            success: true,
+            message: `Application status updated to ${newStatus}`
+        };
+    }
+    // ===========================================
     // PAYMENT & REFUND
     // ===========================================
     async getAllPayments(page = 1, limit = 20, status) {
@@ -1624,6 +1759,210 @@ let AdminService = class AdminService {
                 successful: successfulPayments,
                 refunded: refundedPayments
             }
+        };
+    }
+    // ===========================================
+    // TEST OVERRIDE CONTROLS (ADMIN POWER FEATURES)
+    // ===========================================
+    /**
+     * Admin manually marks a candidate as PASSED for a skill test
+     * Creates a SkillTestAttempt with isPassed: true
+     */ async manuallyPassTest(candidateId, skillBucketId, adminId, reason, validityDays = 7) {
+        // Verify candidate exists
+        const candidate = await this.prisma.candidate.findUnique({
+            where: {
+                id: candidateId
+            }
+        });
+        if (!candidate) throw new _common.NotFoundException('Candidate not found');
+        // Verify skill bucket exists
+        const skillBucket = await this.prisma.skillBucket.findUnique({
+            where: {
+                id: skillBucketId
+            }
+        });
+        if (!skillBucket) throw new _common.NotFoundException('Skill bucket not found');
+        const now = new Date();
+        const validTill = new Date(now.getTime() + validityDays * 24 * 60 * 60 * 1000);
+        const attempt = await this.prisma.skillTestAttempt.create({
+            data: {
+                candidateId,
+                skillBucketId,
+                isPassed: true,
+                score: 100,
+                validTill,
+                retestAllowedAt: null
+            }
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: _constants.AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attempt.id,
+                newValue: {
+                    isPassed: true,
+                    validTill,
+                    validityDays,
+                    reason
+                },
+                metadata: {
+                    action: 'manual_pass',
+                    candidateId,
+                    skillBucketId
+                }
+            }
+        });
+        return {
+            success: true,
+            message: `Candidate manually passed for ${skillBucket.name}. Valid until ${validTill.toISOString()}`,
+            attempt
+        };
+    }
+    /**
+     * Admin manually marks a candidate as FAILED for a skill test
+     * Creates a SkillTestAttempt with isPassed: false and immediate retest allowed
+     */ async manuallyFailTest(candidateId, skillBucketId, adminId, reason) {
+        // Verify candidate exists
+        const candidate = await this.prisma.candidate.findUnique({
+            where: {
+                id: candidateId
+            }
+        });
+        if (!candidate) throw new _common.NotFoundException('Candidate not found');
+        // Verify skill bucket exists
+        const skillBucket = await this.prisma.skillBucket.findUnique({
+            where: {
+                id: skillBucketId
+            }
+        });
+        if (!skillBucket) throw new _common.NotFoundException('Skill bucket not found');
+        const now = new Date();
+        const attempt = await this.prisma.skillTestAttempt.create({
+            data: {
+                candidateId,
+                skillBucketId,
+                isPassed: false,
+                score: 0,
+                validTill: null,
+                retestAllowedAt: now
+            }
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: _constants.AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attempt.id,
+                newValue: {
+                    isPassed: false,
+                    reason
+                },
+                metadata: {
+                    action: 'manual_fail',
+                    candidateId,
+                    skillBucketId
+                }
+            }
+        });
+        return {
+            success: true,
+            message: `Candidate manually failed for ${skillBucket.name}. Immediate retest allowed.`,
+            attempt
+        };
+    }
+    /**
+     * Admin extends the validity of an existing test attempt
+     */ async extendTestValidity(attemptId, newValidTill, adminId, reason) {
+        const attempt = await this.prisma.skillTestAttempt.findUnique({
+            where: {
+                id: attemptId
+            },
+            include: {
+                SkillBucket: true
+            }
+        });
+        if (!attempt) throw new _common.NotFoundException('Test attempt not found');
+        if (!attempt.isPassed) throw new _common.BadRequestException('Can only extend validity for passed tests');
+        const oldValidTill = attempt.validTill;
+        const updated = await this.prisma.skillTestAttempt.update({
+            where: {
+                id: attemptId
+            },
+            data: {
+                validTill: newValidTill
+            }
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: _constants.AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attemptId,
+                oldValue: {
+                    validTill: oldValidTill
+                },
+                newValue: {
+                    validTill: newValidTill,
+                    reason
+                },
+                metadata: {
+                    action: 'extend_validity'
+                }
+            }
+        });
+        return {
+            success: true,
+            message: `Validity extended to ${newValidTill.toISOString()}`,
+            attempt: updated
+        };
+    }
+    /**
+     * Admin resets the retest cooldown for a failed test attempt
+     * Allows candidate to immediately retake the test
+     */ async resetRetestCooldown(attemptId, adminId, reason) {
+        const attempt = await this.prisma.skillTestAttempt.findUnique({
+            where: {
+                id: attemptId
+            },
+            include: {
+                SkillBucket: true
+            }
+        });
+        if (!attempt) throw new _common.NotFoundException('Test attempt not found');
+        if (attempt.isPassed) throw new _common.BadRequestException('Cooldown reset only applies to failed tests');
+        const now = new Date();
+        const oldRetestAllowedAt = attempt.retestAllowedAt;
+        const updated = await this.prisma.skillTestAttempt.update({
+            where: {
+                id: attemptId
+            },
+            data: {
+                retestAllowedAt: now
+            }
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: _constants.AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attemptId,
+                oldValue: {
+                    retestAllowedAt: oldRetestAllowedAt
+                },
+                newValue: {
+                    retestAllowedAt: now,
+                    reason
+                },
+                metadata: {
+                    action: 'reset_cooldown'
+                }
+            }
+        });
+        return {
+            success: true,
+            message: 'Retest cooldown reset. Candidate can now retake the test.',
+            attempt: updated
         };
     }
     constructor(prisma){

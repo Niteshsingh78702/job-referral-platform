@@ -70,6 +70,13 @@ let AdminController = class AdminController {
     async deleteJob(jobId, adminId) {
         return this.adminService.deleteJob(jobId, adminId);
     }
+    // Applications
+    async getApplications(page, limit, status, jobId, search) {
+        return this.adminService.getAllApplications(page, limit, status, jobId, search);
+    }
+    async updateApplicationStatus(applicationId, newStatus, reason, adminId) {
+        return this.adminService.updateApplicationStatus(applicationId, newStatus, adminId, reason);
+    }
     // Candidates
     async getCandidates(page, limit, search) {
         return this.adminService.getAllCandidates(page, limit, search);
@@ -157,6 +164,21 @@ let AdminController = class AdminController {
     }
     async getEnhancedAnalytics() {
         return this.adminService.getEnhancedAnalytics();
+    }
+    // ===========================================
+    // TEST OVERRIDE CONTROLS (ADMIN POWER FEATURES)
+    // ===========================================
+    async manuallyPassTest(candidateId, skillBucketId, reason, validityDays, adminId) {
+        return this.adminService.manuallyPassTest(candidateId, skillBucketId, adminId, reason, validityDays);
+    }
+    async manuallyFailTest(candidateId, skillBucketId, reason, adminId) {
+        return this.adminService.manuallyFailTest(candidateId, skillBucketId, adminId, reason);
+    }
+    async extendTestValidity(attemptId, newValidTill, reason, adminId) {
+        return this.adminService.extendTestValidity(attemptId, new Date(newValidTill), adminId, reason);
+    }
+    async resetRetestCooldown(attemptId, reason, adminId) {
+        return this.adminService.resetRetestCooldown(attemptId, adminId, reason);
     }
     constructor(adminService){
         this.adminService = adminService;
@@ -305,6 +327,38 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "deleteJob", null);
+_ts_decorate([
+    (0, _common.Get)('applications'),
+    _ts_param(0, (0, _common.Query)('page')),
+    _ts_param(1, (0, _common.Query)('limit')),
+    _ts_param(2, (0, _common.Query)('status')),
+    _ts_param(3, (0, _common.Query)('jobId')),
+    _ts_param(4, (0, _common.Query)('search')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        Number,
+        Number,
+        String,
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "getApplications", null);
+_ts_decorate([
+    (0, _common.Patch)('applications/:id/status'),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_param(1, (0, _common.Body)('status')),
+    _ts_param(2, (0, _common.Body)('reason')),
+    _ts_param(3, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "updateApplicationStatus", null);
 _ts_decorate([
     (0, _common.Get)('candidates'),
     _ts_param(0, (0, _common.Query)('page')),
@@ -573,6 +627,66 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "getEnhancedAnalytics", null);
+_ts_decorate([
+    (0, _common.Post)('skill-tests/pass'),
+    _ts_param(0, (0, _common.Body)('candidateId')),
+    _ts_param(1, (0, _common.Body)('skillBucketId')),
+    _ts_param(2, (0, _common.Body)('reason')),
+    _ts_param(3, (0, _common.Body)('validityDays')),
+    _ts_param(4, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        String,
+        Number,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "manuallyPassTest", null);
+_ts_decorate([
+    (0, _common.Post)('skill-tests/fail'),
+    _ts_param(0, (0, _common.Body)('candidateId')),
+    _ts_param(1, (0, _common.Body)('skillBucketId')),
+    _ts_param(2, (0, _common.Body)('reason')),
+    _ts_param(3, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "manuallyFailTest", null);
+_ts_decorate([
+    (0, _common.Patch)('skill-tests/:attemptId/extend-validity'),
+    _ts_param(0, (0, _common.Param)('attemptId')),
+    _ts_param(1, (0, _common.Body)('newValidTill')),
+    _ts_param(2, (0, _common.Body)('reason')),
+    _ts_param(3, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "extendTestValidity", null);
+_ts_decorate([
+    (0, _common.Patch)('skill-tests/:attemptId/reset-cooldown'),
+    _ts_param(0, (0, _common.Param)('attemptId')),
+    _ts_param(1, (0, _common.Body)('reason')),
+    _ts_param(2, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "resetRetestCooldown", null);
 AdminController = _ts_decorate([
     (0, _common.Controller)('admin'),
     (0, _decorators.Roles)(_constants.UserRole.ADMIN),

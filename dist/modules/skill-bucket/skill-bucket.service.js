@@ -9,7 +9,49 @@ Object.defineProperty(exports, "SkillBucketService", {
     }
 });
 const _common = require("@nestjs/common");
+const _crypto = /*#__PURE__*/ _interop_require_wildcard(require("crypto"));
 const _prismaservice = require("../../prisma/prisma.service");
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+}
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {
+        __proto__: null
+    };
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
+}
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -39,13 +81,14 @@ let SkillBucketService = class SkillBucketService {
         }
         return this.prisma.skillBucket.create({
             data: {
+                id: _crypto.randomUUID(),
                 code: dto.code,
                 name: dto.name,
                 description: dto.description,
                 displayName: dto.displayName || `HR Shortlisting Check - ${dto.name}`,
                 experienceMin: dto.experienceMin ?? 0,
                 experienceMax: dto.experienceMax ?? 3,
-                testId: dto.testId
+                updatedAt: new Date()
             },
             include: {
                 Test: true
@@ -90,13 +133,13 @@ let SkillBucketService = class SkillBucketService {
                         id: true,
                         title: true,
                         duration: true,
-                        totalQuestionBank: true
+                        totalQuestions: true
                     }
                 },
                 _count: {
                     select: {
-                        jobs: true,
-                        attempts: true
+                        Job: true,
+                        SkillTestAttempt: true
                     }
                 }
             },
@@ -249,18 +292,31 @@ let SkillBucketService = class SkillBucketService {
      * Called from TestService after test is graded
      */ async recordSkillTestAttempt(candidateId, skillBucketId, isPassed, score, testSessionId) {
         const now = new Date();
+        // Get configured validity/cooldown from TestTemplate (via SkillBucket)
+        const skillBucket = await this.prisma.skillBucket.findUnique({
+            where: {
+                id: skillBucketId
+            },
+            include: {
+                TestTemplate: true
+            }
+        });
+        // Use configured values or defaults
+        const validityDays = skillBucket?.TestTemplate?.testValidityDays ?? TEST_VALIDITY_DAYS;
+        const cooldownHours = skillBucket?.TestTemplate?.retestCooldownHours ?? RETEST_COOLDOWN_HOURS;
         // Calculate validity or cooldown based on result
         let validTill = null;
         let retestAllowedAt = null;
         if (isPassed) {
-            // Valid for 7 days
-            validTill = new Date(now.getTime() + TEST_VALIDITY_DAYS * 24 * 60 * 60 * 1000);
+            // Valid for configured days
+            validTill = new Date(now.getTime() + validityDays * 24 * 60 * 60 * 1000);
         } else {
-            // Cooldown for 24 hours
-            retestAllowedAt = new Date(now.getTime() + RETEST_COOLDOWN_HOURS * 60 * 60 * 1000);
+            // Cooldown for configured hours
+            retestAllowedAt = new Date(now.getTime() + cooldownHours * 60 * 60 * 1000);
         }
         const attempt = await this.prisma.skillTestAttempt.create({
             data: {
+                id: _crypto.randomUUID(),
                 candidateId,
                 skillBucketId,
                 isPassed,
@@ -270,7 +326,7 @@ let SkillBucketService = class SkillBucketService {
                 testSessionId
             }
         });
-        this.logger.log(`Recorded skill test attempt: candidate=${candidateId}, skill=${skillBucketId}, ` + `passed=${isPassed}, score=${score}, validTill=${validTill}, retestAllowedAt=${retestAllowedAt}`);
+        this.logger.log(`Recorded skill test attempt: candidate=${candidateId}, skill=${skillBucketId}, ` + `passed=${isPassed}, score=${score}, validTill=${validTill}, retestAllowedAt=${retestAllowedAt}, ` + `validityDays=${validityDays}, cooldownHours=${cooldownHours}`);
         return attempt;
     }
     /**
@@ -299,9 +355,9 @@ let SkillBucketService = class SkillBucketService {
             }
         });
         return validAttempts.map((attempt)=>({
-                skillBucketCode: attempt.skillBucket.code,
-                skillBucketName: attempt.skillBucket.name,
-                displayName: attempt.skillBucket.displayName || attempt.skillBucket.name,
+                skillBucketCode: attempt.SkillBucket.code,
+                skillBucketName: attempt.SkillBucket.name,
+                displayName: attempt.SkillBucket.displayName || attempt.SkillBucket.name,
                 score: attempt.score,
                 validTill: attempt.validTill,
                 daysRemaining: Math.ceil((attempt.validTill.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
@@ -388,9 +444,9 @@ let SkillBucketService = class SkillBucketService {
             include: {
                 _count: {
                     select: {
-                        jobs: true,
-                        attempts: true,
-                        jobRequirements: true
+                        Job: true,
+                        SkillTestAttempt: true,
+                        JobRequiredSkillBucket: true
                     }
                 }
             }
@@ -399,11 +455,11 @@ let SkillBucketService = class SkillBucketService {
             throw new _common.NotFoundException('Skill bucket not found');
         }
         // Check if skill bucket is in use
-        if (bucket._count.jobs > 0 || bucket._count.jobRequirements > 0) {
-            throw new _common.BadRequestException(`Cannot delete skill bucket: it is assigned to ${bucket._count.jobs + bucket._count.jobRequirements} job(s). Deactivate it instead.`);
+        if (bucket._count.Job > 0 || bucket._count.JobRequiredSkillBucket > 0) {
+            throw new _common.BadRequestException(`Cannot delete skill bucket: it is assigned to ${bucket._count.Job + bucket._count.JobRequiredSkillBucket} job(s). Deactivate it instead.`);
         }
         // If there are attempts, just deactivate instead of hard delete
-        if (bucket._count.attempts > 0) {
+        if (bucket._count.SkillTestAttempt > 0) {
             return this.prisma.skillBucket.update({
                 where: {
                     id
@@ -451,6 +507,7 @@ let SkillBucketService = class SkillBucketService {
                 }
             },
             create: {
+                id: _crypto.randomUUID(),
                 jobId,
                 skillBucketId,
                 displayOrder

@@ -130,6 +130,28 @@ export class AdminController {
         return this.adminService.deleteJob(jobId, adminId);
     }
 
+    // Applications
+    @Get('applications')
+    async getApplications(
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('status') status?: string,
+        @Query('jobId') jobId?: string,
+        @Query('search') search?: string,
+    ) {
+        return this.adminService.getAllApplications(page, limit, status, jobId, search);
+    }
+
+    @Patch('applications/:id/status')
+    async updateApplicationStatus(
+        @Param('id') applicationId: string,
+        @Body('status') newStatus: string,
+        @Body('reason') reason: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.updateApplicationStatus(applicationId, newStatus, adminId, reason);
+    }
+
     // Candidates
     @Get('candidates')
     async getCandidates(

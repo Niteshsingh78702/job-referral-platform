@@ -101,6 +101,22 @@ _ts_decorate([
     (0, _classvalidator.IsBoolean)(),
     _ts_metadata("design:type", Boolean)
 ], CreateTestTemplateDto.prototype, "showLiveScore", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classtransformer.Type)(()=>Number),
+    (0, _classvalidator.IsInt)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.Max)(30),
+    _ts_metadata("design:type", Number)
+], CreateTestTemplateDto.prototype, "testValidityDays", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classtransformer.Type)(()=>Number),
+    (0, _classvalidator.IsInt)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.Max)(168),
+    _ts_metadata("design:type", Number)
+], CreateTestTemplateDto.prototype, "retestCooldownHours", void 0);
 let UpdateTestTemplateDto = class UpdateTestTemplateDto {
 };
 _ts_decorate([
@@ -167,6 +183,22 @@ _ts_decorate([
     (0, _classvalidator.IsBoolean)(),
     _ts_metadata("design:type", Boolean)
 ], UpdateTestTemplateDto.prototype, "isActive", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classtransformer.Type)(()=>Number),
+    (0, _classvalidator.IsInt)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.Max)(30),
+    _ts_metadata("design:type", Number)
+], UpdateTestTemplateDto.prototype, "testValidityDays", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classtransformer.Type)(()=>Number),
+    (0, _classvalidator.IsInt)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.Max)(168),
+    _ts_metadata("design:type", Number)
+], UpdateTestTemplateDto.prototype, "retestCooldownHours", void 0);
 let AssignTemplateDto = class AssignTemplateDto {
 };
 _ts_decorate([

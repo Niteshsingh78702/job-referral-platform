@@ -498,6 +498,112 @@ export class AdminService {
     }
 
     // ===========================================
+    // APPLICATION MANAGEMENT
+    // ===========================================
+
+    async getAllApplications(
+        page = 1,
+        limit = 20,
+        status?: string,
+        jobId?: string,
+        search?: string,
+    ) {
+        const where: any = {};
+
+        if (status) where.status = status;
+        if (jobId) where.jobId = jobId;
+
+        if (search) {
+            where.OR = [
+                { Candidate: { firstName: { contains: search, mode: 'insensitive' } } },
+                { Candidate: { lastName: { contains: search, mode: 'insensitive' } } },
+                { Job: { title: { contains: search, mode: 'insensitive' } } },
+                { Job: { companyName: { contains: search, mode: 'insensitive' } } },
+            ];
+        }
+
+        const skip = (page - 1) * limit;
+
+        const [applications, total] = await Promise.all([
+            this.prisma.jobApplication.findMany({
+                where,
+                skip,
+                take: limit,
+                include: {
+                    Candidate: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            headline: true,
+                            totalExperience: true,
+                        },
+                    },
+                    Job: {
+                        select: {
+                            id: true,
+                            title: true,
+                            companyName: true,
+                            status: true,
+                        },
+                    },
+                    Interview: {
+                        select: {
+                            id: true,
+                            status: true,
+                            paymentStatus: true,
+                            scheduledDate: true,
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.jobApplication.count({ where }),
+        ]);
+
+        return {
+            data: applications,
+            meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
+    }
+
+    async updateApplicationStatus(
+        applicationId: string,
+        newStatus: string,
+        adminId: string,
+        reason?: string,
+    ) {
+        const application = await this.prisma.jobApplication.findUnique({
+            where: { id: applicationId },
+        });
+
+        if (!application) throw new NotFoundException('Application not found');
+
+        const oldStatus = application.status;
+
+        await this.prisma.$transaction(async (tx) => {
+            await tx.jobApplication.update({
+                where: { id: applicationId },
+                data: { status: newStatus as any },
+            });
+
+            await tx.auditLog.create({
+                data: {
+                    userId: adminId,
+                    action: AuditAction.ADMIN_OVERRIDE,
+                    entityType: 'JobApplication',
+                    entityId: applicationId,
+                    oldValue: { status: oldStatus },
+                    newValue: { status: newStatus },
+                    metadata: { action: 'status_override', reason },
+                },
+            });
+        });
+
+        return { success: true, message: `Application status updated to ${newStatus}` };
+    }
+
+    // ===========================================
     // PAYMENT & REFUND
     // ===========================================
 

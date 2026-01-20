@@ -332,10 +332,12 @@ export class JobService {
 
             const app = await tx.jobApplication.create({
                 data: {
+                    id: crypto.randomUUID(),
                     candidateId: candidate.id,
                     jobId: job.id,
                     status: applicationStatus,
                     coverLetter: dto.coverLetter,
+                    updatedAt: new Date(),
                     // If valid skill pass, mark test as passed
                     ...(firstPassedTest && {
                         testScore: firstPassedTest.score,

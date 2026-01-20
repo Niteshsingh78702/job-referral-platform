@@ -394,6 +394,131 @@ export class JobService {
         });
     }
 
+    /**
+     * Check if a candidate can apply for a job (for frontend pre-check)
+     * This allows the frontend to show appropriate UI before the user clicks Apply
+     */
+    async getApplyEligibility(jobId: string, userId: string) {
+        // Get candidate
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { userId },
+        });
+
+        if (!candidate) {
+            return {
+                canApply: false,
+                reason: 'Candidate profile not found',
+                requiresProfile: true,
+            };
+        }
+
+        // Get job
+        const job = await this.prisma.job.findUnique({
+            where: { id: jobId },
+        });
+
+        if (!job) {
+            return {
+                canApply: false,
+                reason: 'Job not found',
+            };
+        }
+
+        if (job.status !== JobStatus.ACTIVE) {
+            return {
+                canApply: false,
+                reason: 'Job is not accepting applications',
+            };
+        }
+
+        if (job.applicationCount >= job.maxApplications) {
+            return {
+                canApply: false,
+                reason: 'Job has reached maximum applications',
+            };
+        }
+
+        // Check if already applied
+        const existingApplication = await this.prisma.jobApplication.findUnique({
+            where: {
+                candidateId_jobId: {
+                    candidateId: candidate.id,
+                    jobId: job.id,
+                },
+            },
+        });
+
+        if (existingApplication) {
+            return {
+                canApply: false,
+                reason: 'Already applied for this job',
+                applicationId: existingApplication.id,
+                applicationStatus: existingApplication.status,
+            };
+        }
+
+        // Check skill requirements
+        const skillCheckResult = await this.skillBucketService.checkAllRequiredSkillsForJob(
+            candidate.id,
+            job.id,
+        );
+
+        if (skillCheckResult.hasRequirements && !skillCheckResult.canApply) {
+            // Check if any are in cooldown
+            const inCooldown = skillCheckResult.missingTests.filter(t => t.isFailed && !t.canRetest);
+            if (inCooldown.length > 0) {
+                return {
+                    canApply: false,
+                    reason: 'In retest cooldown',
+                    cooldownTests: inCooldown.map(t => ({
+                        skillName: t.skillBucketName,
+                        displayName: t.displayName,
+                        retestInHours: t.retestInHours,
+                    })),
+                };
+            }
+
+            // Check if any are expired
+            const expired = skillCheckResult.missingTests.filter(t => t.isPassed && !t.isValid);
+            if (expired.length > 0) {
+                return {
+                    canApply: false,
+                    reason: 'Skill test expired',
+                    expiredTests: expired.map(t => ({
+                        skillName: t.skillBucketName,
+                        displayName: t.displayName,
+                    })),
+                    requiresRetest: true,
+                };
+            }
+
+            // Need to take tests
+            return {
+                canApply: false,
+                reason: 'Skill tests required',
+                missingTests: skillCheckResult.missingTests.map(t => ({
+                    skillBucketId: t.skillBucketId,
+                    skillName: t.skillBucketName,
+                    displayName: t.displayName,
+                    neverTaken: t.neverTaken,
+                })),
+                requiresTest: true,
+            };
+        }
+
+        // All checks passed
+        return {
+            canApply: true,
+            skillTestInfo: skillCheckResult.hasRequirements ? {
+                passedSkills: skillCheckResult.passedTests.map(t => ({
+                    skillName: t.skillBucketName,
+                    displayName: t.displayName,
+                    validDaysRemaining: t.validDaysRemaining,
+                })),
+            } : null,
+        };
+    }
+
     // Helper: Generate slug
     private generateSlug(title: string, company: string): string {
         const base = `${title}-at-${company}`

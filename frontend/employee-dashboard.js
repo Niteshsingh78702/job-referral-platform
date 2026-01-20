@@ -48,6 +48,29 @@ async function checkAuth() {
         return;
     }
 
+    // Check user role and redirect if not an employee
+    const user = localStorage.getItem('user');
+    if (user) {
+        try {
+            const userData = JSON.parse(user);
+            if (userData.role && userData.role !== 'EMPLOYEE') {
+                // Redirect to correct dashboard based on role
+                if (userData.role === 'HR') {
+                    window.location.href = 'hr-dashboard.html';
+                    return;
+                } else if (userData.role === 'ADMIN') {
+                    window.location.href = 'admin.html';
+                    return;
+                } else {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
+    }
+
     try {
         // Verify token and load employee data
         await loadEmployeeProfile();

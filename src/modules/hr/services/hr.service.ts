@@ -437,7 +437,7 @@ export class HRService {
                 orderBy: { createdAt: 'desc' },
                 include: {
                     _count: {
-                        select: { jobApplication: true },
+                        select: { JobApplication: true },
                     },
                     JobSkill: true,
                 },
@@ -822,7 +822,7 @@ export class HRService {
                             headline: true,
                             totalExperience: true,
                             currentCompany: true,
-                            JobSkill: {
+                            CandidateSkill: {
                                 select: {
                                     name: true,
                                     level: true,

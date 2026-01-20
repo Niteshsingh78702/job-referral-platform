@@ -208,6 +208,28 @@ export class TestService {
             throw new BadRequestException('No test configured for this job');
         }
 
+        // Defense-in-depth: Check skill test cooldown if job has skill bucket
+        if (application.Job.skillBucketId) {
+            const skillStatus = await this.skillBucketService.checkCandidateSkillStatus(
+                application.Candidate.id,
+                application.Job.skillBucketId,
+            );
+
+            // Block if candidate is in retest cooldown (failed recently)
+            if (skillStatus.isFailed && !skillStatus.canRetest) {
+                throw new BadRequestException(
+                    `Retest not allowed yet. Please wait ${skillStatus.retestInHours} hours before retrying.`
+                );
+            }
+
+            // Also check if already passed and still valid (shouldn't need to retake)
+            if (skillStatus.isPassed && skillStatus.isValid) {
+                throw new BadRequestException(
+                    `You already have a valid skill pass for this role (valid for ${skillStatus.validDaysRemaining} more days). No need to retake the test.`
+                );
+            }
+        }
+
         // Check if already has an active or completed session
         const existingSession = application.testSessions.find(
             (s) => s.status !== TestSessionStatus.EXPIRED,

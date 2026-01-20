@@ -474,7 +474,7 @@ let HRService = class HRService {
                 include: {
                     _count: {
                         select: {
-                            jobApplication: true
+                            JobApplication: true
                         }
                     },
                     JobSkill: true
@@ -896,7 +896,7 @@ let HRService = class HRService {
                             headline: true,
                             totalExperience: true,
                             currentCompany: true,
-                            JobSkill: {
+                            CandidateSkill: {
                                 select: {
                                     name: true,
                                     level: true

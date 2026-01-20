@@ -48,6 +48,15 @@ export class JobController {
         return this.jobService.updateJob(jobId, userId, dto);
     }
 
+    @Get(':id/apply-eligibility')
+    @Roles(UserRole.CANDIDATE)
+    async getApplyEligibility(
+        @Param('id') jobId: string,
+        @CurrentUser('sub') userId: string,
+    ) {
+        return this.jobService.getApplyEligibility(jobId, userId);
+    }
+
     @Post(':id/apply')
     @Roles(UserRole.CANDIDATE)
     async applyForJob(

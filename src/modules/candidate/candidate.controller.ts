@@ -33,6 +33,11 @@ export class CandidateController {
         private readonly resumeParserService: ResumeParserService,
     ) { }
 
+    @Get('me')
+    async getMe(@CurrentUser('sub') userId: string) {
+        return this.candidateService.getProfile(userId);
+    }
+
     @Get('profile')
     async getProfile(@CurrentUser('sub') userId: string) {
         return this.candidateService.getProfile(userId);

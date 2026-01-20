@@ -10,6 +10,7 @@ Object.defineProperty(exports, "HRService", {
 });
 const _common = require("@nestjs/common");
 const _bcrypt = /*#__PURE__*/ _interop_require_wildcard(require("bcrypt"));
+const _crypto = /*#__PURE__*/ _interop_require_wildcard(require("crypto"));
 const _prismaservice = require("../../../prisma/prisma.service");
 const _tokenservice = require("../../auth/services/token.service");
 const _constants = require("../../../common/constants");
@@ -110,17 +111,20 @@ let HRService = class HRService {
             // Create user with HR role
             const user = await tx.user.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     email: dto.email,
                     phone: dto.phone,
                     passwordHash,
                     role: _constants.UserRole.HR,
                     status: _constants.UserStatus.ACTIVE,
-                    emailVerified: true
+                    emailVerified: true,
+                    updatedAt: new Date()
                 }
             });
             // Create HR profile - Auto-approved for development
             const hr = await tx.hR.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     companyName: dto.companyName,
                     companyEmail: dto.companyEmail,
@@ -128,13 +132,15 @@ let HRService = class HRService {
                     designation: dto.designation,
                     linkedinUrl: dto.linkedinUrl,
                     approvalStatus: _constants.HRApprovalStatus.APPROVED,
-                    approvedAt: new Date()
+                    approvedAt: new Date(),
+                    updatedAt: new Date()
                 }
             });
             // Log device
             if (deviceInfo) {
                 await tx.deviceLog.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         deviceId: deviceInfo.deviceId || 'unknown',
                         ipAddress: deviceInfo.ip || 'unknown',
@@ -145,6 +151,7 @@ let HRService = class HRService {
             // Create audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.CREATE,
                     entityType: 'HR',
@@ -231,6 +238,7 @@ let HRService = class HRService {
             if (deviceInfo) {
                 await tx.deviceLog.create({
                     data: {
+                        id: _crypto.randomUUID(),
                         userId: user.id,
                         deviceId: deviceInfo.deviceId || 'unknown',
                         ipAddress: deviceInfo.ip || 'unknown',
@@ -241,6 +249,7 @@ let HRService = class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.LOGIN,
                     entityType: 'HR',
@@ -515,6 +524,7 @@ let HRService = class HRService {
         const job = await this.prisma.$transaction(async (tx)=>{
             const newJob = await tx.job.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     slug,
                     title: dto.title,
                     description: dto.description,
@@ -531,7 +541,8 @@ let HRService = class HRService {
                     maxJobApplication: dto.maxApplications ?? 100,
                     referralFee: dto.referralFee ?? 499,
                     status: _client.JobStatus.DRAFT,
-                    hrId: user.HR.id
+                    hrId: user.HR.id,
+                    updatedAt: new Date()
                 }
             });
             // Add skills
@@ -558,6 +569,7 @@ let HRService = class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.CREATE,
                     entityType: 'Job',
@@ -632,6 +644,7 @@ let HRService = class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.UPDATE,
                     entityType: 'Job',
@@ -759,6 +772,7 @@ let HRService = class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.UPDATE,
                     entityType: 'Job',
@@ -837,6 +851,7 @@ let HRService = class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: user.id,
                     action: _constants.AuditAction.DELETE,
                     entityType: 'Job',

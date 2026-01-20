@@ -7,6 +7,7 @@ import {
     ForbiddenException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { TokenService, JwtPayload } from '../../auth/services/token.service';
 import { HRRegisterDto, HRLoginDto, UpdateHRProfileDto, CreateJobDto, UpdateJobStatusDto, UpdateJobDto } from '../dto';
@@ -67,18 +68,21 @@ export class HRService {
             // Create user with HR role
             const user = await tx.user.create({
                 data: {
+                    id: crypto.randomUUID(),
                     email: dto.email,
                     phone: dto.phone,
                     passwordHash,
                     role: UserRole.HR,
                     status: UserStatus.ACTIVE, // Auto-activate for dev
                     emailVerified: true, // Auto-verify for dev
+                    updatedAt: new Date(),
                 },
             });
 
             // Create HR profile - Auto-approved for development
             const hr = await tx.hR.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: user.id,
                     companyName: dto.companyName,
                     companyEmail: dto.companyEmail,
@@ -87,6 +91,7 @@ export class HRService {
                     linkedinUrl: dto.linkedinUrl,
                     approvalStatus: HRApprovalStatus.APPROVED, // Auto-approve for dev
                     approvedAt: new Date(),
+                    updatedAt: new Date(),
                 },
             });
 
@@ -94,6 +99,7 @@ export class HRService {
             if (deviceInfo) {
                 await tx.deviceLog.create({
                     data: {
+                        id: crypto.randomUUID(),
                         userId: user.id,
                         deviceId: deviceInfo.deviceId || 'unknown',
                         ipAddress: deviceInfo.ip || 'unknown',
@@ -105,6 +111,7 @@ export class HRService {
             // Create audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: user.id,
                     action: AuditAction.CREATE,
                     entityType: 'HR',
@@ -193,6 +200,7 @@ export class HRService {
             if (deviceInfo) {
                 await tx.deviceLog.create({
                     data: {
+                        id: crypto.randomUUID(),
                         userId: user.id,
                         deviceId: deviceInfo.deviceId || 'unknown',
                         ipAddress: deviceInfo.ip || 'unknown',
@@ -204,6 +212,7 @@ export class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: user.id,
                     action: AuditAction.LOGIN,
                     entityType: 'HR',
@@ -480,6 +489,7 @@ export class HRService {
         const job = await this.prisma.$transaction(async (tx) => {
             const newJob = await tx.job.create({
                 data: {
+                    id: crypto.randomUUID(),
                     slug,
                     title: dto.title,
                     description: dto.description,
@@ -497,6 +507,7 @@ export class HRService {
                     referralFee: dto.referralFee ?? 499,
                     status: PrismaJobStatus.DRAFT,
                     hrId: user.HR!.id,
+                    updatedAt: new Date(),
                 },
             });
 
@@ -520,6 +531,7 @@ export class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: user.id,
                     action: AuditAction.CREATE,
                     entityType: 'Job',
@@ -586,6 +598,7 @@ export class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: user.id,
                     action: AuditAction.UPDATE,
                     entityType: 'Job',
@@ -707,6 +720,7 @@ export class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: user.id,
                     action: AuditAction.UPDATE,
                     entityType: 'Job',
@@ -767,6 +781,7 @@ export class HRService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: user.id,
                     action: AuditAction.DELETE,
                     entityType: 'Job',

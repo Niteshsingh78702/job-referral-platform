@@ -31,6 +31,9 @@ function _ts_param(paramIndex, decorator) {
     };
 }
 let CandidateController = class CandidateController {
+    async getMe(userId) {
+        return this.candidateService.getProfile(userId);
+    }
     async getProfile(userId) {
         return this.candidateService.getProfile(userId);
     }
@@ -91,6 +94,15 @@ let CandidateController = class CandidateController {
         this.resumeParserService = resumeParserService;
     }
 };
+_ts_decorate([
+    (0, _common.Get)('me'),
+    _ts_param(0, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CandidateController.prototype, "getMe", null);
 _ts_decorate([
     (0, _common.Get)('profile'),
     _ts_param(0, (0, _decorators.CurrentUser)('sub')),

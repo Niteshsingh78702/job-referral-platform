@@ -6,6 +6,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 import Redis from 'ioredis';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTestDto, AddQuestionDto, SubmitAnswerDto, TestEventDto } from './dto';
@@ -288,6 +289,7 @@ export class TestService {
         // Log audit
         await this.prisma.auditLog.create({
             data: {
+                id: crypto.randomUUID(),
                 userId,
                 action: AuditAction.TEST_START,
                 entityType: 'TestSession',
@@ -497,6 +499,7 @@ export class TestService {
             // Log audit
             await this.prisma.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId,
                     action: AuditAction.TEST_TAB_SWITCH,
                     entityType: 'TestSession',
@@ -630,6 +633,7 @@ export class TestService {
         // Log audit
         await this.prisma.auditLog.create({
             data: {
+                id: crypto.randomUUID(),
                 userId: session.application.candidate.userId,
                 action: AuditAction.TEST_SUBMIT,
                 entityType: 'TestSession',

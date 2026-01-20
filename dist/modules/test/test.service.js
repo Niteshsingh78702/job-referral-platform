@@ -10,6 +10,7 @@ Object.defineProperty(exports, "TestService", {
 });
 const _common = require("@nestjs/common");
 const _config = require("@nestjs/config");
+const _crypto = /*#__PURE__*/ _interop_require_wildcard(require("crypto"));
 const _ioredis = /*#__PURE__*/ _interop_require_default(require("ioredis"));
 const _prismaservice = require("../../prisma/prisma.service");
 const _constants = require("../../common/constants");
@@ -18,6 +19,47 @@ function _interop_require_default(obj) {
     return obj && obj.__esModule ? obj : {
         default: obj
     };
+}
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+}
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {
+        __proto__: null
+    };
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
 }
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -256,6 +298,7 @@ let TestService = class TestService {
         // Log audit
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId,
                 action: _constants.AuditAction.TEST_START,
                 entityType: 'TestSession',
@@ -444,6 +487,7 @@ let TestService = class TestService {
             // Log audit
             await this.prisma.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId,
                     action: _constants.AuditAction.TEST_TAB_SWITCH,
                     entityType: 'TestSession',
@@ -564,6 +608,7 @@ let TestService = class TestService {
         // Log audit
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId: session.application.candidate.userId,
                 action: _constants.AuditAction.TEST_SUBMIT,
                 entityType: 'TestSession',

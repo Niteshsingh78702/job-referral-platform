@@ -165,6 +165,7 @@ let PaymentService = class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId,
                 action: _constants.AuditAction.PAYMENT_INITIATED,
                 entityType: 'Payment',
@@ -334,6 +335,7 @@ let PaymentService = class PaymentService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     action: _constants.AuditAction.PAYMENT_SUCCESS,
                     entityType: 'Payment',
                     entityId: payment.id,
@@ -358,6 +360,7 @@ let PaymentService = class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 action: _constants.AuditAction.PAYMENT_FAILED,
                 entityType: 'Payment',
                 entityId: payment.id,
@@ -469,6 +472,7 @@ let PaymentService = class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId,
                 action: _constants.AuditAction.REFUND_REQUESTED,
                 entityType: 'Refund',
@@ -572,6 +576,7 @@ let PaymentService = class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId,
                 action: _constants.AuditAction.PAYMENT_INITIATED,
                 entityType: 'InterviewPayment',
@@ -669,6 +674,7 @@ let PaymentService = class PaymentService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId,
                     action: _constants.AuditAction.PAYMENT_SUCCESS,
                     entityType: 'InterviewPayment',

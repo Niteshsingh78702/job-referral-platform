@@ -515,6 +515,7 @@ let AdminService = class AdminService {
         });
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId: adminId,
                 action: _constants.AuditAction.ADMIN_OVERRIDE,
                 entityType: 'Job',
@@ -1444,6 +1445,7 @@ let AdminService = class AdminService {
         });
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId: adminId,
                 action: _constants.AuditAction.DELETE,
                 entityType: 'SkillBucket',
@@ -1490,6 +1492,7 @@ let AdminService = class AdminService {
         });
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId: adminId,
                 action: _constants.AuditAction.CREATE,
                 entityType: 'JobRequiredSkillBucket',
@@ -1527,6 +1530,7 @@ let AdminService = class AdminService {
         });
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId: adminId,
                 action: _constants.AuditAction.DELETE,
                 entityType: 'JobRequiredSkillBucket',

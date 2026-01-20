@@ -4,6 +4,7 @@ import {
     BadRequestException,
     ForbiddenException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { ConfirmInterviewDto } from './dto';
@@ -92,6 +93,7 @@ export class InterviewService {
             // Create audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId,
                     action: AuditAction.CREATE,
                     entityType: 'Interview',
@@ -540,6 +542,7 @@ export class InterviewService {
             // Create audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminUserId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Interview',
@@ -592,6 +595,7 @@ export class InterviewService {
             // Create audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminUserId,
                     action: AuditAction.UPDATE,
                     entityType: 'Interview',

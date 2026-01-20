@@ -150,6 +150,7 @@ export class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: crypto.randomUUID(),
                 userId,
                 action: AuditAction.PAYMENT_INITIATED,
                 entityType: 'Payment',
@@ -307,6 +308,7 @@ export class PaymentService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     action: AuditAction.PAYMENT_SUCCESS,
                     entityType: 'Payment',
                     entityId: payment.id,
@@ -329,6 +331,7 @@ export class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: crypto.randomUUID(),
                 action: AuditAction.PAYMENT_FAILED,
                 entityType: 'Payment',
                 entityId: payment.id,
@@ -450,6 +453,7 @@ export class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: crypto.randomUUID(),
                 userId,
                 action: AuditAction.REFUND_REQUESTED,
                 entityType: 'Refund',
@@ -561,6 +565,7 @@ export class PaymentService {
         // Audit log
         await this.prisma.auditLog.create({
             data: {
+                id: crypto.randomUUID(),
                 userId,
                 action: AuditAction.PAYMENT_INITIATED,
                 entityType: 'InterviewPayment',
@@ -649,6 +654,7 @@ export class PaymentService {
             // Audit log
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId,
                     action: AuditAction.PAYMENT_SUCCESS,
                     entityType: 'InterviewPayment',

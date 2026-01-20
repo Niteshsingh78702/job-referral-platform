@@ -7,9 +7,11 @@ import {
     IsEnum,
 } from 'class-validator';
 import { UserRole } from '../../../common/constants';
+import { IsValidEmailDomain } from '../../../common/validators';
 
 export class RegisterDto {
-    @IsEmail()
+    @IsEmail({}, { message: 'Please enter a valid email address' })
+    @IsValidEmailDomain()
     email: string;
 
     @IsOptional()
@@ -45,7 +47,8 @@ export class RegisterDto {
 }
 
 export class LoginDto {
-    @IsEmail()
+    @IsEmail({}, { message: 'Please enter a valid email address' })
+    @IsValidEmailDomain()
     email: string;
 
     @IsString()

@@ -362,11 +362,30 @@ async function handleRegister(event) {
         const data = await response.json();
 
         if (data.success) {
-            showToast('success', 'Account created successfully! Please login.');
-            showModal('login');
+            // Backend now returns tokens and user data - auto-login!
+            state.token = data.data.token.accessToken;
+            state.user = data.data.user || { email, firstName, lastName, role };
 
-            // Pre-fill email
-            document.getElementById('loginEmail').value = email;
+            localStorage.setItem('token', state.token);
+            localStorage.setItem('user', JSON.stringify(state.user));
+
+            closeModal();
+            showToast('success', 'Account created successfully! Redirecting to your dashboard...');
+
+            // Redirect based on role (same as login)
+            setTimeout(() => {
+                if (state.user.role === 'EMPLOYEE') {
+                    window.location.href = 'employee-dashboard.html';
+                } else if (state.user.role === 'HR') {
+                    window.location.href = 'hr-dashboard.html';
+                } else if (state.user.role === 'ADMIN') {
+                    window.location.href = 'admin.html';
+                } else {
+                    // Candidate / default - stay on page and show dashboard
+                    updateUIForLoggedInUser();
+                    scrollToSection('#dashboard');
+                }
+            }, 500);
         } else {
             showToast('error', data.message || 'Registration failed. Please try again.');
         }

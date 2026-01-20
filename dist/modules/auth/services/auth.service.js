@@ -173,13 +173,37 @@ let AuthService = class AuthService {
             });
             return user;
         });
+        // Fetch the full user with profile data
+        const fullUser = await this.prisma.user.findUnique({
+            where: {
+                id: result.id
+            },
+            include: {
+                Candidate: true,
+                HR: true,
+                Employee: true
+            }
+        });
         // Generate tokens
         const payload = {
             sub: result.id,
             email: result.email,
             role: result.role
         };
-        return this.tokenService.generateTokenPair(payload);
+        const token = await this.tokenService.generateTokenPair(payload);
+        // Build user response with profile data for frontend
+        const userResponse = {
+            id: result.id,
+            email: result.email,
+            role: result.role,
+            status: result.status,
+            firstName: dto.firstName || fullUser?.Candidate?.firstName,
+            lastName: dto.lastName || fullUser?.Candidate?.lastName
+        };
+        return {
+            token,
+            user: userResponse
+        };
     }
     // Login with email/password
     async login(dto, deviceInfo) {

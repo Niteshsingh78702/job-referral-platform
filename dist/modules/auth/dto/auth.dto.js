@@ -42,6 +42,7 @@ _export(exports, {
 });
 const _classvalidator = require("class-validator");
 const _constants = require("../../../common/constants");
+const _validators = require("../../../common/validators");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -57,7 +58,10 @@ let RegisterDto = class RegisterDto {
     }
 };
 _ts_decorate([
-    (0, _classvalidator.IsEmail)(),
+    (0, _classvalidator.IsEmail)({}, {
+        message: 'Please enter a valid email address'
+    }),
+    (0, _validators.IsValidEmailDomain)(),
     _ts_metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
 _ts_decorate([
@@ -101,7 +105,10 @@ _ts_decorate([
 let LoginDto = class LoginDto {
 };
 _ts_decorate([
-    (0, _classvalidator.IsEmail)(),
+    (0, _classvalidator.IsEmail)({}, {
+        message: 'Please enter a valid email address'
+    }),
+    (0, _validators.IsValidEmailDomain)(),
     _ts_metadata("design:type", String)
 ], LoginDto.prototype, "email", void 0);
 _ts_decorate([

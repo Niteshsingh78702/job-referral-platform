@@ -147,6 +147,7 @@ let TestService = class TestService {
     async createTest(dto) {
         return this.prisma.test.create({
             data: {
+                id: _crypto.randomUUID(),
                 title: dto.title,
                 description: dto.description,
                 duration: dto.duration || 30,
@@ -154,7 +155,8 @@ let TestService = class TestService {
                 totalTestQuestion: dto.totalQuestions || 20,
                 shuffleTestQuestion: dto.shuffleQuestions ?? true,
                 maxTabSwitches: dto.maxTabSwitches || 2,
-                difficulty: dto.difficulty || 'MEDIUM'
+                difficulty: dto.difficulty || 'MEDIUM',
+                updatedAt: new Date()
             }
         });
     }
@@ -172,6 +174,7 @@ let TestService = class TestService {
         }
         return this.prisma.testQuestion.create({
             data: {
+                id: _crypto.randomUUID(),
                 testId,
                 question: dto.question,
                 options: dto.options,
@@ -273,6 +276,7 @@ let TestService = class TestService {
         // Create test session in database
         const session = await this.prisma.testSession.create({
             data: {
+                id: _crypto.randomUUID(),
                 applicationId,
                 testId: test.id,
                 status: _constants.TestSessionStatus.ACTIVE,
@@ -474,6 +478,7 @@ let TestService = class TestService {
         // Log event
         await this.prisma.testEvent.create({
             data: {
+                id: _crypto.randomUUID(),
                 sessionId,
                 eventType: dto.eventType,
                 eventData: dto.eventData
@@ -596,10 +601,12 @@ let TestService = class TestService {
         if (isPassed) {
             await this.prisma.referral.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     applicationId: session.applicationId,
                     type: 'HR_DIRECT',
                     status: _constants.ReferralStatus.PENDING,
-                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                    updatedAt: new Date()
                 }
             });
         }

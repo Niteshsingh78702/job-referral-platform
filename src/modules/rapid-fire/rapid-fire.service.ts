@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QuestionBankService } from '../question-bank/question-bank.service';
 
@@ -317,6 +318,7 @@ export class RapidFireTestService {
         const attemptedAt = new Date();
         await this.prisma.skillTestAttempt.create({
             data: {
+                id: crypto.randomUUID(),
                 candidateId: session.candidateId,
                 skillBucketId: session.skillBucketId,
                 isPassed,
@@ -384,6 +386,7 @@ export class RapidFireTestService {
         const attemptedAt = new Date();
         await this.prisma.skillTestAttempt.create({
             data: {
+                id: crypto.randomUUID(),
                 candidateId: session.candidateId,
                 skillBucketId: session.skillBucketId,
                 isPassed: false,

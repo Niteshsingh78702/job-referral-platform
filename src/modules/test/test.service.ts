@@ -126,6 +126,7 @@ export class TestService {
     async createTest(dto: CreateTestDto) {
         return this.prisma.test.create({
             data: {
+                id: crypto.randomUUID(),
                 title: dto.title,
                 description: dto.description,
                 duration: dto.duration || 30,
@@ -134,6 +135,7 @@ export class TestService {
                 shuffleTestQuestion: dto.shuffleQuestions ?? true,
                 maxTabSwitches: dto.maxTabSwitches || 2,
                 difficulty: dto.difficulty || 'MEDIUM',
+                updatedAt: new Date(),
             },
         });
     }
@@ -150,6 +152,7 @@ export class TestService {
 
         return this.prisma.testQuestion.create({
             data: {
+                id: crypto.randomUUID(),
                 testId,
                 question: dto.question,
                 options: dto.options,
@@ -257,6 +260,7 @@ export class TestService {
         // Create test session in database
         const session = await this.prisma.testSession.create({
             data: {
+                id: crypto.randomUUID(),
                 applicationId,
                 testId: test.id,
                 status: TestSessionStatus.ACTIVE,
@@ -480,6 +484,7 @@ export class TestService {
         // Log event
         await this.prisma.testEvent.create({
             data: {
+                id: crypto.randomUUID(),
                 sessionId,
                 eventType: dto.eventType,
                 eventData: dto.eventData,
@@ -619,10 +624,12 @@ export class TestService {
         if (isPassed) {
             await this.prisma.referral.create({
                 data: {
+                    id: crypto.randomUUID(),
                     applicationId: session.applicationId,
                     type: 'HR_DIRECT', // Default to HR, can be changed to employee
                     status: ReferralStatus.PENDING,
                     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+                    updatedAt: new Date(),
                 },
             });
         }

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTestTemplateDto, UpdateTestTemplateDto, TemplateFiltersDto, AssignTemplateDto } from './dto';
 
@@ -26,6 +27,7 @@ export class TestTemplateService {
 
         return this.prisma.testTemplate.create({
             data: {
+                id: crypto.randomUUID(),
                 name: dto.name,
                 description: dto.description,
                 testType: dto.testType,
@@ -37,6 +39,7 @@ export class TestTemplateService {
                 selectionRoleType: dto.selectionRoleType,
                 allowSkip: dto.allowSkip ?? true,
                 showLiveScore: dto.showLiveScore ?? false,
+                updatedAt: new Date(),
             },
         });
     }

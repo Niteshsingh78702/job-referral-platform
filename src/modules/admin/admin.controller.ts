@@ -417,4 +417,38 @@ export class AdminController {
     ) {
         return this.adminService.resetRetestCooldown(attemptId, adminId, reason);
     }
+
+    // ===========================================
+    // FRAUD DETECTION
+    // ===========================================
+
+    @Get('fraud/suspicious-activities')
+    async getSuspiciousActivities(
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('isReviewed') isReviewed?: string,
+        @Query('activityType') activityType?: string,
+    ) {
+        return this.adminService.getSuspiciousActivities(
+            page ? parseInt(page) : 1,
+            limit ? parseInt(limit) : 20,
+            isReviewed !== undefined ? isReviewed === 'true' : undefined,
+            activityType,
+        );
+    }
+
+    @Post('fraud/suspicious-activities/:id/review')
+    async reviewSuspiciousActivity(
+        @Param('id') activityId: string,
+        @Body('action') action: 'dismiss' | 'block_user',
+        @Body('notes') notes: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.reviewSuspiciousActivity(activityId, adminId, action, notes);
+    }
+
+    @Get('fraud/hr-metrics')
+    async getHRFraudMetrics() {
+        return this.adminService.getHRFraudMetrics();
+    }
 }

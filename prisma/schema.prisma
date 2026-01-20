@@ -105,7 +105,30 @@ model DeviceLog {
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([deviceId])
+  @@index([ipAddress])
   @@index([userId])
+}
+
+// Fraud detection - suspicious activity tracking
+model SuspiciousActivity {
+  id           String               @id
+  userId       String?
+  activityType SuspiciousType
+  severity     SuspiciousSeverity   @default(MEDIUM)
+  deviceId     String?
+  ipAddress    String?
+  details      Json?
+  isReviewed   Boolean              @default(false)
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNotes  String?
+  createdAt    DateTime             @default(now())
+  User         User?                @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([activityType])
+  @@index([isReviewed])
+  @@index([createdAt])
 }
 
 model Education {
@@ -669,6 +692,7 @@ model User {
   OTPToken           OTPToken[]
   PasswordResetToken PasswordResetToken[]
   RefreshToken       RefreshToken[]
+  SuspiciousActivity SuspiciousActivity[]
 
   @@index([email])
   @@index([googleId])
@@ -827,4 +851,20 @@ enum UserStatus {
   ACTIVE
   BLOCKED
   DELETED
+}
+
+enum SuspiciousType {
+  MULTI_ACCOUNT_DEVICE
+  MULTI_ACCOUNT_IP
+  HR_EXCESSIVE_CANCELLATIONS
+  HR_HIGH_NO_SHOW_RATE
+  RAPID_REGISTRATIONS
+  PAYMENT_ANOMALY
+}
+
+enum SuspiciousSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }

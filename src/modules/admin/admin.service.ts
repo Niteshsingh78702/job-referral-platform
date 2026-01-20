@@ -3,6 +3,7 @@ import {
     NotFoundException,
     BadRequestException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
     UserStatus,
@@ -120,6 +121,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'User',
@@ -144,6 +146,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'User',
@@ -191,6 +194,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'HR',
@@ -218,6 +222,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'HR',
@@ -273,6 +278,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Job',
@@ -294,6 +300,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Job',
@@ -317,6 +324,7 @@ export class AdminService {
 
         const newJob = await this.prisma.job.create({
             data: {
+                id: crypto.randomUUID(),
                 slug,
                 title: jobData.title,
                 description: jobData.description || '',
@@ -330,12 +338,14 @@ export class AdminService {
                 status: JobStatus.ACTIVE,
                 postedAt: new Date(),
                 expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                updatedAt: new Date(),
                 // hrId is optional for admin-created jobs
             },
         });
 
         await this.prisma.auditLog.create({
             data: {
+                id: crypto.randomUUID(),
                 userId: adminId,
                 action: AuditAction.ADMIN_OVERRIDE,
                 entityType: 'Job',
@@ -389,6 +399,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Job',
@@ -485,6 +496,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'User',
@@ -589,6 +601,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'JobApplication',
@@ -686,6 +699,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.REFUND_PROCESSED,
                     entityType: 'Refund',
@@ -723,6 +737,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.REFUND_PROCESSED,
                     entityType: 'Refund',
@@ -869,6 +884,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Interview',
@@ -918,6 +934,7 @@ export class AdminService {
             // Log the no-show with details
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Interview',
@@ -1075,6 +1092,7 @@ export class AdminService {
 
             await this.prisma.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.UPDATE,
                     entityType: 'SkillBucket',
@@ -1216,6 +1234,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Payment',
@@ -1266,6 +1285,7 @@ export class AdminService {
 
             await tx.auditLog.create({
                 data: {
+                    id: crypto.randomUUID(),
                     userId: adminId,
                     action: AuditAction.REFUND_PROCESSED,
                     entityType: 'Refund',
@@ -1604,6 +1624,169 @@ export class AdminService {
             success: true,
             message: 'Retest cooldown reset. Candidate can now retake the test.',
             attempt: updated,
+        };
+    }
+
+    // ==========================================
+    // FRAUD DETECTION: Suspicious Activity Management
+    // ==========================================
+
+    async getSuspiciousActivities(
+        page = 1,
+        limit = 20,
+        isReviewed?: boolean,
+        activityType?: string,
+    ) {
+        const where: any = {};
+        if (isReviewed !== undefined) where.isReviewed = isReviewed;
+        if (activityType) where.activityType = activityType;
+
+        const skip = (page - 1) * limit;
+
+        const [activities, total] = await Promise.all([
+            this.prisma.suspiciousActivity.findMany({
+                where,
+                skip,
+                take: limit,
+                include: {
+                    User: {
+                        select: {
+                            id: true,
+                            email: true,
+                            role: true,
+                            status: true,
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.suspiciousActivity.count({ where }),
+        ]);
+
+        return {
+            data: activities,
+            meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
+    }
+
+    async reviewSuspiciousActivity(
+        activityId: string,
+        adminId: string,
+        action: 'dismiss' | 'block_user',
+        notes?: string,
+    ) {
+        const activity = await this.prisma.suspiciousActivity.findUnique({
+            where: { id: activityId },
+            include: { User: true },
+        });
+
+        if (!activity) {
+            throw new NotFoundException('Suspicious activity not found');
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+            // Mark as reviewed
+            await tx.suspiciousActivity.update({
+                where: { id: activityId },
+                data: {
+                    isReviewed: true,
+                    reviewedBy: adminId,
+                    reviewedAt: new Date(),
+                    reviewNotes: notes,
+                },
+            });
+
+            // If action is block_user, block the associated user
+            if (action === 'block_user' && activity.userId) {
+                await tx.user.update({
+                    where: { id: activity.userId },
+                    data: { status: UserStatus.BLOCKED },
+                });
+            }
+
+            // Audit log
+            await tx.auditLog.create({
+                data: {
+                    id: crypto.randomUUID(),
+                    userId: adminId,
+                    action: AuditAction.ADMIN_OVERRIDE,
+                    entityType: 'SuspiciousActivity',
+                    entityId: activityId,
+                    metadata: {
+                        action,
+                        notes,
+                        userBlocked: action === 'block_user',
+                    },
+                },
+            });
+        });
+
+        return {
+            success: true,
+            message: action === 'block_user'
+                ? 'Suspicious activity reviewed. User has been blocked.'
+                : 'Suspicious activity dismissed.',
+        };
+    }
+
+    async getHRFraudMetrics() {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+        const hrStats = await this.prisma.hR.findMany({
+            include: {
+                Job: {
+                    include: {
+                        JobApplication: {
+                            where: {
+                                createdAt: { gte: thirtyDaysAgo },
+                            },
+                            include: {
+                                Interview: true,
+                            },
+                        },
+                    },
+                },
+                User: {
+                    select: { email: true, status: true },
+                },
+            },
+        });
+
+        const metrics = hrStats.map((hr) => {
+            const allInterviews = hr.Job.flatMap((job) =>
+                job.JobApplication.map((app) => app.Interview).filter(Boolean)
+            );
+            const cancelledCount = allInterviews.filter(
+                (i: any) => i?.status === 'CANCELLED'
+            ).length;
+            const noShowCount = allInterviews.filter(
+                (i: any) => i?.status === 'HR_NO_SHOW'
+            ).length;
+            const totalInterviews = allInterviews.length;
+
+            return {
+                hrId: hr.id,
+                email: hr.User.email,
+                companyName: hr.companyName,
+                userStatus: hr.User.status,
+                totalInterviews,
+                cancelledCount,
+                noShowCount,
+                cancellationRate: totalInterviews > 0
+                    ? ((cancelledCount / totalInterviews) * 100).toFixed(1)
+                    : 0,
+                noShowRate: totalInterviews > 0
+                    ? ((noShowCount / totalInterviews) * 100).toFixed(1)
+                    : 0,
+                isFlagged: cancelledCount > 3 || noShowCount > 2,
+            };
+        });
+
+        return {
+            flaggedHRs: metrics.filter((m) => m.isFlagged),
+            allMetrics: metrics.sort((a, b) =>
+                (b.cancelledCount + b.noShowCount) - (a.cancelledCount + a.noShowCount)
+            ),
         };
     }
 }

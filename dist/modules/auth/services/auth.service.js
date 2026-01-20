@@ -155,6 +155,8 @@ let AuthService = class AuthService {
                         userAgent: deviceInfo.userAgent
                     }
                 });
+                // FRAUD DETECTION: Check for multi-account patterns
+                await this.checkMultiAccountFraud(tx, user.id, deviceInfo);
             }
             // Create audit log
             await tx.auditLog.create({
@@ -748,6 +750,95 @@ let AuthService = class AuthService {
             user: userWithoutPassword,
             isNewUser
         };
+    }
+    /**
+     * FRAUD DETECTION: Check for multi-account patterns
+     * Flags when same device ID or IP address is used to register multiple accounts
+     */ async checkMultiAccountFraud(tx, userId, deviceInfo) {
+        const deviceId = deviceInfo.deviceId || 'unknown';
+        const ipAddress = deviceInfo.ip || 'unknown';
+        // Skip checks for unknown values
+        if (deviceId === 'unknown' && ipAddress === 'unknown') {
+            return;
+        }
+        try {
+            // Check for same device ID used by other accounts
+            if (deviceId !== 'unknown') {
+                const existingDeviceLogs = await tx.deviceLog.findMany({
+                    where: {
+                        deviceId,
+                        userId: {
+                            not: userId
+                        }
+                    },
+                    distinct: [
+                        'userId'
+                    ],
+                    take: 5
+                });
+                if (existingDeviceLogs.length > 0) {
+                    const otherUserIds = existingDeviceLogs.map((log)=>log.userId);
+                    await tx.suspiciousActivity.create({
+                        data: {
+                            id: _crypto.randomUUID(),
+                            userId,
+                            activityType: 'MULTI_ACCOUNT_DEVICE',
+                            severity: existingDeviceLogs.length >= 3 ? 'HIGH' : 'MEDIUM',
+                            deviceId,
+                            ipAddress,
+                            details: {
+                                otherAccountsCount: existingDeviceLogs.length,
+                                otherUserIds,
+                                message: `Device ${deviceId} was used to register ${existingDeviceLogs.length + 1} accounts`
+                            }
+                        }
+                    });
+                    this.logger.warn(`FRAUD ALERT: Multi-account detected on device ${deviceId}. ` + `User ${userId} shares device with ${existingDeviceLogs.length} other accounts.`);
+                }
+            }
+            // Check for same IP used by multiple accounts recently (last 24h)
+            if (ipAddress !== 'unknown') {
+                const recentDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const existingIpLogs = await tx.deviceLog.findMany({
+                    where: {
+                        ipAddress,
+                        userId: {
+                            not: userId
+                        },
+                        createdAt: {
+                            gte: recentDate
+                        }
+                    },
+                    distinct: [
+                        'userId'
+                    ],
+                    take: 5
+                });
+                if (existingIpLogs.length >= 2) {
+                    const otherUserIds = existingIpLogs.map((log)=>log.userId);
+                    await tx.suspiciousActivity.create({
+                        data: {
+                            id: _crypto.randomUUID(),
+                            userId,
+                            activityType: 'MULTI_ACCOUNT_IP',
+                            severity: existingIpLogs.length >= 5 ? 'HIGH' : 'LOW',
+                            deviceId,
+                            ipAddress,
+                            details: {
+                                otherAccountsCount: existingIpLogs.length,
+                                otherUserIds,
+                                timeWindow: '24h',
+                                message: `IP ${ipAddress} registered ${existingIpLogs.length + 1} accounts in last 24 hours`
+                            }
+                        }
+                    });
+                    this.logger.warn(`FRAUD ALERT: Rapid registrations from IP ${ipAddress}. ` + `${existingIpLogs.length + 1} accounts in 24h.`);
+                }
+            }
+        } catch (error) {
+            // Don't block registration if fraud check fails
+            this.logger.error('Fraud check failed', error);
+        }
     }
     constructor(prisma, otpService, tokenService, googleAuthService, emailService){
         this.prisma = prisma;

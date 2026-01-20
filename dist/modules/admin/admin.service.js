@@ -9,8 +9,50 @@ Object.defineProperty(exports, "AdminService", {
     }
 });
 const _common = require("@nestjs/common");
+const _crypto = /*#__PURE__*/ _interop_require_wildcard(require("crypto"));
 const _prismaservice = require("../../prisma/prisma.service");
 const _constants = require("../../common/constants");
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+}
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {
+        __proto__: null
+    };
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
+}
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -164,6 +206,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'User',
@@ -197,6 +240,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'User',
@@ -261,6 +305,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'HR',
@@ -295,6 +340,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'HR',
@@ -367,6 +413,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Job',
@@ -394,6 +441,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Job',
@@ -416,6 +464,7 @@ let AdminService = class AdminService {
         const slug = `${baseSlug}-${randomSuffix}`;
         const newJob = await this.prisma.job.create({
             data: {
+                id: _crypto.randomUUID(),
                 slug,
                 title: jobData.title,
                 description: jobData.description || '',
@@ -428,11 +477,13 @@ let AdminService = class AdminService {
                 referralFee: jobData.referralFee || 499,
                 status: _constants.JobStatus.ACTIVE,
                 postedAt: new Date(),
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                updatedAt: new Date()
             }
         });
         await this.prisma.auditLog.create({
             data: {
+                id: _crypto.randomUUID(),
                 userId: adminId,
                 action: _constants.AuditAction.ADMIN_OVERRIDE,
                 entityType: 'Job',
@@ -506,6 +557,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Job',
@@ -656,6 +708,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'User',
@@ -786,6 +839,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'JobApplication',
@@ -924,6 +978,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.REFUND_PROCESSED,
                     entityType: 'Refund',
@@ -965,6 +1020,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.REFUND_PROCESSED,
                     entityType: 'Refund',
@@ -1141,6 +1197,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Interview',
@@ -1207,6 +1264,7 @@ let AdminService = class AdminService {
             // Log the no-show with details
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Interview',
@@ -1362,6 +1420,7 @@ let AdminService = class AdminService {
             });
             await this.prisma.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.UPDATE,
                     entityType: 'SkillBucket',
@@ -1533,6 +1592,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.ADMIN_OVERRIDE,
                     entityType: 'Payment',
@@ -1595,6 +1655,7 @@ let AdminService = class AdminService {
             });
             await tx.auditLog.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     userId: adminId,
                     action: _constants.AuditAction.REFUND_PROCESSED,
                     entityType: 'Refund',
@@ -1963,6 +2024,153 @@ let AdminService = class AdminService {
             success: true,
             message: 'Retest cooldown reset. Candidate can now retake the test.',
             attempt: updated
+        };
+    }
+    // ==========================================
+    // FRAUD DETECTION: Suspicious Activity Management
+    // ==========================================
+    async getSuspiciousActivities(page = 1, limit = 20, isReviewed, activityType) {
+        const where = {};
+        if (isReviewed !== undefined) where.isReviewed = isReviewed;
+        if (activityType) where.activityType = activityType;
+        const skip = (page - 1) * limit;
+        const [activities, total] = await Promise.all([
+            this.prisma.suspiciousActivity.findMany({
+                where,
+                skip,
+                take: limit,
+                include: {
+                    User: {
+                        select: {
+                            id: true,
+                            email: true,
+                            role: true,
+                            status: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            }),
+            this.prisma.suspiciousActivity.count({
+                where
+            })
+        ]);
+        return {
+            data: activities,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+    }
+    async reviewSuspiciousActivity(activityId, adminId, action, notes) {
+        const activity = await this.prisma.suspiciousActivity.findUnique({
+            where: {
+                id: activityId
+            },
+            include: {
+                User: true
+            }
+        });
+        if (!activity) {
+            throw new _common.NotFoundException('Suspicious activity not found');
+        }
+        await this.prisma.$transaction(async (tx)=>{
+            // Mark as reviewed
+            await tx.suspiciousActivity.update({
+                where: {
+                    id: activityId
+                },
+                data: {
+                    isReviewed: true,
+                    reviewedBy: adminId,
+                    reviewedAt: new Date(),
+                    reviewNotes: notes
+                }
+            });
+            // If action is block_user, block the associated user
+            if (action === 'block_user' && activity.userId) {
+                await tx.user.update({
+                    where: {
+                        id: activity.userId
+                    },
+                    data: {
+                        status: _constants.UserStatus.BLOCKED
+                    }
+                });
+            }
+            // Audit log
+            await tx.auditLog.create({
+                data: {
+                    id: _crypto.randomUUID(),
+                    userId: adminId,
+                    action: _constants.AuditAction.ADMIN_OVERRIDE,
+                    entityType: 'SuspiciousActivity',
+                    entityId: activityId,
+                    metadata: {
+                        action,
+                        notes,
+                        userBlocked: action === 'block_user'
+                    }
+                }
+            });
+        });
+        return {
+            success: true,
+            message: action === 'block_user' ? 'Suspicious activity reviewed. User has been blocked.' : 'Suspicious activity dismissed.'
+        };
+    }
+    async getHRFraudMetrics() {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const hrStats = await this.prisma.hR.findMany({
+            include: {
+                Job: {
+                    include: {
+                        JobApplication: {
+                            where: {
+                                createdAt: {
+                                    gte: thirtyDaysAgo
+                                }
+                            },
+                            include: {
+                                Interview: true
+                            }
+                        }
+                    }
+                },
+                User: {
+                    select: {
+                        email: true,
+                        status: true
+                    }
+                }
+            }
+        });
+        const metrics = hrStats.map((hr)=>{
+            const allInterviews = hr.Job.flatMap((job)=>job.JobApplication.map((app)=>app.Interview).filter(Boolean));
+            const cancelledCount = allInterviews.filter((i)=>i?.status === 'CANCELLED').length;
+            const noShowCount = allInterviews.filter((i)=>i?.status === 'HR_NO_SHOW').length;
+            const totalInterviews = allInterviews.length;
+            return {
+                hrId: hr.id,
+                email: hr.User.email,
+                companyName: hr.companyName,
+                userStatus: hr.User.status,
+                totalInterviews,
+                cancelledCount,
+                noShowCount,
+                cancellationRate: totalInterviews > 0 ? (cancelledCount / totalInterviews * 100).toFixed(1) : 0,
+                noShowRate: totalInterviews > 0 ? (noShowCount / totalInterviews * 100).toFixed(1) : 0,
+                isFlagged: cancelledCount > 3 || noShowCount > 2
+            };
+        });
+        return {
+            flaggedHRs: metrics.filter((m)=>m.isFlagged),
+            allMetrics: metrics.sort((a, b)=>b.cancelledCount + b.noShowCount - (a.cancelledCount + a.noShowCount))
         };
     }
     constructor(prisma){

@@ -180,6 +180,18 @@ let AdminController = class AdminController {
     async resetRetestCooldown(attemptId, reason, adminId) {
         return this.adminService.resetRetestCooldown(attemptId, adminId, reason);
     }
+    // ===========================================
+    // FRAUD DETECTION
+    // ===========================================
+    async getSuspiciousActivities(page, limit, isReviewed, activityType) {
+        return this.adminService.getSuspiciousActivities(page ? parseInt(page) : 1, limit ? parseInt(limit) : 20, isReviewed !== undefined ? isReviewed === 'true' : undefined, activityType);
+    }
+    async reviewSuspiciousActivity(activityId, action, notes, adminId) {
+        return this.adminService.reviewSuspiciousActivity(activityId, adminId, action, notes);
+    }
+    async getHRFraudMetrics() {
+        return this.adminService.getHRFraudMetrics();
+    }
     constructor(adminService){
         this.adminService = adminService;
     }
@@ -687,6 +699,42 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "resetRetestCooldown", null);
+_ts_decorate([
+    (0, _common.Get)('fraud/suspicious-activities'),
+    _ts_param(0, (0, _common.Query)('page')),
+    _ts_param(1, (0, _common.Query)('limit')),
+    _ts_param(2, (0, _common.Query)('isReviewed')),
+    _ts_param(3, (0, _common.Query)('activityType')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "getSuspiciousActivities", null);
+_ts_decorate([
+    (0, _common.Post)('fraud/suspicious-activities/:id/review'),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_param(1, (0, _common.Body)('action')),
+    _ts_param(2, (0, _common.Body)('notes')),
+    _ts_param(3, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "reviewSuspiciousActivity", null);
+_ts_decorate([
+    (0, _common.Get)('fraud/hr-metrics'),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "getHRFraudMetrics", null);
 AdminController = _ts_decorate([
     (0, _common.Controller)('admin'),
     (0, _decorators.Roles)(_constants.UserRole.ADMIN),

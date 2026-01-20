@@ -1309,6 +1309,197 @@ export class AdminService {
             },
         };
     }
+
+    // ===========================================
+    // TEST OVERRIDE CONTROLS (ADMIN POWER FEATURES)
+    // ===========================================
+
+    /**
+     * Admin manually marks a candidate as PASSED for a skill test
+     * Creates a SkillTestAttempt with isPassed: true
+     */
+    async manuallyPassTest(
+        candidateId: string,
+        skillBucketId: string,
+        adminId: string,
+        reason: string,
+        validityDays: number = 7,
+    ) {
+        // Verify candidate exists
+        const candidate = await this.prisma.candidate.findUnique({ where: { id: candidateId } });
+        if (!candidate) throw new NotFoundException('Candidate not found');
+
+        // Verify skill bucket exists
+        const skillBucket = await this.prisma.skillBucket.findUnique({ where: { id: skillBucketId } });
+        if (!skillBucket) throw new NotFoundException('Skill bucket not found');
+
+        const now = new Date();
+        const validTill = new Date(now.getTime() + validityDays * 24 * 60 * 60 * 1000);
+
+        const attempt = await this.prisma.skillTestAttempt.create({
+            data: {
+                candidateId,
+                skillBucketId,
+                isPassed: true,
+                score: 100, // Admin-granted pass
+                validTill,
+                retestAllowedAt: null,
+            },
+        });
+
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attempt.id,
+                newValue: { isPassed: true, validTill, validityDays, reason },
+                metadata: { action: 'manual_pass', candidateId, skillBucketId },
+            },
+        });
+
+        return {
+            success: true,
+            message: `Candidate manually passed for ${skillBucket.name}. Valid until ${validTill.toISOString()}`,
+            attempt,
+        };
+    }
+
+    /**
+     * Admin manually marks a candidate as FAILED for a skill test
+     * Creates a SkillTestAttempt with isPassed: false and immediate retest allowed
+     */
+    async manuallyFailTest(
+        candidateId: string,
+        skillBucketId: string,
+        adminId: string,
+        reason: string,
+    ) {
+        // Verify candidate exists
+        const candidate = await this.prisma.candidate.findUnique({ where: { id: candidateId } });
+        if (!candidate) throw new NotFoundException('Candidate not found');
+
+        // Verify skill bucket exists
+        const skillBucket = await this.prisma.skillBucket.findUnique({ where: { id: skillBucketId } });
+        if (!skillBucket) throw new NotFoundException('Skill bucket not found');
+
+        const now = new Date();
+
+        const attempt = await this.prisma.skillTestAttempt.create({
+            data: {
+                candidateId,
+                skillBucketId,
+                isPassed: false,
+                score: 0, // Admin-forced fail
+                validTill: null,
+                retestAllowedAt: now, // Immediate retest allowed since admin forced it
+            },
+        });
+
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attempt.id,
+                newValue: { isPassed: false, reason },
+                metadata: { action: 'manual_fail', candidateId, skillBucketId },
+            },
+        });
+
+        return {
+            success: true,
+            message: `Candidate manually failed for ${skillBucket.name}. Immediate retest allowed.`,
+            attempt,
+        };
+    }
+
+    /**
+     * Admin extends the validity of an existing test attempt
+     */
+    async extendTestValidity(
+        attemptId: string,
+        newValidTill: Date,
+        adminId: string,
+        reason: string,
+    ) {
+        const attempt = await this.prisma.skillTestAttempt.findUnique({
+            where: { id: attemptId },
+            include: { SkillBucket: true },
+        });
+
+        if (!attempt) throw new NotFoundException('Test attempt not found');
+        if (!attempt.isPassed) throw new BadRequestException('Can only extend validity for passed tests');
+
+        const oldValidTill = attempt.validTill;
+
+        const updated = await this.prisma.skillTestAttempt.update({
+            where: { id: attemptId },
+            data: { validTill: newValidTill },
+        });
+
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attemptId,
+                oldValue: { validTill: oldValidTill },
+                newValue: { validTill: newValidTill, reason },
+                metadata: { action: 'extend_validity' },
+            },
+        });
+
+        return {
+            success: true,
+            message: `Validity extended to ${newValidTill.toISOString()}`,
+            attempt: updated,
+        };
+    }
+
+    /**
+     * Admin resets the retest cooldown for a failed test attempt
+     * Allows candidate to immediately retake the test
+     */
+    async resetRetestCooldown(
+        attemptId: string,
+        adminId: string,
+        reason: string,
+    ) {
+        const attempt = await this.prisma.skillTestAttempt.findUnique({
+            where: { id: attemptId },
+            include: { SkillBucket: true },
+        });
+
+        if (!attempt) throw new NotFoundException('Test attempt not found');
+        if (attempt.isPassed) throw new BadRequestException('Cooldown reset only applies to failed tests');
+
+        const now = new Date();
+        const oldRetestAllowedAt = attempt.retestAllowedAt;
+
+        const updated = await this.prisma.skillTestAttempt.update({
+            where: { id: attemptId },
+            data: { retestAllowedAt: now },
+        });
+
+        await this.prisma.auditLog.create({
+            data: {
+                userId: adminId,
+                action: AuditAction.ADMIN_OVERRIDE,
+                entityType: 'SkillTestAttempt',
+                entityId: attemptId,
+                oldValue: { retestAllowedAt: oldRetestAllowedAt },
+                newValue: { retestAllowedAt: now, reason },
+                metadata: { action: 'reset_cooldown' },
+            },
+        });
+
+        return {
+            success: true,
+            message: 'Retest cooldown reset. Candidate can now retake the test.',
+            attempt: updated,
+        };
+    }
 }
 
 

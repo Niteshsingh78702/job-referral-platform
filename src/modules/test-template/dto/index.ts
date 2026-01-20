@@ -51,6 +51,20 @@ export class CreateTestTemplateDto {
     @IsOptional()
     @IsBoolean()
     showLiveScore?: boolean;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(30)
+    testValidityDays?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(168)
+    retestCooldownHours?: number;
 }
 
 export class UpdateTestTemplateDto {
@@ -104,6 +118,20 @@ export class UpdateTestTemplateDto {
     @IsOptional()
     @IsBoolean()
     isActive?: boolean;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(30)
+    testValidityDays?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(168)
+    retestCooldownHours?: number;
 }
 
 export class AssignTemplateDto {

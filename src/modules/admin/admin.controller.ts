@@ -351,4 +351,48 @@ export class AdminController {
     async getEnhancedAnalytics() {
         return this.adminService.getEnhancedAnalytics();
     }
+
+    // ===========================================
+    // TEST OVERRIDE CONTROLS (ADMIN POWER FEATURES)
+    // ===========================================
+
+    @Post('skill-tests/pass')
+    async manuallyPassTest(
+        @Body('candidateId') candidateId: string,
+        @Body('skillBucketId') skillBucketId: string,
+        @Body('reason') reason: string,
+        @Body('validityDays') validityDays: number,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.manuallyPassTest(candidateId, skillBucketId, adminId, reason, validityDays);
+    }
+
+    @Post('skill-tests/fail')
+    async manuallyFailTest(
+        @Body('candidateId') candidateId: string,
+        @Body('skillBucketId') skillBucketId: string,
+        @Body('reason') reason: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.manuallyFailTest(candidateId, skillBucketId, adminId, reason);
+    }
+
+    @Patch('skill-tests/:attemptId/extend-validity')
+    async extendTestValidity(
+        @Param('attemptId') attemptId: string,
+        @Body('newValidTill') newValidTill: string,
+        @Body('reason') reason: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.extendTestValidity(attemptId, new Date(newValidTill), adminId, reason);
+    }
+
+    @Patch('skill-tests/:attemptId/reset-cooldown')
+    async resetRetestCooldown(
+        @Param('attemptId') attemptId: string,
+        @Body('reason') reason: string,
+        @CurrentUser('sub') adminId: string,
+    ) {
+        return this.adminService.resetRetestCooldown(attemptId, adminId, reason);
+    }
 }

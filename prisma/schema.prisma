@@ -627,8 +627,10 @@ model TestTemplate {
   description       String?
   testType          TestType      @default(RAPID_FIRE)
   duration          Int           @default(20)
-  passingCriteria   Float         @default(70.0)
-  questionPoolSize  Int           @default(100)
+  passingCriteria       Float         @default(70.0)
+  testValidityDays      Int           @default(7)
+  retestCooldownHours   Int           @default(24)
+  questionPoolSize      Int           @default(100)
   autoSelect        Boolean       @default(true)
   selectionTags     String[]
   selectionRoleType String?

@@ -268,16 +268,26 @@ export class SkillBucketService {
     ) {
         const now = new Date();
 
+        // Get configured validity/cooldown from TestTemplate (via SkillBucket)
+        const skillBucket = await this.prisma.skillBucket.findUnique({
+            where: { id: skillBucketId },
+            include: { TestTemplate: true },
+        });
+
+        // Use configured values or defaults
+        const validityDays = skillBucket?.TestTemplate?.testValidityDays ?? TEST_VALIDITY_DAYS;
+        const cooldownHours = skillBucket?.TestTemplate?.retestCooldownHours ?? RETEST_COOLDOWN_HOURS;
+
         // Calculate validity or cooldown based on result
         let validTill: Date | null = null;
         let retestAllowedAt: Date | null = null;
 
         if (isPassed) {
-            // Valid for 7 days
-            validTill = new Date(now.getTime() + TEST_VALIDITY_DAYS * 24 * 60 * 60 * 1000);
+            // Valid for configured days
+            validTill = new Date(now.getTime() + validityDays * 24 * 60 * 60 * 1000);
         } else {
-            // Cooldown for 24 hours
-            retestAllowedAt = new Date(now.getTime() + RETEST_COOLDOWN_HOURS * 60 * 60 * 1000);
+            // Cooldown for configured hours
+            retestAllowedAt = new Date(now.getTime() + cooldownHours * 60 * 60 * 1000);
         }
 
         const attempt = await this.prisma.skillTestAttempt.create({
@@ -294,7 +304,8 @@ export class SkillBucketService {
 
         this.logger.log(
             `Recorded skill test attempt: candidate=${candidateId}, skill=${skillBucketId}, ` +
-            `passed=${isPassed}, score=${score}, validTill=${validTill}, retestAllowedAt=${retestAllowedAt}`
+            `passed=${isPassed}, score=${score}, validTill=${validTill}, retestAllowedAt=${retestAllowedAt}, ` +
+            `validityDays=${validityDays}, cooldownHours=${cooldownHours}`
         );
 
         return attempt;

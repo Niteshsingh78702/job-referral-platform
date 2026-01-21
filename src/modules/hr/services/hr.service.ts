@@ -512,9 +512,10 @@ export class HRService {
             });
 
             // Add skills
-            if (dto.JobSkill && dto.jobSkill.length > 0) {
+            if (dto.jobSkill && dto.jobSkill.length > 0) {
                 await tx.jobSkill.createMany({
                     data: dto.jobSkill.map(skill => ({
+                        id: crypto.randomUUID(),
                         jobId: newJob.id,
                         name: skill,
                         isRequired: true,
@@ -680,7 +681,7 @@ export class HRService {
 
         const updatedJob = await this.prisma.$transaction(async (tx) => {
             // Update skills if provided
-            if (dto.JobSkill && dto.jobSkill.length > 0) {
+            if (dto.jobSkill && dto.jobSkill.length > 0) {
                 // Delete existing skills
                 await tx.jobSkill.deleteMany({
                     where: { jobId },
@@ -688,6 +689,7 @@ export class HRService {
                 // Add new skills
                 await tx.jobSkill.createMany({
                     data: dto.jobSkill.map(skill => ({
+                        id: crypto.randomUUID(),
                         jobId,
                         name: skill,
                         isRequired: true,

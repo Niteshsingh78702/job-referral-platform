@@ -633,9 +633,12 @@ function renderJobs(jobs) {
                 ${(job.skills || []).slice(0, 3).map(skill => `<span class="skill-tag">${skill.name}</span>`).join('')}
                 ${(job.skills || []).length > 3 ? `<span class="skill-tag">+${job.skills.length - 3}</span>` : ''}
             </div>
+            <div class="skill-test-notice">
+                <span class="test-required-badge">🧪 Skill Test Required (Valid 7 Days)</span>
+            </div>
             <div class="job-footer">
                 <div class="job-footer-left">
-                    <span class="referral-fee">Referral Fee: ₹${job.referralFee || 499}</span>
+                    <span class="interview-fee">💳 Pay ₹99 only if interview scheduled</span>
                     <span class="posted-time">📅 ${getTimeAgo(job.postedAt || job.createdAt)}</span>
                 </div>
                 ${getApplyButtonHtml(job.id, true)}
@@ -643,6 +646,7 @@ function renderJobs(jobs) {
         </div>
     `).join('');
 }
+
 
 // Helper function to format relative time like Naukri.com
 function getTimeAgo(dateString) {
@@ -723,8 +727,34 @@ function showJobDetails(jobId) {
             </div>
             ` : ''}
             <div class="info-item">
-                <span class="info-label">Referral Fee</span>
-                <span class="info-value">₹${job.referralFee || 499}</span>
+                <span class="info-label">Interview Fee</span>
+                <span class="info-value" style="color: var(--success);">₹99 (only if scheduled)</span>
+            </div>
+        </div>
+        
+        <!-- How It Works for This Job -->
+        <div class="job-flow-steps">
+            <h4>📋 How to Apply</h4>
+            <div class="flow-steps-grid">
+                <div class="flow-step">
+                    <span class="flow-step-icon">🧪</span>
+                    <span class="flow-step-text">Pass Skill Test (Valid 7 Days)</span>
+                </div>
+                <div class="flow-step-arrow">→</div>
+                <div class="flow-step">
+                    <span class="flow-step-icon">📝</span>
+                    <span class="flow-step-text">Submit Application (Free)</span>
+                </div>
+                <div class="flow-step-arrow">→</div>
+                <div class="flow-step">
+                    <span class="flow-step-icon">📅</span>
+                    <span class="flow-step-text">HR Schedules Interview</span>
+                </div>
+                <div class="flow-step-arrow">→</div>
+                <div class="flow-step">
+                    <span class="flow-step-icon">💳</span>
+                    <span class="flow-step-text">Pay ₹99 to Unlock Details</span>
+                </div>
             </div>
         </div>
         
@@ -749,6 +779,7 @@ function showJobDetails(jobId) {
                 ${isJobSaved(job.id) ? '❤️ Saved' : '🤍 Save Job'}
             </button>
         </div>
+
         
         ${similarJobs.length > 0 ? `
         <div class="similar-jobs-section">
@@ -2068,7 +2099,7 @@ async function loadApplications() {
             // Interview completed
             actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Interview Completed</button>`;
         } else {
-            actionButton = `<button class="btn btn-outline btn-sm">View Details</button>`;
+            actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
         }
 
         // Cancel button (only show for cancellable statuses)

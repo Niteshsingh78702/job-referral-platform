@@ -109,28 +109,6 @@ model DeviceLog {
   @@index([userId])
 }
 
-// Fraud detection - suspicious activity tracking
-model SuspiciousActivity {
-  id           String               @id
-  userId       String?
-  activityType SuspiciousType
-  severity     SuspiciousSeverity   @default(MEDIUM)
-  deviceId     String?
-  ipAddress    String?
-  details      Json?
-  isReviewed   Boolean              @default(false)
-  reviewedBy   String?
-  reviewedAt   DateTime?
-  reviewNotes  String?
-  createdAt    DateTime             @default(now())
-  User         User?                @relation(fields: [userId], references: [id])
-  
-  @@index([userId])
-  @@index([activityType])
-  @@index([isReviewed])
-  @@index([createdAt])
-}
-
 model Education {
   id          String    @id
   candidateId String
@@ -540,6 +518,27 @@ model SkillTestAttempt {
   @@index([validTill])
 }
 
+model SuspiciousActivity {
+  id           String             @id
+  userId       String?
+  activityType SuspiciousType
+  severity     SuspiciousSeverity @default(MEDIUM)
+  deviceId     String?
+  ipAddress    String?
+  details      Json?
+  isReviewed   Boolean            @default(false)
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNotes  String?
+  createdAt    DateTime           @default(now())
+  User         User?              @relation(fields: [userId], references: [id])
+
+  @@index([activityType])
+  @@index([createdAt])
+  @@index([isReviewed])
+  @@index([userId])
+}
+
 model SystemConfig {
   id        String   @id
   key       String   @unique
@@ -617,7 +616,6 @@ model TestSession {
   id                  String            @id
   applicationId       String?
   testId              String?
-  testTemplateId      String?
   status              TestSessionStatus @default(ACTIVE)
   startedAt           DateTime          @default(now())
   endsAt              DateTime
@@ -629,9 +627,10 @@ model TestSession {
   tabSwitchCount      Int               @default(0)
   warningCount        Int               @default(0)
   questionOrder       Int[]
-  selectedQuestionIds String[]
-  answeredCount       Int               @default(0)
   createdAt           DateTime          @default(now())
+  answeredCount       Int               @default(0)
+  selectedQuestionIds String[]
+  testTemplateId      String?
   TestAnswer          TestAnswer[]
   TestEvent           TestEvent[]
   JobApplication      JobApplication?   @relation(fields: [applicationId], references: [id])
@@ -645,25 +644,25 @@ model TestSession {
 }
 
 model TestTemplate {
-  id                String        @id
-  name              String
-  description       String?
-  testType          TestType      @default(RAPID_FIRE)
-  duration          Int           @default(20)
-  passingCriteria       Float         @default(70.0)
-  testValidityDays      Int           @default(7)
-  retestCooldownHours   Int           @default(24)
-  questionPoolSize      Int           @default(100)
-  autoSelect        Boolean       @default(true)
-  selectionTags     String[]
-  selectionRoleType String?
-  allowSkip         Boolean       @default(true)
-  showLiveScore     Boolean       @default(false)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime
-  isActive          Boolean       @default(true)
-  SkillBucket       SkillBucket[]
-  TestSession       TestSession[]
+  id                  String        @id
+  name                String
+  description         String?
+  testType            TestType      @default(RAPID_FIRE)
+  duration            Int           @default(20)
+  passingCriteria     Float         @default(70.0)
+  testValidityDays    Int           @default(7)
+  retestCooldownHours Int           @default(24)
+  questionPoolSize    Int           @default(100)
+  autoSelect          Boolean       @default(true)
+  selectionTags       String[]
+  selectionRoleType   String?
+  allowSkip           Boolean       @default(true)
+  showLiveScore       Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime
+  isActive            Boolean       @default(true)
+  SkillBucket         SkillBucket[]
+  TestSession         TestSession[]
 
   @@index([isActive])
   @@index([testType])
@@ -678,11 +677,11 @@ model User {
   status             UserStatus           @default(PENDING)
   emailVerified      Boolean              @default(false)
   phoneVerified      Boolean              @default(false)
-  googleId           String?              @unique
-  authProvider       String               @default("email")
   createdAt          DateTime             @default(now())
   updatedAt          DateTime
   lastLoginAt        DateTime?
+  authProvider       String               @default("email")
+  googleId           String?              @unique
   AuditLog           AuditLog[]
   Candidate          Candidate?
   DeviceLog          DeviceLog[]
@@ -708,11 +707,11 @@ enum ApplicationStatus {
   TEST_FAILED
   REFERRAL_PENDING
   REFERRAL_CONFIRMED
-  INTERVIEW_REQUESTED
   PAYMENT_PENDING
   CONTACT_UNLOCKED
   CLOSED
   EXPIRED
+  INTERVIEW_REQUESTED
   TEST_REQUIRED
   TEST_IN_PROGRESS
   INTERVIEW_CONFIRMED
@@ -827,6 +826,22 @@ enum RefundStatus {
   PROCESSED
 }
 
+enum SuspiciousSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SuspiciousType {
+  MULTI_ACCOUNT_DEVICE
+  MULTI_ACCOUNT_IP
+  HR_EXCESSIVE_CANCELLATIONS
+  HR_HIGH_NO_SHOW_RATE
+  RAPID_REGISTRATIONS
+  PAYMENT_ANOMALY
+}
+
 enum TestSessionStatus {
   ACTIVE
   SUBMITTED
@@ -851,20 +866,4 @@ enum UserStatus {
   ACTIVE
   BLOCKED
   DELETED
-}
-
-enum SuspiciousType {
-  MULTI_ACCOUNT_DEVICE
-  MULTI_ACCOUNT_IP
-  HR_EXCESSIVE_CANCELLATIONS
-  HR_HIGH_NO_SHOW_RATE
-  RAPID_REGISTRATIONS
-  PAYMENT_ANOMALY
-}
-
-enum SuspiciousSeverity {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
 }

@@ -293,7 +293,7 @@ export class InterviewService {
 
         const interviews = await this.prisma.interview.findMany({
             where: {
-                application: {
+                JobApplication: {
                     candidateId: candidate.id,
                 },
             },
@@ -356,8 +356,8 @@ export class InterviewService {
         }
 
         const where: any = {
-            application: {
-                job: {
+            JobApplication: {
+                Job: {
                     hrId: hr.id,
                 },
             },
@@ -368,8 +368,8 @@ export class InterviewService {
         }
 
         if (filters?.jobId) {
-            where.application = {
-                ...where.application,
+            where.JobApplication = {
+                ...where.JobApplication,
                 jobId: filters.jobId,
             };
         }

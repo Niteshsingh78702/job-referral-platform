@@ -693,6 +693,30 @@ a:hover {
     opacity: 0.8;
 }
 
+/* Skill Test Notice */
+.skill-test-notice {
+    margin-bottom: 16px;
+}
+
+.test-required-badge {
+    display: inline-block;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 50px;
+    letter-spacing: 0.3px;
+}
+
+.interview-fee {
+    font-size: 13px;
+    color: var(--success);
+    font-weight: 500;
+}
+
+
 /* Loading Spinner */
 .loading-spinner {
     grid-column: 1 / -1;
@@ -3104,4 +3128,100 @@ a:hover {
     color: var(--text-secondary);
     margin-bottom: 24px;
     font-size: 15px;
+}
+
+/* Job Flow Steps (How to Apply) */
+.job-flow-steps {
+    margin: 24px 0;
+    padding: 20px;
+    background: rgba(99, 102, 241, 0.05);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.job-flow-steps h4 {
+    font-size: 15px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.flow-steps-grid {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.flow-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+}
+
+.flow-step-icon {
+    font-size: 16px;
+}
+
+.flow-step-text {
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.flow-step-arrow {
+    color: var(--primary-light);
+    font-size: 18px;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .flow-steps-grid {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .flow-step-arrow {
+        transform: rotate(90deg);
+        text-align: center;
+    }
+}
+
+/* Eligibility Notice */
+.eligibility-notice {
+    margin-bottom: 24px;
+}
+
+.eligibility-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--radius-lg);
+}
+
+.eligibility-card.new-user {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.eligibility-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.eligibility-content h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.eligibility-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
 }

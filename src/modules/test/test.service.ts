@@ -445,7 +445,7 @@ export class TestService {
         const session = await this.prisma.testSession.findUnique({
             where: { id: sessionId },
             include: {
-                application: { include: { Candidate: true } },
+                JobApplication: { include: { Candidate: true } },
                 Test: true,
                 answers: true,
             },
@@ -542,7 +542,7 @@ export class TestService {
         const session = await this.prisma.testSession.findUnique({
             where: { id: sessionId },
             include: {
-                application: { include: { Candidate: true } },
+                JobApplication: { include: { Candidate: true } },
                 Test: true,
                 answers: true,
             },

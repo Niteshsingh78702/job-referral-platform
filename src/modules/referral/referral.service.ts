@@ -29,14 +29,14 @@ export class ReferralService {
         return this.prisma.referral.findMany({
             where: {
                 status: { in: [ReferralStatus.PENDING, ReferralStatus.CONFIRMED] },
-                application: {
+                JobApplication: {
                     Job: {
                         hrId: hr.id,
                     },
                 },
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {
@@ -80,7 +80,7 @@ export class ReferralService {
                 OR: [
                     { employeeId: employee.id },
                     {
-                        application: {
+                        JobApplication: {
                             Job: {
                                 companyName: { equals: employee.companyName, mode: 'insensitive' },
                             },
@@ -89,7 +89,7 @@ export class ReferralService {
                 ],
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {
@@ -124,7 +124,7 @@ export class ReferralService {
         const referral = await this.prisma.referral.findUnique({
             where: { id: referralId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: { include: { HR: true } },
                     },
@@ -201,7 +201,7 @@ export class ReferralService {
         const referral = await this.prisma.referral.findUnique({
             where: { id: referralId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: { include: { HR: true } },
                     },
@@ -233,7 +233,7 @@ export class ReferralService {
         const referral = await this.prisma.referral.findUnique({
             where: { id: referralId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: { include: { HR: true } },
                     },
@@ -280,7 +280,7 @@ export class ReferralService {
             return this.prisma.referral.findMany({
                 where: { hrId: hr.id },
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {
@@ -308,7 +308,7 @@ export class ReferralService {
             return this.prisma.referral.findMany({
                 where: { employeeId: employee.id },
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {

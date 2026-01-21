@@ -185,7 +185,7 @@ export class PaymentService {
         const payment = await this.prisma.payment.findUnique({
             where: { razorpayOrderId: dto.razorpayOrderId },
             include: {
-                application: {
+                JobApplication: {
                     include: { Candidate: true },
                 },
             },
@@ -352,12 +352,12 @@ export class PaymentService {
 
         return this.prisma.payment.findMany({
             where: {
-                application: {
+                JobApplication: {
                     candidateId: candidate.id,
                 },
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             select: {
@@ -378,7 +378,7 @@ export class PaymentService {
         const payment = await this.prisma.payment.findUnique({
             where: { id: paymentId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: true,
                         Job: true,
@@ -404,7 +404,7 @@ export class PaymentService {
         const payment = await this.prisma.payment.findUnique({
             where: { id: dto.paymentId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: true,
                         Referral: true,
@@ -602,7 +602,7 @@ export class PaymentService {
         const payment = await this.prisma.payment.findUnique({
             where: { razorpayOrderId: dto.razorpayOrderId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: { include: { User: true } },
                         Interview: true,

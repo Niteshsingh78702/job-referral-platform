@@ -325,7 +325,7 @@ export class CandidateService {
                         passingScore: true,
                     },
                 },
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             select: {
@@ -362,7 +362,7 @@ export class CandidateService {
                 applicationId: { in: applicationIds },
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             select: {

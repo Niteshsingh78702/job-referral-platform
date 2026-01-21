@@ -142,7 +142,7 @@ export class EmployeeService {
                 status: ReferralStatus.PENDING,
                 type: ReferralType.Employee,
                 employeeId: null,
-                application: {
+                JobApplication: {
                     Job: {
                         companyName: {
                             equals: employee.companyName,
@@ -213,7 +213,7 @@ export class EmployeeService {
                 status: ReferralStatus.PENDING,
                 type: ReferralType.Employee,
                 employeeId: null, // Not yet claimed by any employee
-                application: {
+                JobApplication: {
                     Job: {
                         companyName: {
                             equals: employee.companyName,
@@ -244,7 +244,7 @@ export class EmployeeService {
                 },
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {
@@ -325,7 +325,7 @@ export class EmployeeService {
             this.prisma.referral.findMany({
                 where,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {
@@ -387,7 +387,7 @@ export class EmployeeService {
         const referral = await this.prisma.referral.findUnique({
             where: { applicationId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: true,
                     },
@@ -506,7 +506,7 @@ export class EmployeeService {
                 include: {
                     Referral: {
                         include: {
-                            application: {
+                            JobApplication: {
                                 include: {
                                     Candidate: {
                                         select: { firstName: true, lastName: true },

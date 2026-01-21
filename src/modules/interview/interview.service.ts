@@ -34,8 +34,8 @@ export class InterviewService {
         const application = await this.prisma.jobApplication.findUnique({
             where: { id: applicationId },
             include: {
-                job: { include: { hr: true } },
-                candidate: { include: { user: true } },
+                Job: { include: { HR: true } },
+                Candidate: { include: { User: true } },
             },
         });
 
@@ -55,7 +55,7 @@ export class InterviewService {
             where: { userId },
         });
 
-        if (!hr || application.job.hrId !== hr.id) {
+        if (!hr || application.Job.hrId !== hr.id) {
             throw new ForbiddenException('You can only confirm interviews for your own job applications');
         }
 
@@ -135,10 +135,10 @@ export class InterviewService {
         const interview = await this.prisma.interview.findUnique({
             where: { applicationId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        job: { include: { hr: { include: { user: true } } } },
-                        candidate: { include: { user: true } },
+                        Job: { include: { HR: { include: { User: true } } } },
+                        Candidate: { include: { User: true } },
                     },
                 },
             },
@@ -199,9 +199,9 @@ export class InterviewService {
         const interview = await this.prisma.interview.findUnique({
             where: { id: interviewId },
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        job: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true,
@@ -218,7 +218,7 @@ export class InterviewService {
         }
 
         // Verify candidate owns this interview's application
-        if (interview.application.candidateId !== candidate.id) {
+        if (interview.JobApplication.candidateId !== candidate.id) {
             throw new ForbiddenException('You can only view your own interviews');
         }
 
@@ -228,7 +228,7 @@ export class InterviewService {
             mode: interview.mode,
             status: interview.status,
             paymentStatus: interview.paymentStatus,
-            job: interview.application.job,
+            job: interview.JobApplication.Job,
             createdAt: interview.createdAt,
         };
 
@@ -298,9 +298,9 @@ export class InterviewService {
                 },
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        job: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true,
@@ -320,7 +320,7 @@ export class InterviewService {
                 mode: interview.mode,
                 status: interview.status,
                 paymentStatus: interview.paymentStatus,
-                job: interview.application.job,
+                job: interview.JobApplication.Job,
                 createdAt: interview.createdAt,
                 paidAt: interview.paidAt,
             };
@@ -377,21 +377,21 @@ export class InterviewService {
         const interviews = await this.prisma.interview.findMany({
             where,
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        candidate: {
+                        Candidate: {
                             select: {
                                 id: true,
                                 firstName: true,
                                 lastName: true,
-                                user: {
+                                User: {
                                     select: {
                                         email: true,
                                     },
                                 },
                             },
                         },
-                        job: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true,
@@ -466,19 +466,19 @@ export class InterviewService {
                 skip,
                 take: limit,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
-                            candidate: {
+                            Candidate: {
                                 select: {
                                     firstName: true,
                                     lastName: true,
                                 },
                             },
-                            job: {
+                            Job: {
                                 select: {
                                     title: true,
                                     companyName: true,
-                                    hr: {
+                                    HR: {
                                         select: {
                                             companyName: true,
                                         },

@@ -333,7 +333,7 @@ let CandidateService = class CandidateService {
                         passingScore: true
                     }
                 },
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             select: {
@@ -375,7 +375,7 @@ let CandidateService = class CandidateService {
                 }
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             select: {

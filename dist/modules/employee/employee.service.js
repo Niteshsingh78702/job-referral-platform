@@ -143,7 +143,7 @@ let EmployeeService = class EmployeeService {
                 status: _constants.ReferralStatus.PENDING,
                 type: _constants.ReferralType.Employee,
                 employeeId: null,
-                application: {
+                JobApplication: {
                     Job: {
                         companyName: {
                             equals: employee.companyName,
@@ -199,7 +199,7 @@ let EmployeeService = class EmployeeService {
                 status: _constants.ReferralStatus.PENDING,
                 type: _constants.ReferralType.Employee,
                 employeeId: null,
-                application: {
+                JobApplication: {
                     Job: {
                         companyName: {
                             equals: employee.companyName,
@@ -237,7 +237,7 @@ let EmployeeService = class EmployeeService {
                 }
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {
@@ -323,7 +323,7 @@ let EmployeeService = class EmployeeService {
             this.prisma.referral.findMany({
                 where,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {
@@ -388,7 +388,7 @@ let EmployeeService = class EmployeeService {
                 applicationId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: true
                     }
@@ -506,7 +506,7 @@ let EmployeeService = class EmployeeService {
                 include: {
                     Referral: {
                         include: {
-                            application: {
+                            JobApplication: {
                                 include: {
                                     Candidate: {
                                         select: {

@@ -76,14 +76,14 @@ let InterviewService = class InterviewService {
                 id: applicationId
             },
             include: {
-                job: {
+                Job: {
                     include: {
-                        hr: true
+                        HR: true
                     }
                 },
-                candidate: {
+                Candidate: {
                     include: {
-                        user: true
+                        User: true
                     }
                 }
             }
@@ -101,7 +101,7 @@ let InterviewService = class InterviewService {
                 userId
             }
         });
-        if (!hr || application.job.hrId !== hr.id) {
+        if (!hr || application.Job.hrId !== hr.id) {
             throw new _common.ForbiddenException('You can only confirm interviews for your own job applications');
         }
         // Check if interview already exists
@@ -179,20 +179,20 @@ let InterviewService = class InterviewService {
                 applicationId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        job: {
+                        Job: {
                             include: {
-                                hr: {
+                                HR: {
                                     include: {
-                                        user: true
+                                        User: true
                                     }
                                 }
                             }
                         },
-                        candidate: {
+                        Candidate: {
                             include: {
-                                user: true
+                                User: true
                             }
                         }
                     }
@@ -251,9 +251,9 @@ let InterviewService = class InterviewService {
                 id: interviewId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        job: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true,
@@ -268,7 +268,7 @@ let InterviewService = class InterviewService {
             throw new _common.NotFoundException('Interview not found');
         }
         // Verify candidate owns this interview's application
-        if (interview.application.candidateId !== candidate.id) {
+        if (interview.JobApplication.candidateId !== candidate.id) {
             throw new _common.ForbiddenException('You can only view your own interviews');
         }
         // Base response (always visible)
@@ -277,7 +277,7 @@ let InterviewService = class InterviewService {
             mode: interview.mode,
             status: interview.status,
             paymentStatus: interview.paymentStatus,
-            job: interview.application.job,
+            job: interview.JobApplication.Job,
             createdAt: interview.createdAt
         };
         // Return filtered data based on status
@@ -332,14 +332,14 @@ let InterviewService = class InterviewService {
         }
         const interviews = await this.prisma.interview.findMany({
             where: {
-                application: {
+                JobApplication: {
                     candidateId: candidate.id
                 }
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        job: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true,
@@ -360,7 +360,7 @@ let InterviewService = class InterviewService {
                 mode: interview.mode,
                 status: interview.status,
                 paymentStatus: interview.paymentStatus,
-                job: interview.application.job,
+                job: interview.JobApplication.Job,
                 createdAt: interview.createdAt,
                 paidAt: interview.paidAt
             };
@@ -391,8 +391,8 @@ let InterviewService = class InterviewService {
             throw new _common.NotFoundException('HR profile not found');
         }
         const where = {
-            application: {
-                job: {
+            JobApplication: {
+                Job: {
                     hrId: hr.id
                 }
             }
@@ -401,29 +401,29 @@ let InterviewService = class InterviewService {
             where.status = filters.status;
         }
         if (filters?.jobId) {
-            where.application = {
-                ...where.application,
+            where.JobApplication = {
+                ...where.JobApplication,
                 jobId: filters.jobId
             };
         }
         const interviews = await this.prisma.interview.findMany({
             where,
             include: {
-                application: {
+                JobApplication: {
                     include: {
-                        candidate: {
+                        Candidate: {
                             select: {
                                 id: true,
                                 firstName: true,
                                 lastName: true,
-                                user: {
+                                User: {
                                     select: {
                                         email: true
                                     }
                                 }
                             }
                         },
-                        job: {
+                        Job: {
                             select: {
                                 id: true,
                                 title: true
@@ -510,19 +510,19 @@ let InterviewService = class InterviewService {
                 skip,
                 take: limit,
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
-                            candidate: {
+                            Candidate: {
                                 select: {
                                     firstName: true,
                                     lastName: true
                                 }
                             },
-                            job: {
+                            Job: {
                                 select: {
                                     title: true,
                                     companyName: true,
-                                    hr: {
+                                    HR: {
                                         select: {
                                             companyName: true
                                         }

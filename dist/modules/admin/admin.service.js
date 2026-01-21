@@ -1230,7 +1230,7 @@ let AdminService = class AdminService {
                 id: interviewId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {

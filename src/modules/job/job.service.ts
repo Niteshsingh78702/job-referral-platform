@@ -58,7 +58,7 @@ export class JobService {
                     experienceMin: dto.experienceMin,
                     experienceMax: dto.experienceMax,
                     educationLevel: dto.educationLevel,
-                    maxApplications: dto.maxApplications || 100,
+                    maxApplications: dto.maxApplications || 100, // Ensure field name matches schema
                     referralFee: dto.referralFee || 499,
                     testId: dto.testId,
                     hrId: hr.id,

@@ -39,14 +39,14 @@ let ReferralService = class ReferralService {
                         _constants.ReferralStatus.CONFIRMED
                     ]
                 },
-                application: {
+                JobApplication: {
                     Job: {
                         hrId: hr.id
                     }
                 }
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {
@@ -92,7 +92,7 @@ let ReferralService = class ReferralService {
                         employeeId: employee.id
                     },
                     {
-                        application: {
+                        JobApplication: {
                             Job: {
                                 companyName: {
                                     equals: employee.companyName,
@@ -104,7 +104,7 @@ let ReferralService = class ReferralService {
                 ]
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             select: {
@@ -137,7 +137,7 @@ let ReferralService = class ReferralService {
                 id: referralId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             include: {
@@ -219,7 +219,7 @@ let ReferralService = class ReferralService {
                 id: referralId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             include: {
@@ -255,7 +255,7 @@ let ReferralService = class ReferralService {
                 id: referralId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             include: {
@@ -312,7 +312,7 @@ let ReferralService = class ReferralService {
                     hrId: hr.id
                 },
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {
@@ -346,7 +346,7 @@ let ReferralService = class ReferralService {
                     employeeId: employee.id
                 },
                 include: {
-                    application: {
+                    JobApplication: {
                         include: {
                             Candidate: {
                                 select: {

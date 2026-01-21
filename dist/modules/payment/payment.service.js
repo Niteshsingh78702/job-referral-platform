@@ -197,7 +197,7 @@ let PaymentService = class PaymentService {
                 razorpayOrderId: dto.razorpayOrderId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: true
                     }
@@ -382,12 +382,12 @@ let PaymentService = class PaymentService {
         }
         return this.prisma.payment.findMany({
             where: {
-                application: {
+                JobApplication: {
                     candidateId: candidate.id
                 }
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Job: {
                             select: {
@@ -411,7 +411,7 @@ let PaymentService = class PaymentService {
                 id: paymentId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: true,
                         Job: true
@@ -435,7 +435,7 @@ let PaymentService = class PaymentService {
                 id: dto.paymentId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: true,
                         Referral: true
@@ -610,7 +610,7 @@ let PaymentService = class PaymentService {
                 razorpayOrderId: dto.razorpayOrderId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: {
                             include: {

@@ -57,7 +57,7 @@ let JobService = class JobService {
                     experienceMin: dto.experienceMin,
                     experienceMax: dto.experienceMax,
                     educationLevel: dto.educationLevel,
-                    maxJobApplication: dto.maxApplications || 100,
+                    maxApplications: dto.maxApplications || 100,
                     referralFee: dto.referralFee || 499,
                     testId: dto.testId,
                     hrId: hr.id,

@@ -538,7 +538,7 @@ let HRService = class HRService {
                     experienceMin: dto.experienceMin,
                     experienceMax: dto.experienceMax,
                     educationLevel: dto.educationLevel,
-                    maxJobApplication: dto.maxApplications ?? 100,
+                    maxApplications: dto.maxApplications ?? 100,
                     referralFee: dto.referralFee ?? 499,
                     status: _client.JobStatus.DRAFT,
                     hrId: user.HR.id,
@@ -546,9 +546,10 @@ let HRService = class HRService {
                 }
             });
             // Add skills
-            if (dto.JobSkill && dto.jobSkill.length > 0) {
+            if (dto.jobSkill && dto.jobSkill.length > 0) {
                 await tx.jobSkill.createMany({
                     data: dto.jobSkill.map((skill)=>({
+                            id: _crypto.randomUUID(),
                             jobId: newJob.id,
                             name: skill,
                             isRequired: true
@@ -728,7 +729,7 @@ let HRService = class HRService {
         }
         const updatedJob = await this.prisma.$transaction(async (tx)=>{
             // Update skills if provided
-            if (dto.JobSkill && dto.jobSkill.length > 0) {
+            if (dto.jobSkill && dto.jobSkill.length > 0) {
                 // Delete existing skills
                 await tx.jobSkill.deleteMany({
                     where: {
@@ -738,6 +739,7 @@ let HRService = class HRService {
                 // Add new skills
                 await tx.jobSkill.createMany({
                     data: dto.jobSkill.map((skill)=>({
+                            id: _crypto.randomUUID(),
                             jobId,
                             name: skill,
                             isRequired: true
@@ -761,7 +763,7 @@ let HRService = class HRService {
                     experienceMin: dto.experienceMin,
                     experienceMax: dto.experienceMax,
                     educationLevel: dto.educationLevel,
-                    maxJobApplication: dto.maxApplications,
+                    maxApplications: dto.maxApplications,
                     referralFee: dto.referralFee,
                     status: dto.status ? dto.status : undefined
                 },

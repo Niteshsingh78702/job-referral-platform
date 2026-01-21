@@ -440,7 +440,7 @@ let TestService = class TestService {
                 id: sessionId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: true
                     }
@@ -531,7 +531,7 @@ let TestService = class TestService {
                 id: sessionId
             },
             include: {
-                application: {
+                JobApplication: {
                     include: {
                         Candidate: true
                     }

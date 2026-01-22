@@ -1358,15 +1358,19 @@
 
             emptyState.classList.add('hidden');
 
-            list.innerHTML = activity.map(item => `
-                <li class="activity-item">
-                    <div class="activity-icon">📄</div>
-                    <div class="activity-content">
-                        <div class="activity-title">${item.candidate} applied for ${item.jobTitle}</div>
-                        <div class="activity-meta">${timeAgo(item.createdAt)} • ${item.status}</div>
-                    </div>
-                </li>
-            `).join('');
+            list.innerHTML = activity.map(item => {
+                // Use Candidate (capitalized) as returned by the backend, fallback to candidate (lowercase)
+                const candidateName = item.Candidate || item.candidate || 'Unknown Candidate';
+                return `
+                    <li class="activity-item">
+                        <div class="activity-icon">📄</div>
+                        <div class="activity-content">
+                            <div class="activity-title">${candidateName} applied for ${item.jobTitle}</div>
+                            <div class="activity-meta">${timeAgo(item.createdAt)} • ${item.status}</div>
+                        </div>
+                    </li>
+                `;
+            }).join('');
         }
 
         function timeAgo(date) {
@@ -1472,14 +1476,18 @@
 
                     console.log('👤 Processing application:', app.id, 'Candidate:', candidate.firstName, 'Status:', app.status);
 
-                    // Check if test passed (testScore >= 70 or testPassedAt is set)
+                    // Check if test passed - status 'APPLIED' means test was passed (backend sets this on pass)
+                    // Also check testScore and testPassedAt as additional indicators
                     const testPassed = !!(
+                        app.status === 'APPLIED' ||  // Backend sets APPLIED when test passes
+                        app.status === 'TEST_PASSED' ||
                         app.testPassedAt ||
                         (app.testScore && app.testScore >= 70)
                     );
 
-                    // Determine if HR can confirm interview (test passed, status is APPLIED, no interview yet)
-                    const canConfirmInterview = testPassed &&
+                    // Determine if HR can confirm interview
+                    // Candidates with APPLIED/TEST_PASSED status and no interview yet can be confirmed
+                    const canConfirmInterview =
                         (app.status === 'APPLIED' || app.status === 'TEST_PASSED' || app.status === 'REFERRAL_CONFIRMED') &&
                         !interview;
 
@@ -1554,9 +1562,8 @@
                 case 'TEST_FAILED':
                     return '<span class="badge badge-closed">❌ Failed</span>';
                 case 'APPLIED':
-                    return testPassed
-                        ? '<span class="badge badge-active">✅ Test Passed</span>'
-                        : '<span class="badge badge-pending">📝 Applied</span>';
+                    // Status APPLIED means test was passed (backend logic)
+                    return '<span class="badge badge-active">✅ Test Passed</span>';
                 case 'INTERVIEW_CONFIRMED':
                     return '<span class="badge badge-pending">📅 Interview Set</span>';
                 case 'PAYMENT_PENDING':

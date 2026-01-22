@@ -204,7 +204,8 @@ export class TestService {
             throw new ForbiddenException('Not authorized to access this application');
         }
 
-        if (application.status !== ApplicationStatus.TEST_REQUIRED) {
+        if (application.status !== ApplicationStatus.TEST_REQUIRED &&
+            application.status !== ApplicationStatus.TEST_PENDING) {
             throw new BadRequestException('Test not available for this application');
         }
 

@@ -118,6 +118,7 @@ let InterviewService = class InterviewService {
             // Create interview record with interview details already set
             const newInterview = await tx.interview.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     applicationId,
                     mode: dto.mode,
                     scheduledDate: new Date(dto.scheduledDate),

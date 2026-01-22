@@ -73,6 +73,7 @@ export class InterviewService {
             // Create interview record with interview details already set
             const newInterview = await tx.interview.create({
                 data: {
+                    id: crypto.randomUUID(), // Generate unique id
                     applicationId,
                     mode: dto.mode as any,
                     scheduledDate: new Date(dto.scheduledDate),

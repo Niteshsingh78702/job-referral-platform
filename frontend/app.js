@@ -2399,7 +2399,9 @@ function showApplicationDetails(appId) {
 
     // Render content
     const content = document.getElementById('applicationDetailContent');
-    const interviewSchedule = getInterviewSchedule(appId, app.status);
+    // Pass interview object from application to getInterviewSchedule
+    const interview = app.interview || app.Interview || null;
+    const interviewSchedule = getInterviewSchedule(appId, app.status, interview);
 
     content.innerHTML = `
         <h2 class="modal-title">${app.jobTitle}</h2>
@@ -2418,7 +2420,7 @@ function showApplicationDetails(appId) {
         <div class="interview-schedule">
             <h4>📅 Interview Schedule</h4>
             ${interviewSchedule.map(interview => `
-                <div class="interview-item ${interview.completed ? 'completed' : ''}">
+                <div class="interview-item ${interview.completed ? 'completed' : ''} ${interview.needsPayment ? 'needs-payment' : ''}">
                     <div class="interview-date">
                         <span class="day">${interview.day}</span>
                         <span class="month">${interview.month}</span>
@@ -2428,7 +2430,12 @@ function showApplicationDetails(appId) {
                         <span class="interview-time">🕐 ${interview.time}</span>
                         ${interview.interviewer ? `<span class="interviewer">👤 ${interview.interviewer}</span>` : ''}
                     </div>
-                    <span class="interview-status ${interview.completed ? 'done' : 'upcoming'}">${interview.completed ? '✓ Done' : '⏳ Upcoming'}</span>
+                    ${interview.needsPayment ?
+            `<button class="btn btn-primary btn-sm pay-now-btn" onclick="initiatePayment('${interview.applicationId}', '${interview.interviewId}')">💳 Pay ₹99 to Unlock</button>` :
+            interview.isPaid ?
+                `<span class="interview-status done">✅ Paid - Details Unlocked</span>` :
+                `<span class="interview-status ${interview.completed ? 'done' : 'upcoming'}">${interview.completed ? '✓ Done' : '⏳ Upcoming'}</span>`
+        }
                 </div>
             `).join('')}
         </div>
@@ -2436,11 +2443,13 @@ function showApplicationDetails(appId) {
         <div class="interview-schedule empty">
             <h4>📅 Interview Schedule</h4>
             <p class="empty-schedule">
-                ${app.status === 'TEST_PENDING' || app.status === 'APPLIED' ?
-            '📝 Complete your test first to get interview scheduled' :
-            app.status === 'TEST_FAILED' ?
-                '❌ Application was not successful' :
-                '🔔 Interview details will appear here once scheduled'}
+                ${app.status === 'INTERVIEW_CONFIRMED' ?
+            '💳 Pay ₹99 to unlock your interview details!' :
+            app.status === 'TEST_PENDING' || app.status === 'APPLIED' ?
+                '📝 Complete your test first to get interview scheduled' :
+                app.status === 'TEST_FAILED' ?
+                    '❌ Application was not successful' :
+                    '🔔 Interview details will appear here once HR schedules it'}
             </p>
         </div>
         `}
@@ -2503,60 +2512,48 @@ function getTimelineSteps(status) {
     });
 }
 
-function getInterviewSchedule(appId, status) {
-    // Check localStorage for any stored interview data
-    const storedInterviews = JSON.parse(localStorage.getItem('interviewSchedules') || '{}');
-    if (storedInterviews[appId]) {
-        return storedInterviews[appId];
+function getInterviewSchedule(appId, status, interview) {
+    // If no interview object is passed, return null
+    if (!interview) {
+        return null;
     }
 
-    // For demo purposes, generate mock interview schedule for passed/referred applications
-    if (status === 'TEST_PASSED' || status === 'REFERRAL_PENDING' || status === 'REFERRED') {
-        const now = new Date();
-        const mockSchedule = [];
+    // Build interview schedule from real interview data
+    const schedule = [];
 
-        // Add a completed phone screen
-        const phoneDate = new Date(now);
-        phoneDate.setDate(phoneDate.getDate() - 3);
-        mockSchedule.push({
-            type: 'Phone Screening',
-            day: phoneDate.getDate(),
-            month: phoneDate.toLocaleString('en-US', { month: 'short' }),
-            time: '10:00 AM',
-            interviewer: 'HR Team',
-            completed: true
-        });
-
-        if (status === 'REFERRED') {
-            // Add completed technical round
-            const techDate = new Date(now);
-            techDate.setDate(techDate.getDate() - 1);
-            mockSchedule.push({
-                type: 'Technical Round',
-                day: techDate.getDate(),
-                month: techDate.toLocaleString('en-US', { month: 'short' }),
-                time: '2:00 PM',
-                interviewer: 'Engineering Lead',
-                completed: true
-            });
-        } else {
-            // Add upcoming technical round
-            const techDate = new Date(now);
-            techDate.setDate(techDate.getDate() + 2);
-            mockSchedule.push({
-                type: 'Technical Round',
-                day: techDate.getDate(),
-                month: techDate.toLocaleString('en-US', { month: 'short' }),
-                time: '3:00 PM',
-                interviewer: 'Engineering Team',
-                completed: false
-            });
-        }
-
-        return mockSchedule;
+    // Parse the scheduled date
+    let scheduledDate = null;
+    if (interview.scheduledDate) {
+        scheduledDate = new Date(interview.scheduledDate);
     }
 
-    return null;
+    // Interview mode display
+    const modeDisplay = {
+        'VIDEO': '📹 Video Call',
+        'CALL': '📞 Phone Call',
+        'ONSITE': '🏢 On-site Interview'
+    };
+
+    // Interview status determines if completed
+    const isCompleted = interview.status === 'INTERVIEW_COMPLETED';
+    const isPaid = interview.status === 'PAYMENT_SUCCESS' || interview.status === 'INTERVIEW_COMPLETED';
+    const needsPayment = interview.status === 'INTERVIEW_CONFIRMED';
+
+    schedule.push({
+        type: modeDisplay[interview.mode] || interview.mode,
+        day: scheduledDate ? scheduledDate.getDate() : '?',
+        month: scheduledDate ? scheduledDate.toLocaleString('en-US', { month: 'short' }).toUpperCase() : '',
+        time: isPaid ? (interview.scheduledTime || 'Time TBD') : '🔒 Pay to unlock',
+        interviewer: isPaid ? (interview.hrNotes || 'HR Team') : '',
+        completed: isCompleted,
+        needsPayment: needsPayment,
+        isPaid: isPaid,
+        interviewId: interview.id,
+        applicationId: appId,
+        status: interview.status
+    });
+
+    return schedule;
 }
 
 function closeApplicationModal() {
@@ -2564,6 +2561,109 @@ function closeApplicationModal() {
     document.getElementById('applicationDetailModal')?.classList.remove('active');
     document.body.style.overflow = '';
     currentApplicationId = null;
+}
+
+// Payment function for unlocking interview details
+async function initiatePayment(applicationId, interviewId) {
+    if (!state.token) {
+        showToast('error', 'Please login to continue');
+        return;
+    }
+
+    try {
+        showToast('info', 'Initiating payment...');
+
+        // Create payment order
+        const response = await fetch(`${API_BASE_URL}/payments/create-order`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${state.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ applicationId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to create payment order');
+        }
+
+        const order = data.data || data;
+
+        // Initialize Razorpay
+        if (typeof Razorpay === 'undefined') {
+            // Load Razorpay script if not loaded
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => openRazorpayCheckout(order, applicationId);
+            document.head.appendChild(script);
+        } else {
+            openRazorpayCheckout(order, applicationId);
+        }
+    } catch (error) {
+        console.error('Payment error:', error);
+        showToast('error', error.message || 'Payment failed. Please try again.');
+    }
+}
+
+function openRazorpayCheckout(order, applicationId) {
+    const options = {
+        key: order.razorpayKeyId || 'rzp_test_placeholder',
+        amount: order.amount || 9900,
+        currency: order.currency || 'INR',
+        name: 'JobRefer',
+        description: 'Interview Details Unlock Fee',
+        order_id: order.razorpayOrderId,
+        handler: async function (response) {
+            try {
+                // Verify payment on backend
+                const verifyResponse = await fetch(`${API_BASE_URL}/payments/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${state.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        applicationId,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                });
+
+                if (!verifyResponse.ok) {
+                    throw new Error('Payment verification failed');
+                }
+
+                showToast('success', '🎉 Payment successful! Interview details unlocked!');
+                closeApplicationModal();
+                await loadApplications();
+
+                // Show the application details again with unlocked interview
+                setTimeout(() => {
+                    showApplicationDetails(applicationId);
+                }, 500);
+            } catch (error) {
+                showToast('error', 'Payment verification failed. Please contact support.');
+            }
+        },
+        prefill: {
+            email: state.user?.email || '',
+            name: state.user?.firstName ? `${state.user.firstName} ${state.user.lastName || ''}` : ''
+        },
+        theme: {
+            color: '#2563eb'
+        },
+        modal: {
+            ondismiss: function () {
+                showToast('info', 'Payment cancelled');
+            }
+        }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
 }
 
 function saveApplicationNote() {

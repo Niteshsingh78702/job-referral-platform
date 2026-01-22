@@ -298,12 +298,15 @@ let CandidateService = class CandidateService {
                     select: {
                         id: true,
                         status: true,
+                        paymentStatus: true,
                         scheduledAt: true,
+                        scheduledDate: true,
+                        scheduledTime: true,
                         mode: true,
-                        meetingLink: true,
-                        hrPhone: true,
-                        hrName: true,
-                        officeAddress: true
+                        hrNotes: true,
+                        interviewLink: true,
+                        callDetails: true,
+                        paidAt: true
                     }
                 },
                 TestSession: {

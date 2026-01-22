@@ -185,4 +185,16 @@ export class HRController {
     ) {
         return this.hrService.getApplications(userId, { jobId, status, page, limit });
     }
+
+    @Post('applications/:applicationId/reject')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.HR)
+    @HttpCode(HttpStatus.OK)
+    async rejectApplication(
+        @CurrentUser('sub') userId: string,
+        @Param('applicationId') applicationId: string,
+        @Body() dto: { reason?: string },
+    ) {
+        return this.hrService.rejectApplication(userId, applicationId, dto.reason);
+    }
 }

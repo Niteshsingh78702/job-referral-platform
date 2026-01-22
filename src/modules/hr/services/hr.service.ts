@@ -844,11 +844,40 @@ export class HRService {
                             headline: true,
                             totalExperience: true,
                             currentCompany: true,
+                            resumeUrl: true,           // Resume link for HR
+                            location: true,            // Location
+                            linkedIn: true,            // LinkedIn profile
+                            phone: true,               // Contact phone
+                            user: {
+                                select: {
+                                    email: true,       // Email for HR to contact
+                                },
+                            },
                             CandidateSkill: {
                                 select: {
                                     name: true,
                                     level: true,
                                 },
+                            },
+                            CandidateExperience: {
+                                select: {
+                                    title: true,
+                                    company: true,
+                                    startDate: true,
+                                    endDate: true,
+                                    isCurrent: true,
+                                },
+                                orderBy: { startDate: 'desc' },
+                                take: 3,  // Last 3 experiences
+                            },
+                            CandidateEducation: {
+                                select: {
+                                    degree: true,
+                                    institution: true,
+                                    year: true,
+                                },
+                                orderBy: { year: 'desc' },
+                                take: 2,  // Last 2 education entries
                             },
                         },
                     },
@@ -884,6 +913,49 @@ export class HRService {
                 total: validApplications.length,
                 totalPages: Math.ceil(validApplications.length / limit),
             },
+        };
+    }
+
+    // Reject an application
+    async rejectApplication(userId: string, applicationId: string, reason?: string) {
+        // First verify the HR has access to this application
+        const hr = await this.prisma.hR.findUnique({
+            where: { userId },
+        });
+
+        if (!hr) {
+            throw new NotFoundException('HR profile not found');
+        }
+
+        // Find the application and verify it belongs to one of HR's jobs
+        const application = await this.prisma.jobApplication.findUnique({
+            where: { id: applicationId },
+            include: {
+                Job: true,
+            },
+        });
+
+        if (!application) {
+            throw new NotFoundException('Application not found');
+        }
+
+        if (application.Job.hrId !== hr.id) {
+            throw new ForbiddenException('You do not have access to this application');
+        }
+
+        // Update the application status to REJECTED
+        const updatedApplication = await this.prisma.jobApplication.update({
+            where: { id: applicationId },
+            data: {
+                status: 'REJECTED' as any,
+                updatedAt: new Date(),
+            },
+        });
+
+        return {
+            message: 'Application rejected successfully',
+            applicationId: updatedApplication.id,
+            status: 'REJECTED',
         };
     }
 }

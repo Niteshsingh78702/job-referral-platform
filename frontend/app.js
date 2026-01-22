@@ -2071,11 +2071,29 @@ async function loadApplications() {
         }
     }
 
-    // Also load demo applications from localStorage and merge
+    // Also load demo applications from localStorage, but filter out duplicates
     const demoApps = JSON.parse(localStorage.getItem('demoApplications') || '[]');
     if (demoApps.length > 0) {
-        console.log('🟢 Also loaded', demoApps.length, 'demo applications from localStorage');
-        applications = [...applications, ...demoApps];
+        // Get set of existing job IDs from API applications to prevent duplicates
+        const existingJobIds = new Set(applications.map(app => app.jobId));
+        const existingJobCompanyPairs = new Set(
+            applications.map(app => `${app.jobTitle?.toLowerCase()}-${app.company?.toLowerCase()}`)
+        );
+
+        // Only add demo apps that don't already exist in API applications
+        const uniqueDemoApps = demoApps.filter(demoApp => {
+            const jobCompanyPair = `${demoApp.jobTitle?.toLowerCase()}-${demoApp.company?.toLowerCase()}`;
+            const isDuplicate = existingJobIds.has(demoApp.jobId) || existingJobCompanyPairs.has(jobCompanyPair);
+            if (isDuplicate) {
+                console.log('⚠️ Skipping duplicate demo app:', demoApp.jobTitle, 'at', demoApp.company);
+            }
+            return !isDuplicate;
+        });
+
+        if (uniqueDemoApps.length > 0) {
+            console.log('🟢 Adding', uniqueDemoApps.length, 'unique demo applications from localStorage');
+            applications = [...applications, ...uniqueDemoApps];
+        }
     }
 
     // If no applications, show empty state

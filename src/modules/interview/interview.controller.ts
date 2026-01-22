@@ -135,4 +135,19 @@ export class InterviewController {
     ) {
         return this.interviewService.markCompleted(interviewId, adminUserId);
     }
+
+    /**
+     * HR marks interview outcome (Selected/Not Selected/No Show)
+     */
+    @Post(':interviewId/outcome')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.HR)
+    @HttpCode(HttpStatus.OK)
+    async markInterviewOutcome(
+        @CurrentUser('sub') userId: string,
+        @Param('interviewId') interviewId: string,
+        @Body() dto: { outcome: 'SELECTED' | 'NOT_SELECTED' | 'CANDIDATE_NO_SHOW'; notes?: string; applicationId?: string },
+    ) {
+        return this.interviewService.markInterviewOutcome(userId, interviewId, dto);
+    }
 }

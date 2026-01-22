@@ -616,9 +616,89 @@ export class InterviewService {
         };
     }
 
+    // HR marks interview outcome (Selected/Not Selected/No Show)
+    async markInterviewOutcome(
+        userId: string,
+        interviewId: string,
+        dto: { outcome: 'SELECTED' | 'NOT_SELECTED' | 'CANDIDATE_NO_SHOW'; notes?: string; applicationId?: string }
+    ) {
+        // Verify HR owns this interview
+        const hr = await this.prisma.hR.findUnique({
+            where: { userId },
+        });
+
+        if (!hr) {
+            throw new NotFoundException('HR profile not found');
+        }
+
+        const interview = await this.prisma.interview.findUnique({
+            where: { id: interviewId },
+            include: {
+                JobApplication: {
+                    include: {
+                        Job: true,
+                    },
+                },
+            },
+        });
+
+        if (!interview) {
+            throw new NotFoundException('Interview not found');
+        }
+
+        if (interview.JobApplication.Job.hrId !== hr.id) {
+            throw new ForbiddenException('You do not have access to this interview');
+        }
+
+        // Map outcome to status
+        const statusMap: Record<string, string> = {
+            'SELECTED': 'SELECTED',
+            'NOT_SELECTED': 'NOT_SELECTED',
+            'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW',
+        };
+
+        const applicationStatusMap: Record<string, string> = {
+            'SELECTED': 'SELECTED',
+            'NOT_SELECTED': 'INTERVIEW_REJECTED',
+            'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW',
+        };
+
+        const newStatus = statusMap[dto.outcome] || 'INTERVIEW_COMPLETED';
+        const newAppStatus = applicationStatusMap[dto.outcome] || 'INTERVIEW_COMPLETED';
+
+        // Update interview and application in transaction
+        const updatedInterview = await this.prisma.$transaction(async (tx) => {
+            // Update interview status
+            const updated = await tx.interview.update({
+                where: { id: interviewId },
+                data: {
+                    status: newStatus as any,
+                    updatedAt: new Date(),
+                },
+            });
+
+            // Update application status
+            await tx.jobApplication.update({
+                where: { id: interview.applicationId },
+                data: {
+                    status: newAppStatus as any,
+                    updatedAt: new Date(),
+                },
+            });
+
+            return updated;
+        });
+
+        return {
+            message: `Interview marked as ${dto.outcome.replace(/_/g, ' ')}`,
+            interview: updatedInterview,
+            applicationStatus: newAppStatus,
+        };
+    }
+
     // ===========================================
     // Email Helper Methods
-    // ===========================================
+    // ============================================
 
     private async sendInterviewConfirmedEmail(application: any, dto: ConfirmInterviewDto) {
         const candidateEmail = application.candidate.user.email;

@@ -102,6 +102,9 @@ let HRController = class HRController {
             limit
         });
     }
+    async rejectApplication(userId, applicationId, dto) {
+        return this.hrService.rejectApplication(userId, applicationId, dto.reason);
+    }
     constructor(hrService){
         this.hrService = hrService;
     }
@@ -287,6 +290,22 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], HRController.prototype, "getApplications", null);
+_ts_decorate([
+    (0, _common.Post)('applications/:applicationId/reject'),
+    (0, _common.UseGuards)(_guards.RolesGuard),
+    (0, _decorators.Roles)(_constants.UserRole.HR),
+    (0, _common.HttpCode)(_common.HttpStatus.OK),
+    _ts_param(0, (0, _decorators.CurrentUser)('sub')),
+    _ts_param(1, (0, _common.Param)('applicationId')),
+    _ts_param(2, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        Object
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], HRController.prototype, "rejectApplication", null);
 HRController = _ts_decorate([
     (0, _common.Controller)('hr'),
     _ts_metadata("design:type", Function),

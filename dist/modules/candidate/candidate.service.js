@@ -27,13 +27,13 @@ let CandidateService = class CandidateService {
                 userId
             },
             include: {
-                JobSkill: true,
-                experiences: {
+                CandidateSkill: true,
+                Experience: {
                     orderBy: {
                         startDate: 'desc'
                     }
                 },
-                educations: {
+                Education: {
                     orderBy: {
                         startYear: 'desc'
                     }
@@ -69,9 +69,9 @@ let CandidateService = class CandidateService {
             },
             data: dto,
             include: {
-                JobSkill: true,
-                experiences: true,
-                educations: true
+                CandidateSkill: true,
+                Experience: true,
+                Education: true
             }
         });
     }
@@ -131,9 +131,9 @@ let CandidateService = class CandidateService {
                 userId
             },
             include: {
-                JobSkill: true,
-                experiences: true,
-                educations: true
+                CandidateSkill: true,
+                Experience: true,
+                Education: true
             }
         });
     }
@@ -292,6 +292,31 @@ let CandidateService = class CandidateService {
                         status: true,
                         amount: true,
                         paidAt: true
+                    }
+                },
+                Interview: {
+                    select: {
+                        id: true,
+                        status: true,
+                        scheduledAt: true,
+                        mode: true,
+                        meetingLink: true,
+                        hrPhone: true,
+                        hrName: true,
+                        officeAddress: true
+                    }
+                },
+                TestSession: {
+                    select: {
+                        id: true,
+                        status: true,
+                        score: true,
+                        isPassed: true,
+                        submittedAt: true
+                    },
+                    take: 1,
+                    orderBy: {
+                        createdAt: 'desc'
                     }
                 }
             },

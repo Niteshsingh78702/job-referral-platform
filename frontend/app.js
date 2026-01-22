@@ -2019,7 +2019,12 @@ async function loadApplications() {
                     jobTitle: app.job?.title || 'Unknown Position',
                     appliedAt: app.createdAt,
                     status: app.status,
-                    testScore: app.testScore
+                    testScore: app.testScore,
+                    testPassedAt: app.testPassedAt,
+                    interview: app.interview || null,
+                    referral: app.referral || null,
+                    payment: app.payment || null,
+                    testSession: app.testSessions?.[0] || app.testSession?.[0] || null
                 }));
                 console.log('✅ Loaded', applications.length, 'applications from API');
             } else if (Array.isArray(data.data)) {
@@ -2031,7 +2036,12 @@ async function loadApplications() {
                     jobTitle: app.job?.title || 'Unknown Position',
                     appliedAt: app.createdAt,
                     status: app.status,
-                    testScore: app.testScore
+                    testScore: app.testScore,
+                    testPassedAt: app.testPassedAt,
+                    interview: app.interview || null,
+                    referral: app.referral || null,
+                    payment: app.payment || null,
+                    testSession: app.testSessions?.[0] || app.testSession?.[0] || null
                 }));
             }
         } catch (error) {
@@ -2070,35 +2080,51 @@ async function loadApplications() {
         const appliedDate = new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
         let actionButton = '';
+
+        // Check if test was passed (either via testSession or testPassedAt)
+        const testPassed = app.testPassedAt || app.testSession?.isPassed || app.testScore >= 70;
+
+        // Determine the correct action button based on application state
         if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">Take Test</button>`;
-        } else if (app.status === 'TEST_PASSED') {
-            actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Awaiting Referral</button>`;
+        } else if (app.status === 'TEST_IN_PROGRESS') {
+            actionButton = `<button class="btn btn-warning btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">⏳ Resume Test</button>`;
         } else if (app.status === 'TEST_FAILED') {
-            actionButton = `<button class="btn btn-outline btn-sm" disabled>Test Failed</button>`;
-        } else if (app.status === 'REFERRED') {
-            actionButton = `<button class="btn btn-success btn-sm" disabled>🎉 Referred!</button>`;
-        } else if (app.status === 'REFERRAL_PENDING') {
-            actionButton = `<button class="btn btn-outline btn-sm" disabled>Pending Referral</button>`;
-        } else if (app.status === 'INTERVIEW_REQUESTED') {
-            // Old flow: Interview requested by HR - Candidate needs to pay ₹99
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #f59e0b, #d97706);">💳 Pay ₹99 for Interview</button>`;
+            actionButton = `<button class="btn btn-outline btn-sm" disabled>❌ Test Failed</button>`;
         } else if (app.status === 'INTERVIEW_CONFIRMED') {
-            // NEW: Confirmation-first flow - HR confirmed interview details, candidate pays to unlock
+            // HR confirmed interview details - candidate pays to unlock
             actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
-        } else if (app.status === 'PAYMENT_SUCCESS' || (app.interview && app.interview.status === 'PAYMENT_SUCCESS')) {
-            // Payment successful - interview details unlocked
+        } else if (app.status === 'PAYMENT_PENDING') {
+            // Payment in progress
+            actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
+        } else if (app.status === 'PAYMENT_SUCCESS') {
+            // Payment successful - show interview details
             actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview?.id || app.id}')">📅 View Interview Details</button>`;
-        } else if (app.interview && app.interview.status === 'READY_TO_SCHEDULE') {
-            // Old flow: Payment done - waiting for HR to schedule
-            actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Paid - Awaiting Schedule</button>`;
-        } else if (app.interview && app.interview.status === 'INTERVIEW_SCHEDULED') {
-            // Interview scheduled
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview.id}')">📅 View Interview</button>`;
-        } else if (app.interview && app.interview.status === 'INTERVIEW_COMPLETED') {
-            // Interview completed
-            actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Interview Completed</button>`;
+        } else if (app.status === 'INTERVIEW_COMPLETED') {
+            // Interview completed successfully
+            actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
+        } else if (app.status === 'CANDIDATE_NO_SHOW' || app.status === 'HR_NO_SHOW') {
+            // No-show status
+            const noShowLabel = app.status === 'CANDIDATE_NO_SHOW' ? 'Missed Interview' : 'HR No-Show';
+            actionButton = `<button class="btn btn-danger btn-sm" disabled>⚠️ ${noShowLabel}</button>`;
+        } else if (app.status === 'REJECTED') {
+            actionButton = `<button class="btn btn-outline btn-sm" disabled>Application Rejected</button>`;
+        } else if (app.status === 'APPLIED' && testPassed) {
+            // Test passed, waiting for HR to confirm interview
+            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Waiting for Interview Schedule</button>`;
+        } else if (app.status === 'APPLIED' && !testPassed && !app.testSession) {
+            // Just applied, no test taken yet (shouldn't happen normally)
+            actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
+        } else if (app.interview?.status === 'INTERVIEW_CONFIRMED') {
+            // Interview confirmed via interview object
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
+        } else if (app.interview?.status === 'PAYMENT_SUCCESS') {
+            // Payment done via interview object
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview.id}')">📅 View Interview Details</button>`;
+        } else if (app.interview?.status === 'INTERVIEW_COMPLETED') {
+            actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else {
+            // Default fallback
             actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
         }
 
@@ -2129,18 +2155,20 @@ async function loadApplications() {
 
 function getStatusLabel(status) {
     const labels = {
-        'TEST_PENDING': 'Pending Test',
+        'TEST_PENDING': 'Test Required',
         'TEST_REQUIRED': 'Test Required',
+        'TEST_IN_PROGRESS': 'Test In Progress',
         'TEST_PASSED': 'Test Passed',
         'TEST_FAILED': 'Test Failed',
         'REFERRAL_PENDING': 'Pending Referral',
         'REFERRED': 'Referred',
-        'APPLIED': 'Applied',
-        'INTERVIEW_REQUESTED': 'Interview Request',
+        'APPLIED': 'Test Passed - Waiting for HR',
         'INTERVIEW_CONFIRMED': '📅 Interview Confirmed - Pay to Unlock',
+        'PAYMENT_PENDING': '⏳ Payment Processing',
         'PAYMENT_SUCCESS': '✅ Paid - View Details',
-        'REFERRAL_CONFIRMED': 'Referral Confirmed',
-        'INTERVIEW_COMPLETED': 'Interview Completed',
+        'INTERVIEW_COMPLETED': '✅ Interview Completed',
+        'CANDIDATE_NO_SHOW': '⚠️ Missed Interview',
+        'HR_NO_SHOW': '⚠️ HR No-Show',
         'REJECTED': 'Rejected'
     };
     return labels[status] || status;
@@ -2150,16 +2178,18 @@ function getStatusClass(status) {
     const classes = {
         'TEST_PENDING': 'status-pending',
         'TEST_REQUIRED': 'status-pending',
+        'TEST_IN_PROGRESS': 'status-pending',
         'TEST_PASSED': 'status-passed',
         'TEST_FAILED': 'status-rejected',
         'REFERRAL_PENDING': 'status-pending',
         'REFERRED': 'status-referred',
-        'APPLIED': 'status-pending',
-        'INTERVIEW_REQUESTED': 'status-interview',
+        'APPLIED': 'status-passed',
         'INTERVIEW_CONFIRMED': 'status-interview',
+        'PAYMENT_PENDING': 'status-pending',
         'PAYMENT_SUCCESS': 'status-passed',
-        'REFERRAL_CONFIRMED': 'status-passed',
         'INTERVIEW_COMPLETED': 'status-passed',
+        'CANDIDATE_NO_SHOW': 'status-rejected',
+        'HR_NO_SHOW': 'status-rejected',
         'REJECTED': 'status-rejected'
     };
     return classes[status] || 'status-pending';
@@ -2248,17 +2278,37 @@ function renderApplicationRows(applications, tableBody) {
         const appliedDate = new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const hasNote = applicationNotes[app.id] ? '📝' : '';
 
+        // Check if test was passed
+        const testPassed = app.testPassedAt || app.testSession?.isPassed || app.testScore >= 70;
+
         let actionButton = '';
-        if (app.status === 'TEST_PENDING') {
+        if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">Take Test</button>`;
-        } else if (app.status === 'TEST_PASSED') {
-            actionButton = `<button class="btn btn-success btn-sm" disabled>✓ Awaiting Referral</button>`;
+        } else if (app.status === 'TEST_IN_PROGRESS') {
+            actionButton = `<button class="btn btn-warning btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">⏳ Resume Test</button>`;
         } else if (app.status === 'TEST_FAILED') {
-            actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
-        } else if (app.status === 'REFERRED') {
-            actionButton = `<button class="btn btn-success btn-sm" disabled>🎉 Referred!</button>`;
-        } else if (app.status === 'REFERRAL_PENDING') {
-            actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
+            actionButton = `<button class="btn btn-outline btn-sm" disabled>❌ Test Failed</button>`;
+        } else if (app.status === 'INTERVIEW_CONFIRMED') {
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
+        } else if (app.status === 'PAYMENT_PENDING') {
+            actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
+        } else if (app.status === 'PAYMENT_SUCCESS') {
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview?.id || app.id}')">📅 View Interview Details</button>`;
+        } else if (app.status === 'INTERVIEW_COMPLETED') {
+            actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
+        } else if (app.status === 'CANDIDATE_NO_SHOW' || app.status === 'HR_NO_SHOW') {
+            const noShowLabel = app.status === 'CANDIDATE_NO_SHOW' ? 'Missed Interview' : 'HR No-Show';
+            actionButton = `<button class="btn btn-danger btn-sm" disabled>⚠️ ${noShowLabel}</button>`;
+        } else if (app.status === 'REJECTED') {
+            actionButton = `<button class="btn btn-outline btn-sm" disabled>Application Rejected</button>`;
+        } else if (app.status === 'APPLIED' && testPassed) {
+            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Waiting for Interview Schedule</button>`;
+        } else if (app.interview?.status === 'INTERVIEW_CONFIRMED') {
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
+        } else if (app.interview?.status === 'PAYMENT_SUCCESS') {
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview.id}')">📅 View Interview Details</button>`;
+        } else if (app.interview?.status === 'INTERVIEW_COMPLETED') {
+            actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else {
             actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
         }

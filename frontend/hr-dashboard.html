@@ -1417,13 +1417,15 @@
                 const tbody = document.getElementById('applicationsTableBody');
 
                 tbody.innerHTML = data.applications.map(app => {
-                    // Determine if interview can be requested
-                    const canRequestInterview = ['TEST_PASSED', 'REFERRAL_CONFIRMED'].includes(app.status) && !app.interview;
+                    // After test passed, status becomes APPLIED. Check testScore to confirm passed.
+                    const testPassed = app.testScore && app.testScore >= 70;
+                    const canRequestInterview = (app.status === 'APPLIED' && testPassed && !app.interview) ||
+                        ['TEST_PASSED', 'REFERRAL_CONFIRMED'].includes(app.status) && !app.interview;
                     const hasInterview = !!app.interview;
 
                     let actionBtn = '';
                     if (canRequestInterview) {
-                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openInterviewRequestModal('${app.id}')">📅 Request Interview</button>`;
+                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openInterviewRequestModal('${app.id}')">📅 Confirm Interview</button>`;
                     } else if (hasInterview && app.interview.status === 'PAYMENT_PENDING') {
                         actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
                     } else if (hasInterview && app.interview.status === 'READY_TO_SCHEDULE') {

@@ -905,7 +905,12 @@ let HRService = class HRService {
                 orderBy: {
                     createdAt: 'desc'
                 },
-                include: {
+                select: {
+                    id: true,
+                    status: true,
+                    testScore: true,
+                    testPassedAt: true,
+                    createdAt: true,
                     Candidate: {
                         select: {
                             firstName: true,
@@ -926,6 +931,15 @@ let HRService = class HRService {
                             id: true,
                             title: true,
                             companyName: true
+                        }
+                    },
+                    Interview: {
+                        select: {
+                            id: true,
+                            status: true,
+                            scheduledDate: true,
+                            scheduledTime: true,
+                            mode: true
                         }
                     }
                 }

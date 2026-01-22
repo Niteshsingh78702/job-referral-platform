@@ -1867,8 +1867,12 @@
                 emptyState?.classList.add('hidden');
 
                 tbody.innerHTML = data.map(interview => {
-                    const candidate = interview.application.candidate;
-                    const job = interview.application.job;
+                    // Handle both capitalized (Prisma) and lowercase relation names
+                    const application = interview.JobApplication || interview.application || {};
+                    const candidate = application.Candidate || application.candidate || {};
+                    const job = application.Job || application.job || {};
+                    const user = candidate.User || candidate.user || {};
+
                     // Updated status colors for confirmation-first flow
                     const statusColors = {
                         'INTERVIEW_CONFIRMED': 'pending',
@@ -1894,10 +1898,10 @@
                     return `
                         <tr>
                             <td>
-                                <div class="job-title">${candidate.firstName} ${candidate.lastName}</div>
-                                <div class="job-company">${candidate.user?.email || '-'}</div>
+                                <div class="job-title">${candidate.firstName || 'Unknown'} ${candidate.lastName || ''}</div>
+                                <div class="job-company">${user.email || '-'}</div>
                             </td>
-                            <td>${job.title}</td>
+                            <td>${job.title || '-'}</td>
                             <td>
                                 <span class="badge">${interview.mode === 'VIDEO' ? '📹' : interview.mode === 'CALL' ? '📞' : '🏢'} ${interview.mode}</span>
                             </td>
@@ -1909,6 +1913,7 @@
                     `;
                 }).join('');
             } catch (error) {
+                console.error('Error loading interviews:', error);
                 showToast(error.message, 'error');
             }
         }

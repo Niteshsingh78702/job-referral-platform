@@ -77,7 +77,7 @@ let TokenService = class TokenService {
     async generateAccessToken(payload) {
         return this.jwtService.signAsync(payload, {
             secret: this.configService.get('JWT_SECRET'),
-            expiresIn: this.configService.get('JWT_ACCESS_EXPIRY', '15m')
+            expiresIn: this.configService.get('JWT_ACCESS_EXPIRY', '7d')
         });
     }
     // Generate refresh token
@@ -154,9 +154,9 @@ let TokenService = class TokenService {
     }
     // Get access token expiry in seconds
     getAccessTokenExpirySeconds() {
-        const expiry = this.configService.get('JWT_ACCESS_EXPIRY', '15m');
+        const expiry = this.configService.get('JWT_ACCESS_EXPIRY', '7d');
         const match = expiry.match(/(\d+)([smhd])/);
-        if (!match) return 900; // default 15 minutes
+        if (!match) return 604800; // default 7 days
         const value = parseInt(match[1]);
         const unit = match[2];
         switch(unit){
@@ -169,7 +169,7 @@ let TokenService = class TokenService {
             case 'd':
                 return value * 86400;
             default:
-                return 900;
+                return 604800;
         }
     }
     // Get refresh token expiry in seconds

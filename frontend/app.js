@@ -2638,12 +2638,11 @@ function openRazorpayCheckout(order, applicationId) {
 
                 showToast('success', '🎉 Payment successful! Interview details unlocked!');
                 closeApplicationModal();
-                await loadApplications();
 
-                // Show the application details again with unlocked interview
+                // Force reload the page to get fresh data from server
                 setTimeout(() => {
-                    showApplicationDetails(applicationId);
-                }, 500);
+                    location.reload();
+                }, 1500);
             } catch (error) {
                 showToast('error', 'Payment verification failed. Please contact support.');
             }
@@ -2685,55 +2684,135 @@ function saveApplicationNote() {
 }
 
 async function withdrawApplication(appId) {
-    if (!confirm('Are you sure you want to withdraw this application? This cannot be undone.')) {
-        return;
-    }
+    // Show custom confirmation modal instead of browser's confirm()
+    showConfirmModal(
+        'Withdraw Application',
+        'Are you sure you want to withdraw this application? This action cannot be undone.',
+        async () => {
+            // User confirmed - proceed with withdrawal
+            if (state.token) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/applications/${appId}/withdraw`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${state.token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
 
-    // Try API first
-    if (state.token) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/applications/${appId}/withdraw`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${state.token}`,
-                    'Content-Type': 'application/json'
+                    if (response.ok) {
+                        closeApplicationModal();
+                        showToast('success', 'Application withdrawn successfully');
+                        loadApplications();
+                        return;
+                    }
+                } catch (error) {
+                    console.log('API unavailable, using local withdrawal');
                 }
-            });
-
-            if (response.ok) {
-                closeApplicationModal();
-                showToast('success', 'Application withdrawn successfully');
-                loadApplications();
-                return;
             }
-        } catch (error) {
-            console.log('API unavailable, using local withdrawal');
+
+            // Local fallback - remove from demoApplications
+            const index = demoApplications.findIndex(a => a.id === appId);
+            if (index > -1) {
+                demoApplications.splice(index, 1);
+                localStorage.setItem('demoApplications', JSON.stringify(demoApplications));
+
+                // Update stats
+                const statsStr = localStorage.getItem('userStats');
+                let stats = statsStr ? JSON.parse(statsStr) : { applications: 0, tests: 0, passed: 0, referrals: 0 };
+                stats.applications = Math.max(0, stats.applications - 1);
+                localStorage.setItem('userStats', JSON.stringify(stats));
+                loadUserStats();
+            }
+
+            // Also remove notes
+            if (applicationNotes[appId]) {
+                delete applicationNotes[appId];
+                localStorage.setItem('applicationNotes', JSON.stringify(applicationNotes));
+            }
+
+            closeApplicationModal();
+            showToast('success', 'Application withdrawn');
+            loadApplications();
         }
+    );
+}
+
+// =============================================
+// Custom Confirmation Modal
+// =============================================
+function showConfirmModal(title, message, onConfirm, onCancel) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('customConfirmModal');
+    if (!modal) {
+        const modalHTML = `
+            <div class="modal-overlay" id="confirmModalOverlay" style="
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.7); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            "></div>
+            <div id="customConfirmModal" style="
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: linear-gradient(145deg, #1e1e2e 0%, #16161d 100%);
+                border: 1px solid rgba(99, 102, 241, 0.3);
+                border-radius: 16px; padding: 24px; z-index: 10001;
+                max-width: 400px; width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            ">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <span style="font-size: 28px;">⚠️</span>
+                    <h3 id="confirmModalTitle" style="margin: 0; color: #fff; font-size: 18px; font-weight: 600;"></h3>
+                </div>
+                <p id="confirmModalMessage" style="
+                    color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6;
+                    margin: 0 0 24px 0;
+                "></p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button id="confirmModalCancel" style="
+                        padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+                        cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+                        background: transparent; color: rgba(255,255,255,0.7);
+                        transition: all 0.2s;
+                    ">Cancel</button>
+                    <button id="confirmModalConfirm" style="
+                        padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+                        cursor: pointer; border: none;
+                        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                        color: #fff; transition: all 0.2s;
+                    ">Confirm</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('customConfirmModal');
     }
 
-    // Local fallback - remove from demoApplications
-    const index = demoApplications.findIndex(a => a.id === appId);
-    if (index > -1) {
-        demoApplications.splice(index, 1);
-        localStorage.setItem('demoApplications', JSON.stringify(demoApplications));
+    // Update content
+    document.getElementById('confirmModalTitle').textContent = title;
+    document.getElementById('confirmModalMessage').textContent = message;
 
-        // Update stats
-        const statsStr = localStorage.getItem('userStats');
-        let stats = statsStr ? JSON.parse(statsStr) : { applications: 0, tests: 0, passed: 0, referrals: 0 };
-        stats.applications = Math.max(0, stats.applications - 1);
-        localStorage.setItem('userStats', JSON.stringify(stats));
-        loadUserStats();
-    }
+    // Show modal
+    document.getElementById('confirmModalOverlay').style.display = 'flex';
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
 
-    // Also remove notes
-    if (applicationNotes[appId]) {
-        delete applicationNotes[appId];
-        localStorage.setItem('applicationNotes', JSON.stringify(applicationNotes));
-    }
+    // Setup handlers
+    const closeModal = () => {
+        document.getElementById('confirmModalOverlay').style.display = 'none';
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    };
 
-    closeApplicationModal();
-    showToast('success', 'Application withdrawn');
-    loadApplications();
+    document.getElementById('confirmModalCancel').onclick = () => {
+        closeModal();
+        if (onCancel) onCancel();
+    };
+
+    document.getElementById('confirmModalConfirm').onclick = () => {
+        closeModal();
+        if (onConfirm) onConfirm();
+    };
+
+    document.getElementById('confirmModalOverlay').onclick = closeModal;
 }
 
 // =============================================
@@ -2744,9 +2823,13 @@ function showChangePasswordModal() {
 }
 
 function confirmDeleteAccount() {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-        showToast('warning', 'Account deletion will be processed within 24 hours.');
-    }
+    showConfirmModal(
+        'Delete Account',
+        'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+        () => {
+            showToast('warning', 'Account deletion will be processed within 24 hours.');
+        }
+    );
 }
 
 // Update the settings link in dropdown
@@ -3460,22 +3543,43 @@ async function payForInterview(applicationId) {
  * Simulate payment success for demo purposes
  */
 async function simulateInterviewPaymentSuccess(applicationId) {
-    showToast('success', '✅ Payment successful! Interview confirmed.');
+    showToast('success', '✅ Payment successful! Interview details unlocked.');
 
     // Update local application status
     const apps = JSON.parse(localStorage.getItem('demoApplications') || '[]');
     const appIndex = apps.findIndex(a => a.id === applicationId);
     if (appIndex !== -1) {
-        apps[appIndex].status = 'INTERVIEW_CONFIRMED';
+        apps[appIndex].status = 'PAYMENT_SUCCESS';  // Payment done - details now visible
         apps[appIndex].interview = {
-            status: 'READY_TO_SCHEDULE',
+            ...apps[appIndex].interview,
+            status: 'PAYMENT_SUCCESS',
+            paymentStatus: 'SUCCESS',
             paidAt: new Date().toISOString()
         };
         localStorage.setItem('demoApplications', JSON.stringify(apps));
     }
 
-    // Reload applications
-    loadApplications();
+    // Also update state.applications if it exists
+    if (state.applications) {
+        const stateAppIndex = state.applications.findIndex(a => a.id === applicationId);
+        if (stateAppIndex !== -1) {
+            state.applications[stateAppIndex].status = 'PAYMENT_SUCCESS';
+            if (state.applications[stateAppIndex].interview || state.applications[stateAppIndex].Interview) {
+                const interview = state.applications[stateAppIndex].interview || state.applications[stateAppIndex].Interview;
+                interview.status = 'PAYMENT_SUCCESS';
+                interview.paymentStatus = 'SUCCESS';
+                interview.paidAt = new Date().toISOString();
+            }
+        }
+    }
+
+    // Force reload applications from server
+    await loadApplications();
+
+    // Small delay then refresh to show updated data
+    setTimeout(() => {
+        location.reload();
+    }, 1500);
 }
 
 /**

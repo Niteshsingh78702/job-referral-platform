@@ -1,0 +1,671 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "TestService", {
+    enumerable: true,
+    get: function() {
+        return TestService;
+    }
+});
+const _common = require("@nestjs/common");
+const _config = require("@nestjs/config");
+const _crypto = /*#__PURE__*/ _interop_require_wildcard(require("crypto"));
+const _ioredis = /*#__PURE__*/ _interop_require_default(require("ioredis"));
+const _prismaservice = require("../../prisma/prisma.service");
+const _constants = require("../../common/constants");
+const _skillbucketservice = require("../skill-bucket/skill-bucket.service");
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+}
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {
+        __proto__: null
+    };
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
+}
+function _ts_decorate(decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for(var i = decorators.length - 1; i >= 0; i--)if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+}
+function _ts_metadata(k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+}
+let TestService = class TestService {
+    initRedis() {
+        const redisUrl = this.configService.get('REDIS_URL');
+        const redisHost = this.configService.get('REDIS_HOST');
+        if (redisUrl || redisHost) {
+            try {
+                if (redisUrl) {
+                    this.redis = new _ioredis.default(redisUrl);
+                } else {
+                    this.redis = new _ioredis.default({
+                        host: redisHost || 'localhost',
+                        port: this.configService.get('REDIS_PORT', 6379),
+                        password: this.configService.get('REDIS_PASSWORD')
+                    });
+                }
+                this.redis.on('error', (err)=>{
+                    this.logger.warn(`Redis error: ${err.message}. Using in-memory storage.`);
+                    this.redis = null;
+                });
+            } catch  {
+                this.logger.warn('Redis not available. Test sessions will use in-memory storage.');
+            }
+        } else {
+            this.logger.log('Redis not configured. Test sessions will use in-memory storage.');
+        }
+    }
+    // Helper methods for Redis operations with fallback
+    async redisSet(key, value, pxMs) {
+        if (this.redis) {
+            try {
+                if (pxMs) {
+                    await this.redis.set(key, value, 'PX', pxMs);
+                } else {
+                    await this.redis.set(key, value);
+                }
+                return;
+            } catch  {
+            // Fall through to in-memory
+            }
+        }
+        this.sessionStore.set(key, {
+            data: value,
+            expiry: pxMs ? Date.now() + pxMs : Date.now() + 3600000
+        });
+    }
+    async redisGet(key) {
+        if (this.redis) {
+            try {
+                return await this.redis.get(key);
+            } catch  {
+            // Fall through
+            }
+        }
+        const stored = this.sessionStore.get(key);
+        if (!stored) return null;
+        if (Date.now() > stored.expiry) {
+            this.sessionStore.delete(key);
+            return null;
+        }
+        return stored.data;
+    }
+    async redisDel(key) {
+        if (this.redis) {
+            try {
+                await this.redis.del(key);
+            } catch  {
+            // Fall through
+            }
+        }
+        this.sessionStore.delete(key);
+    }
+    // ===========================================
+    // ADMIN: Test Management
+    // ===========================================
+    async createTest(dto) {
+        return this.prisma.test.create({
+            data: {
+                id: _crypto.randomUUID(),
+                title: dto.title,
+                description: dto.description,
+                duration: dto.duration || 30,
+                passingScore: dto.passingScore || 70,
+                totalTestQuestion: dto.totalQuestions || 20,
+                shuffleTestQuestion: dto.shuffleQuestions ?? true,
+                maxTabSwitches: dto.maxTabSwitches || 2,
+                difficulty: dto.difficulty || 'MEDIUM',
+                updatedAt: new Date()
+            }
+        });
+    }
+    async addQuestion(testId, dto) {
+        const test = await this.prisma.test.findUnique({
+            where: {
+                id: testId
+            },
+            include: {
+                TestQuestion: true
+            }
+        });
+        if (!test) {
+            throw new _common.NotFoundException('Test not found');
+        }
+        return this.prisma.testQuestion.create({
+            data: {
+                id: _crypto.randomUUID(),
+                testId,
+                question: dto.question,
+                options: dto.options,
+                correctAnswer: dto.correctAnswer,
+                explanation: dto.explanation,
+                points: dto.points || 1,
+                orderIndex: test.TestQuestion.length
+            }
+        });
+    }
+    async getTestById(testId) {
+        const test = await this.prisma.test.findUnique({
+            where: {
+                id: testId
+            },
+            include: {
+                TestQuestion: {
+                    orderBy: {
+                        orderIndex: 'asc'
+                    }
+                }
+            }
+        });
+        if (!test) {
+            throw new _common.NotFoundException('Test not found');
+        }
+        return test;
+    }
+    // ===========================================
+    // Candidate: Test Taking
+    // ===========================================
+    async startTest(applicationId, userId) {
+        // Verify application exists and is in correct state
+        const application = await this.prisma.jobApplication.findUnique({
+            where: {
+                id: applicationId
+            },
+            include: {
+                Candidate: {
+                    include: {
+                        User: true
+                    }
+                },
+                Job: {
+                    include: {
+                        Test: {
+                            include: {
+                                TestQuestion: true
+                            }
+                        }
+                    }
+                },
+                TestSession: true
+            }
+        });
+        if (!application) {
+            throw new _common.NotFoundException('Application not found');
+        }
+        if (application.candidate.userId !== userId) {
+            throw new _common.ForbiddenException('Not authorized to access this application');
+        }
+        if (application.status !== _constants.ApplicationStatus.TEST_REQUIRED && application.status !== _constants.ApplicationStatus.TEST_PENDING) {
+            throw new _common.BadRequestException('Test not available for this application');
+        }
+        if (!application.job.Test) {
+            throw new _common.BadRequestException('No test configured for this job');
+        }
+        // Defense-in-depth: Check skill test cooldown if job has skill bucket
+        if (application.Job.skillBucketId) {
+            const skillStatus = await this.skillBucketService.checkCandidateSkillStatus(application.Candidate.id, application.Job.skillBucketId);
+            // Block if candidate is in retest cooldown (failed recently)
+            if (skillStatus.isFailed && !skillStatus.canRetest) {
+                throw new _common.BadRequestException(`Retest not allowed yet. Please wait ${skillStatus.retestInHours} hours before retrying.`);
+            }
+            // Also check if already passed and still valid (shouldn't need to retake)
+            if (skillStatus.isPassed && skillStatus.isValid) {
+                throw new _common.BadRequestException(`You already have a valid skill pass for this role (valid for ${skillStatus.validDaysRemaining} more days). No need to retake the test.`);
+            }
+        }
+        // Check if already has an active or completed session
+        const existingSession = application.testSessions.find((s)=>s.status !== _constants.TestSessionStatus.EXPIRED);
+        if (existingSession) {
+            if (existingSession.status === _constants.TestSessionStatus.ACTIVE) {
+                // Return existing session (resume)
+                return this.getTestSession(existingSession.id, userId);
+            }
+            throw new _common.BadRequestException('Test already attempted for this application');
+        }
+        const test = application.job.Test;
+        const now = Date.now();
+        const endsAt = now + test.duration * 60 * 1000;
+        // Shuffle questions if enabled
+        let questionOrder = test.TestQuestion.map((_, i)=>i);
+        if (test.shuffleQuestions) {
+            questionOrder = this.shuffleArray([
+                ...questionOrder
+            ]);
+        }
+        // Create test session in database
+        const session = await this.prisma.testSession.create({
+            data: {
+                id: _crypto.randomUUID(),
+                applicationId,
+                testId: test.id,
+                status: _constants.TestSessionStatus.ACTIVE,
+                startedAt: new Date(),
+                endsAt: new Date(endsAt),
+                totalTestQuestion: test.TestQuestion.length,
+                questionOrder
+            }
+        });
+        // Store session in Redis with TTL
+        const sessionData = {
+            sessionId: session.id,
+            applicationId,
+            testId: test.id,
+            userId,
+            startedAt: now,
+            endsAt,
+            questionOrder,
+            tabSwitchCount: 0,
+            maxTabSwitches: test.maxTabSwitches
+        };
+        await this.redisSet(_constants.REDIS_KEYS.TEST_SESSION(session.id), JSON.stringify(sessionData), endsAt - now + 60000);
+        // Log audit
+        await this.prisma.auditLog.create({
+            data: {
+                id: _crypto.randomUUID(),
+                userId,
+                action: _constants.AuditAction.TEST_START,
+                entityType: 'TestSession',
+                entityId: session.id,
+                metadata: {
+                    applicationId,
+                    testId: test.id
+                }
+            }
+        });
+        return this.getTestSession(session.id, userId);
+    }
+    async getTestSession(sessionId, userId) {
+        // Get from Redis/memory first
+        const redisData = await this.redisGet(_constants.REDIS_KEYS.TEST_SESSION(sessionId));
+        if (!redisData) {
+            // Session might have expired
+            throw new _common.BadRequestException('Test session expired or not found');
+        }
+        const sessionData = JSON.parse(redisData);
+        if (sessionData.userId !== userId) {
+            throw new _common.ForbiddenException('Not authorized to access this session');
+        }
+        // Check if time expired
+        if (Date.now() > sessionData.endsAt) {
+            await this.autoSubmitTest(sessionId);
+            throw new _common.BadRequestException('Test time has expired');
+        }
+        // Get session with questions
+        const session = await this.prisma.testSession.findUnique({
+            where: {
+                id: sessionId
+            },
+            include: {
+                Test: {
+                    include: {
+                        TestQuestion: {
+                            orderBy: {
+                                orderIndex: 'asc'
+                            },
+                            select: {
+                                id: true,
+                                question: true,
+                                options: true,
+                                points: true
+                            }
+                        }
+                    }
+                },
+                answers: true
+            }
+        });
+        if (!session) {
+            throw new _common.NotFoundException('Session not found');
+        }
+        // Standard test - check that test relation exists
+        if (!session.test) {
+            throw new _common.BadRequestException('This is a rapid-fire test session. Use the rapid-fire endpoints.');
+        }
+        // Reorder questions based on shuffled order
+        const orderedQuestions = sessionData.questionOrder.map((i)=>session.test.questions[i]);
+        return {
+            sessionId: session.id,
+            testTitle: session.test.title,
+            duration: session.test.duration,
+            totalTestQuestion: session.totalQuestions,
+            remainingTime: Math.max(0, Math.floor((sessionData.endsAt - Date.now()) / 1000)),
+            TestQuestion: orderedQuestions,
+            answers: session.answers.map((a)=>({
+                    questionId: a.questionId,
+                    selectedAnswer: a.selectedAnswer
+                })),
+            tabSwitchCount: sessionData.tabSwitchCount,
+            maxTabSwitches: sessionData.maxTabSwitches
+        };
+    }
+    async submitAnswer(sessionId, userId, dto) {
+        // Validate session from storage
+        const redisData = await this.redisGet(_constants.REDIS_KEYS.TEST_SESSION(sessionId));
+        if (!redisData) {
+            throw new _common.BadRequestException('Test session expired or not found');
+        }
+        const sessionData = JSON.parse(redisData);
+        if (sessionData.userId !== userId) {
+            throw new _common.ForbiddenException('Not authorized');
+        }
+        if (Date.now() > sessionData.endsAt) {
+            await this.autoSubmitTest(sessionId);
+            throw new _common.BadRequestException('Test time has expired');
+        }
+        // Verify question belongs to this test
+        const question = await this.prisma.testQuestion.findFirst({
+            where: {
+                id: dto.questionId,
+                testId: sessionData.testId
+            }
+        });
+        if (!question) {
+            throw new _common.BadRequestException('Invalid question');
+        }
+        // Check if answer is valid
+        if (dto.selectedAnswer < 0 || dto.selectedAnswer >= question.options.length) {
+            throw new _common.BadRequestException('Invalid answer option');
+        }
+        // Save or update answer
+        const isCorrect = dto.selectedAnswer === question.correctAnswer;
+        await this.prisma.testAnswer.upsert({
+            where: {
+                sessionId_questionId: {
+                    sessionId,
+                    questionId: dto.questionId
+                }
+            },
+            create: {
+                sessionId,
+                questionId: dto.questionId,
+                selectedAnswer: dto.selectedAnswer,
+                isCorrect
+            },
+            update: {
+                selectedAnswer: dto.selectedAnswer,
+                isCorrect,
+                answeredAt: new Date()
+            }
+        });
+        return {
+            success: true,
+            questionId: dto.questionId
+        };
+    }
+    async submitTest(sessionId, userId) {
+        // Validate session
+        const session = await this.prisma.testSession.findUnique({
+            where: {
+                id: sessionId
+            },
+            include: {
+                JobApplication: {
+                    include: {
+                        Candidate: true
+                    }
+                },
+                Test: true,
+                answers: true
+            }
+        });
+        if (!session) {
+            throw new _common.NotFoundException('Session not found');
+        }
+        // Check authorization (application may be null for rapid fire tests)
+        if (session.application && session.application.candidate.userId !== userId) {
+            throw new _common.ForbiddenException('Not authorized');
+        }
+        if (session.status !== _constants.TestSessionStatus.ACTIVE) {
+            throw new _common.BadRequestException('Test already submitted');
+        }
+        return this.processTestSubmission(session, false);
+    }
+    async logTestEvent(sessionId, userId, dto) {
+        // Get session from storage
+        const redisData = await this.redisGet(_constants.REDIS_KEYS.TEST_SESSION(sessionId));
+        if (!redisData) {
+            return {
+                success: false
+            };
+        }
+        const sessionData = JSON.parse(redisData);
+        if (sessionData.userId !== userId) {
+            return {
+                success: false
+            };
+        }
+        // Log event
+        await this.prisma.testEvent.create({
+            data: {
+                id: _crypto.randomUUID(),
+                sessionId,
+                eventType: dto.eventType,
+                eventData: dto.eventData
+            }
+        });
+        // Handle tab switch
+        if (dto.eventType === 'TAB_SWITCH') {
+            sessionData.tabSwitchCount++;
+            // Update session storage
+            await this.redisSet(_constants.REDIS_KEYS.TEST_SESSION(sessionId), JSON.stringify(sessionData));
+            // Log audit
+            await this.prisma.auditLog.create({
+                data: {
+                    id: _crypto.randomUUID(),
+                    userId,
+                    action: _constants.AuditAction.TEST_TAB_SWITCH,
+                    entityType: 'TestSession',
+                    entityId: sessionId,
+                    metadata: {
+                        count: sessionData.tabSwitchCount
+                    }
+                }
+            });
+            // Check if exceeds max
+            if (sessionData.tabSwitchCount >= sessionData.maxTabSwitches) {
+                // Auto-submit test
+                await this.autoSubmitTest(sessionId);
+                return {
+                    success: true,
+                    autoSubmitted: true,
+                    message: 'Test auto-submitted due to too many tab switches'
+                };
+            }
+            return {
+                success: true,
+                warning: true,
+                remainingWarnings: sessionData.maxTabSwitches - sessionData.tabSwitchCount
+            };
+        }
+        return {
+            success: true
+        };
+    }
+    // ===========================================
+    // INTERNAL HELPERS
+    // ===========================================
+    async autoSubmitTest(sessionId) {
+        const session = await this.prisma.testSession.findUnique({
+            where: {
+                id: sessionId
+            },
+            include: {
+                JobApplication: {
+                    include: {
+                        Candidate: true
+                    }
+                },
+                Test: true,
+                answers: true
+            }
+        });
+        if (!session || session.status !== _constants.TestSessionStatus.ACTIVE) {
+            return;
+        }
+        return this.processTestSubmission(session, true);
+    }
+    async processTestSubmission(session, isAutoSubmit) {
+        const correctAnswers = session.answers.filter((a)=>a.isCorrect).length;
+        const score = correctAnswers / session.totalQuestions * 100;
+        const isPassed = score >= session.test.passingScore;
+        // Update session
+        await this.prisma.testSession.update({
+            where: {
+                id: session.id
+            },
+            data: {
+                status: isAutoSubmit ? _constants.TestSessionStatus.AUTO_SUBMITTED : _constants.TestSessionStatus.SUBMITTED,
+                submittedAt: new Date(),
+                score,
+                correctAnswers,
+                isPassed
+            }
+        });
+        // Update application status
+        const newStatus = isPassed ? _constants.ApplicationStatus.APPLIED : _constants.ApplicationStatus.TEST_FAILED;
+        await this.prisma.jobApplication.update({
+            where: {
+                id: session.applicationId
+            },
+            data: {
+                status: newStatus,
+                testScore: score,
+                testPassedAt: isPassed ? new Date() : null
+            }
+        });
+        // SKILL-BASED Test: Record skill test attempt if job has a skill bucket
+        try {
+            const application = await this.prisma.jobApplication.findUnique({
+                where: {
+                    id: session.applicationId
+                },
+                include: {
+                    Candidate: true,
+                    Job: {
+                        include: {
+                            SkillBucket: true
+                        }
+                    }
+                }
+            });
+            if (application?.Job?.skillBucketId) {
+                await this.skillBucketService.recordSkillTestAttempt(application.candidate.id, application.job.skillBucketId, isPassed, score, session.id);
+                this.logger.log(`Recorded skill test attempt for candidate ${application.candidate.id} ` + `on skill bucket ${application.job.skillBucketId}: passed=${isPassed}`);
+            }
+        } catch (error) {
+            this.logger.error('Failed to record skill test attempt:', error);
+        // Don't fail the submission if skill tracking fails
+        }
+        // If passed, create referral entry
+        if (isPassed) {
+            await this.prisma.referral.create({
+                data: {
+                    id: _crypto.randomUUID(),
+                    applicationId: session.applicationId,
+                    type: 'HR_DIRECT',
+                    status: _constants.ReferralStatus.PENDING,
+                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                    updatedAt: new Date()
+                }
+            });
+        }
+        // Clear session storage
+        await this.redisDel(_constants.REDIS_KEYS.TEST_SESSION(session.id));
+        // Log audit
+        await this.prisma.auditLog.create({
+            data: {
+                id: _crypto.randomUUID(),
+                userId: session.application.candidate.userId,
+                action: _constants.AuditAction.TEST_SUBMIT,
+                entityType: 'TestSession',
+                entityId: session.id,
+                metadata: {
+                    score,
+                    isPassed,
+                    isAutoSubmit
+                }
+            }
+        });
+        return {
+            success: true,
+            sessionId: session.id,
+            score,
+            isPassed,
+            correctAnswers,
+            totalTestQuestion: session.totalQuestions,
+            isAutoSubmit
+        };
+    }
+    shuffleArray(array) {
+        for(let i = array.length - 1; i > 0; i--){
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [
+                array[j],
+                array[i]
+            ];
+        }
+        return array;
+    }
+    constructor(prisma, configService, skillBucketService){
+        this.prisma = prisma;
+        this.configService = configService;
+        this.skillBucketService = skillBucketService;
+        this.redis = null;
+        this.logger = new _common.Logger(TestService.name);
+        // In-memory fallback for test sessions
+        this.sessionStore = new Map();
+        this.initRedis();
+    }
+};
+TestService = _ts_decorate([
+    (0, _common.Injectable)(),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        typeof _prismaservice.PrismaService === "undefined" ? Object : _prismaservice.PrismaService,
+        typeof _config.ConfigService === "undefined" ? Object : _config.ConfigService,
+        typeof _skillbucketservice.SkillBucketService === "undefined" ? Object : _skillbucketservice.SkillBucketService
+    ])
+], TestService);
+
+//# sourceMappingURL=test.service.js.map

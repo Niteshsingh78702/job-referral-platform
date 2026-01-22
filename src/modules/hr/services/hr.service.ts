@@ -873,13 +873,16 @@ export class HRService {
             this.prisma.jobApplication.count({ where }),
         ]);
 
+        // Filter out applications with missing candidate or job data
+        const validApplications = applications.filter(app => app.Candidate && app.Job);
+
         return {
-            applications,
+            applications: validApplications,
             pagination: {
                 page,
                 limit,
-                total,
-                totalPages: Math.ceil(total / limit),
+                total: validApplications.length,
+                totalPages: Math.ceil(validApplications.length / limit),
             },
         };
     }

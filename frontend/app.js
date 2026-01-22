@@ -2012,37 +2012,59 @@ async function loadApplications() {
 
             if (data.success && Array.isArray(data.data)) {
                 // Map API response to our format
-                applications = data.data.map(app => ({
-                    id: app.id,
-                    jobId: app.jobId,
-                    company: app.job?.companyName || 'Unknown Company',
-                    jobTitle: app.job?.title || 'Unknown Position',
-                    appliedAt: app.createdAt,
-                    status: app.status,
-                    testScore: app.testScore,
-                    testPassedAt: app.testPassedAt,
-                    interview: app.interview || null,
-                    referral: app.referral || null,
-                    payment: app.payment || null,
-                    testSession: app.testSessions?.[0] || app.testSession?.[0] || null
-                }));
+                // Note: Prisma returns capitalized relation names (TestSession, Job, etc.)
+                applications = data.data.map(app => {
+                    // Get job data (handle both lowercase and capitalized Prisma relation names)
+                    const job = app.Job || app.job || {};
+                    // Get test session (Prisma returns as TestSession array)
+                    const testSession = app.TestSession?.[0] || app.testSession?.[0] || app.testSessions?.[0] || null;
+                    // Get interview data
+                    const interview = app.Interview || app.interview || null;
+                    // Get referral data
+                    const referral = app.Referral || app.referral || null;
+                    // Get payment data
+                    const payment = app.Payment || app.payment || null;
+
+                    return {
+                        id: app.id,
+                        jobId: app.jobId,
+                        company: job.companyName || 'Unknown Company',
+                        jobTitle: job.title || 'Unknown Position',
+                        appliedAt: app.createdAt,
+                        status: app.status,
+                        testScore: app.testScore,
+                        testPassedAt: app.testPassedAt,
+                        interview: interview,
+                        referral: referral,
+                        payment: payment,
+                        testSession: testSession
+                    };
+                });
                 console.log('✅ Loaded', applications.length, 'applications from API');
             } else if (Array.isArray(data.data)) {
-                // Handle direct array response
-                applications = data.data.map(app => ({
-                    id: app.id,
-                    jobId: app.jobId,
-                    company: app.job?.companyName || 'Unknown Company',
-                    jobTitle: app.job?.title || 'Unknown Position',
-                    appliedAt: app.createdAt,
-                    status: app.status,
-                    testScore: app.testScore,
-                    testPassedAt: app.testPassedAt,
-                    interview: app.interview || null,
-                    referral: app.referral || null,
-                    payment: app.payment || null,
-                    testSession: app.testSessions?.[0] || app.testSession?.[0] || null
-                }));
+                // Handle direct array response (same mapping as above)
+                applications = data.data.map(app => {
+                    const job = app.Job || app.job || {};
+                    const testSession = app.TestSession?.[0] || app.testSession?.[0] || app.testSessions?.[0] || null;
+                    const interview = app.Interview || app.interview || null;
+                    const referral = app.Referral || app.referral || null;
+                    const payment = app.Payment || app.payment || null;
+
+                    return {
+                        id: app.id,
+                        jobId: app.jobId,
+                        company: job.companyName || 'Unknown Company',
+                        jobTitle: job.title || 'Unknown Position',
+                        appliedAt: app.createdAt,
+                        status: app.status,
+                        testScore: app.testScore,
+                        testPassedAt: app.testPassedAt,
+                        interview: interview,
+                        referral: referral,
+                        payment: payment,
+                        testSession: testSession
+                    };
+                });
             }
         } catch (error) {
             console.error('❌ Error fetching applications from API:', error);
@@ -2081,8 +2103,17 @@ async function loadApplications() {
 
         let actionButton = '';
 
-        // Check if test was passed (either via testSession or testPassedAt)
-        const testPassed = app.testPassedAt || app.testSession?.isPassed || app.testScore >= 70;
+        // Check if test was passed (via multiple indicators)
+        // 1. testPassedAt is set (most reliable - set by backend on test pass)
+        // 2. testSession.isPassed is true
+        // 3. testSession.score >= 70
+        // 4. app.testScore >= 70
+        const testPassed = !!(
+            app.testPassedAt ||
+            app.testSession?.isPassed === true ||
+            (app.testSession?.score && app.testSession.score >= 70) ||
+            (app.testScore && app.testScore >= 70)
+        );
 
         // Determine the correct action button based on application state
         if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
@@ -2278,8 +2309,13 @@ function renderApplicationRows(applications, tableBody) {
         const appliedDate = new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const hasNote = applicationNotes[app.id] ? '📝' : '';
 
-        // Check if test was passed
-        const testPassed = app.testPassedAt || app.testSession?.isPassed || app.testScore >= 70;
+        // Check if test was passed (via multiple indicators)
+        const testPassed = !!(
+            app.testPassedAt ||
+            app.testSession?.isPassed === true ||
+            (app.testSession?.score && app.testSession.score >= 70) ||
+            (app.testScore && app.testScore >= 70)
+        );
 
         let actionButton = '';
         if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {

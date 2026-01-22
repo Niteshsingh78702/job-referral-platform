@@ -1413,44 +1413,160 @@
 
         async function loadApplications() {
             try {
+                console.log('🔄 Loading applications...');
                 const data = await api('/hr/applications');
+                console.log('📦 Raw API response:', data);
+
                 const tbody = document.getElementById('applicationsTableBody');
 
-                tbody.innerHTML = data.applications.map(app => {
-                    // After test passed, status becomes APPLIED. Check testScore to confirm passed.
-                    const testPassed = app.testScore && app.testScore >= 70;
-                    const canRequestInterview = (app.status === 'APPLIED' && testPassed && !app.interview) ||
-                        ['TEST_PASSED', 'REFERRAL_CONFIRMED'].includes(app.status) && !app.interview;
-                    const hasInterview = !!app.interview;
+                if (!data.applications || data.applications.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-title">No applications yet</div>
+                                <p style="color: var(--text-dim);">Applications will appear here when candidates apply to your jobs</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
 
-                    let actionBtn = '';
-                    if (canRequestInterview) {
-                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openInterviewRequestModal('${app.id}')">📅 Confirm Interview</button>`;
-                    } else if (hasInterview && app.interview.status === 'PAYMENT_PENDING') {
-                        actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
-                    } else if (hasInterview && app.interview.status === 'READY_TO_SCHEDULE') {
-                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openScheduleModal('${app.interview.id}')">📆 Schedule</button>`;
-                    } else if (hasInterview && app.interview.status === 'INTERVIEW_SCHEDULED') {
-                        actionBtn = `<span class="badge badge-active">✅ Scheduled</span>`;
+                console.log('📋 Processing', data.applications.length, 'applications');
+
+                // Filter out applications with missing data and log for debugging
+                const validApplications = data.applications.filter(app => {
+                    const candidate = app.Candidate || app.candidate;
+                    const job = app.Job || app.job;
+                    if (!candidate) {
+                        console.warn('⚠️ Application missing candidate data:', app.id, app);
+                        return false;
                     }
+                    if (!job) {
+                        console.warn('⚠️ Application missing job data:', app.id, app);
+                        return false;
+                    }
+                    return true;
+                });
+
+                console.log('✅ Valid applications:', validApplications.length);
+
+                if (validApplications.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-title">No valid applications</div>
+                                <p style="color: var(--text-dim);">Applications with complete data will appear here</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = validApplications.map(app => {
+                    // Handle both capitalized (Prisma) and lowercase relation names
+                    const candidate = app.Candidate || app.candidate || {};
+                    const job = app.Job || app.job || {};
+                    const interview = app.Interview || app.interview || null;
+
+                    console.log('👤 Processing application:', app.id, 'Candidate:', candidate.firstName, 'Status:', app.status);
+
+                    // Check if test passed (testScore >= 70 or testPassedAt is set)
+                    const testPassed = !!(
+                        app.testPassedAt ||
+                        (app.testScore && app.testScore >= 70)
+                    );
+
+                    // Determine if HR can confirm interview (test passed, status is APPLIED, no interview yet)
+                    const canConfirmInterview = testPassed &&
+                        (app.status === 'APPLIED' || app.status === 'TEST_PASSED' || app.status === 'REFERRAL_CONFIRMED') &&
+                        !interview;
+
+                    const hasInterview = !!interview;
+
+                    // Determine action button
+                    let actionBtn = '';
+                    if (canConfirmInterview) {
+                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openInterviewRequestModal('${app.id}')">📅 Confirm Interview</button>`;
+                    } else if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
+                        actionBtn = `<span class="badge badge-pending">📝 Test Pending</span>`;
+                    } else if (app.status === 'TEST_IN_PROGRESS') {
+                        actionBtn = `<span class="badge badge-pending">⏳ Test In Progress</span>`;
+                    } else if (app.status === 'TEST_FAILED') {
+                        actionBtn = `<span class="badge badge-closed">❌ Test Failed</span>`;
+                    } else if (hasInterview && interview.status === 'INTERVIEW_CONFIRMED') {
+                        actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
+                    } else if (hasInterview && interview.status === 'PAYMENT_SUCCESS') {
+                        actionBtn = `<span class="badge badge-active">✅ Paid - Ready</span>`;
+                    } else if (hasInterview && interview.status === 'INTERVIEW_COMPLETED') {
+                        actionBtn = `<span class="badge badge-active">✅ Completed</span>`;
+                    } else if (!testPassed && !hasInterview) {
+                        actionBtn = `<span class="badge badge-pending">⏳ Awaiting Test</span>`;
+                    }
+
+                    // Format status display
+                    const statusDisplay = getStatusDisplayForHR(app.status, testPassed);
 
                     return `
                         <tr>
                             <td>
-                                <div class="job-title">${app.candidate.firstName} ${app.candidate.lastName}</div>
-                                <div class="job-company">${app.candidate.headline || app.candidate.currentCompany || '-'}</div>
+                                <div class="job-title">${candidate.firstName || 'Unknown'} ${candidate.lastName || ''}</div>
+                                <div class="job-company">${candidate.headline || candidate.currentCompany || '-'}</div>
                             </td>
-                            <td>${app.job.title}</td>
-                            <td>${app.candidate.totalExperience || 0} years</td>
-                            <td>${app.testScore ? app.testScore + '%' : '-'}</td>
-                            <td><span class="badge badge-active">${app.status}</span></td>
+                            <td>${job.title || '-'}</td>
+                            <td>${candidate.totalExperience || 0} years</td>
+                            <td>${app.testScore ? app.testScore.toFixed(0) + '%' : '-'}</td>
+                            <td>${statusDisplay}</td>
                             <td>${new Date(app.createdAt).toLocaleDateString()}</td>
                             <td>${actionBtn}</td>
                         </tr>
                     `;
                 }).join('');
             } catch (error) {
+                console.error('❌ Error loading applications:', error);
                 showToast(error.message, 'error');
+
+                // Show error state in table
+                const tbody = document.getElementById('applicationsTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div class="empty-state-icon">⚠️</div>
+                                <div class="empty-state-title">Error loading applications</div>
+                                <p style="color: var(--text-dim);">${error.message}</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        // Helper function to display status nicely for HR
+        function getStatusDisplayForHR(status, testPassed) {
+            switch (status) {
+                case 'TEST_PENDING':
+                case 'TEST_REQUIRED':
+                    return '<span class="badge badge-draft">📝 Test Required</span>';
+                case 'TEST_IN_PROGRESS':
+                    return '<span class="badge badge-pending">⏳ Testing</span>';
+                case 'TEST_FAILED':
+                    return '<span class="badge badge-closed">❌ Failed</span>';
+                case 'APPLIED':
+                    return testPassed
+                        ? '<span class="badge badge-active">✅ Test Passed</span>'
+                        : '<span class="badge badge-pending">📝 Applied</span>';
+                case 'INTERVIEW_CONFIRMED':
+                    return '<span class="badge badge-pending">📅 Interview Set</span>';
+                case 'PAYMENT_PENDING':
+                    return '<span class="badge badge-pending">💳 Payment Pending</span>';
+                case 'PAYMENT_SUCCESS':
+                    return '<span class="badge badge-active">✅ Paid</span>';
+                case 'INTERVIEW_COMPLETED':
+                    return '<span class="badge badge-active">✅ Completed</span>';
+                default:
+                    return `<span class="badge">${status}</span>`;
             }
         }
 

@@ -126,7 +126,8 @@ let InterviewService = class InterviewService {
                     hrNotes: dto.hrNote,
                     status: _constants.InterviewStatus.INTERVIEW_CONFIRMED,
                     paymentStatus: _constants.PaymentStatus.ELIGIBLE,
-                    scheduledAt: new Date()
+                    scheduledAt: new Date(),
+                    updatedAt: new Date()
                 }
             });
             // Update application status to INTERVIEW_CONFIRMED

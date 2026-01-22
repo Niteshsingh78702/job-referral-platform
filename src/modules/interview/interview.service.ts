@@ -82,6 +82,7 @@ export class InterviewService {
                     status: InterviewStatus.INTERVIEW_CONFIRMED as any,
                     paymentStatus: PaymentStatus.ELIGIBLE as any,
                     scheduledAt: new Date(), // HR confirmed at this time
+                    updatedAt: new Date(), // Required field without default
                 },
             });
 

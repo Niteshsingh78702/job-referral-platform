@@ -667,7 +667,12 @@
 
                     <div class="form-group">
                         <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" placeholder="+91 9876543210">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; color: var(--text-dim);">+91</span>
+                            <input type="tel" id="phone" placeholder="9876543210" style="flex: 1;" pattern="[0-9]{10}"
+                                maxlength="10">
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -694,8 +699,8 @@
                     <div class="form-group">
                         <label for="registerPassword">Password *</label>
                         <div class="password-wrapper">
-                            <input type="password" id="registerPassword"
-                                placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special" required minlength="8">
+                            <input type="password" id="registerPassword" placeholder="Minimum 8 characters" required
+                                minlength="8">
                             <button type="button" class="password-toggle"
                                 onclick="togglePassword('registerPassword')">👁</button>
                         </div>
@@ -870,7 +875,7 @@
                 firstName: document.getElementById('firstName').value,
                 lastName: document.getElementById('lastName').value,
                 email: document.getElementById('registerEmail').value,
-                phone: document.getElementById('phone').value || undefined,
+                phone: document.getElementById('phone').value ? '+91' + document.getElementById('phone').value : undefined,
                 companyName: document.getElementById('companyName').value,
                 companyEmail: document.getElementById('companyEmail').value,
                 companyWebsite: document.getElementById('companyWebsite').value || undefined,
@@ -895,10 +900,9 @@
                 return;
             }
 
-            // Password validation
-            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            if (!passwordRegex.test(formData.password)) {
-                showError('Password must be at least 8 characters with uppercase, lowercase, number and special character');
+            // Password validation - just require 8+ characters
+            if (formData.password.length < 8) {
+                showError('Password must be at least 8 characters');
                 return;
             }
 

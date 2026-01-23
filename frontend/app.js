@@ -1063,6 +1063,17 @@ async function applyForJob(jobId) {
         return;
     }
 
+    // Check profile completion - must be 100% to apply
+    const profileCompletion = calculateProfileCompletion();
+    if (profileCompletion < 100) {
+        const missingFields = getMissingProfileFields();
+        const missingList = missingFields.join(', ');
+
+        // Show a detailed warning with incomplete profile modal
+        showIncompleteProfileModal(missingFields, profileCompletion);
+        return;
+    }
+
     // Sample job data mapping for hardcoded HTML jobs
     const sampleJobsMap = {
         '1': { title: 'Senior Software Engineer', company: 'Google' },
@@ -1610,20 +1621,63 @@ function closeProfileModal() {
 async function handleProfileUpdate(event) {
     event.preventDefault();
 
+    // Get form values (some may not exist on the form, handle gracefully)
+    const firstName = document.getElementById('editFirstName')?.value || '';
+    const lastName = document.getElementById('editLastName')?.value || '';
+    const phone = document.getElementById('editPhone')?.value || '';
+    const linkedIn = document.getElementById('editLinkedIn')?.value || '';
+    const skillsValue = document.getElementById('editSkills')?.value || '';
+    const experience = document.getElementById('editExperience')?.value || '';
+    const locationValue = document.getElementById('editLocation')?.value || '';
+    const currentCompany = document.getElementById('editCurrentCompany')?.value || '';
+    const currentRole = document.getElementById('editCurrentRole')?.value || '';
+    const expectedSalary = document.getElementById('editExpectedSalary')?.value || '';
+    const noticePeriod = document.getElementById('editNoticePeriod')?.value || '';
+    const headline = document.getElementById('editHeadline')?.value || '';
+    const bio = document.getElementById('editBio')?.value || '';
+
+    // Parse location into city, state, country
+    const locationParts = locationValue.split(',').map(p => p.trim());
+    const city = locationParts[0] || '';
+    const state = locationParts[1] || '';
+    const country = locationParts[2] || '';
+
+    // Build profile data matching backend DTO (UpdateCandidateProfileDto)
     const profileData = {
-        firstName: document.getElementById('editFirstName').value,
-        lastName: document.getElementById('editLastName').value,
-        phone: document.getElementById('editPhone').value,
-        linkedIn: document.getElementById('editLinkedIn').value,
-        skills: document.getElementById('editSkills').value.split(',').map(s => s.trim()).filter(s => s),
-        experience: document.getElementById('editExperience').value,
-        preferredLocation: document.getElementById('editLocation').value
+        firstName,
+        lastName,
+        headline,
+        bio,
+        currentCompany,
+        currentRole,
+        city,
+        state,
+        country
+    };
+
+    // Add numeric fields only if provided
+    if (experience && parseInt(experience) > 0) {
+        profileData.totalExperience = parseInt(experience);
+    }
+    if (expectedSalary && parseInt(expectedSalary) > 0) {
+        profileData.expectedSalary = parseInt(expectedSalary);
+    }
+    if (noticePeriod) {
+        profileData.noticePeriod = parseInt(noticePeriod);
+    }
+
+    // Store additional fields locally (not in backend DTO but useful for UI)
+    const localExtras = {
+        phone,
+        linkedIn,
+        skills: skillsValue.split(',').map(s => s.trim()).filter(s => s),
+        preferredLocation: locationValue
     };
 
     try {
-        // Try to update via API
+        // Try to update via API using PATCH method (matching backend)
         const response = await fetch(`${API_BASE_URL}/candidates/profile`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${state.token}`
@@ -1632,8 +1686,8 @@ async function handleProfileUpdate(event) {
         });
 
         if (response.ok) {
-            // Update local state
-            state.user = { ...state.user, ...profileData };
+            // Update local state with both backend data and local extras
+            state.user = { ...state.user, ...profileData, ...localExtras };
             localStorage.setItem('user', JSON.stringify(state.user));
 
             closeProfileModal();
@@ -1642,7 +1696,7 @@ async function handleProfileUpdate(event) {
             updateProfileCompletion();
         } else {
             // If API fails, just update locally
-            state.user = { ...state.user, ...profileData };
+            state.user = { ...state.user, ...profileData, ...localExtras };
             localStorage.setItem('user', JSON.stringify(state.user));
             closeProfileModal();
             showToast('success', 'Profile saved locally!');
@@ -1651,7 +1705,7 @@ async function handleProfileUpdate(event) {
         }
     } catch (error) {
         // API not available, save locally
-        state.user = { ...state.user, ...profileData };
+        state.user = { ...state.user, ...profileData, ...localExtras };
         localStorage.setItem('user', JSON.stringify(state.user));
         closeProfileModal();
         showToast('success', 'Profile saved locally!');
@@ -1847,6 +1901,63 @@ function updateProfileCompletion() {
             progressTip.innerHTML = '🎉 Profile complete! You\'re all set.';
         }
     }
+}
+
+// Show modal when profile is incomplete (blocks job applications)
+function showIncompleteProfileModal(missingFields, completion) {
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'incompleteProfileOverlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000; backdrop-filter: blur(4px);
+    `;
+
+    const missingFieldsList = missingFields.map(f => `<li style="margin: 8px 0; color: #fbbf24;">⚠️ ${f}</li>`).join('');
+
+    overlay.innerHTML = `
+        <div style="background: linear-gradient(145deg, #1f2937, #111827); border-radius: 20px; padding: 32px; max-width: 480px; width: 90%; border: 1px solid rgba(99, 102, 241, 0.3); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-size: 64px; margin-bottom: 16px;">📋</div>
+                <h2 style="color: #f3f4f6; font-size: 24px; margin-bottom: 8px;">Complete Your Profile First</h2>
+                <p style="color: #9ca3af; font-size: 14px;">You need to complete 100% of your profile before applying for jobs.</p>
+            </div>
+            
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="color: #f87171; font-weight: 600;">Current Progress</span>
+                    <span style="color: #f87171; font-weight: 700; font-size: 20px;">${completion}%</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); border-radius: 8px; height: 8px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #ef4444, #f97316); height: 100%; width: ${completion}%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <h3 style="color: #e5e7eb; font-size: 14px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Missing Information:</h3>
+                <ul style="list-style: none; padding: 0; margin: 0; color: #fbbf24; font-size: 14px;">
+                    ${missingFieldsList}
+                </ul>
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <button onclick="document.getElementById('incompleteProfileOverlay').remove()" style="flex: 1; padding: 14px 24px; background: transparent; border: 1px solid #4b5563; color: #9ca3af; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s;">
+                    Cancel
+                </button>
+                <button onclick="document.getElementById('incompleteProfileOverlay').remove(); showProfileModal();" style="flex: 2; padding: 14px 24px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: white; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s;">
+                    ✏️ Complete Profile Now
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
 }
 
 // =============================================

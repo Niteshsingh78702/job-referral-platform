@@ -1455,6 +1455,9 @@
 
                 console.log('✅ Valid applications:', validApplications.length);
 
+                // Cache applications for profile viewing
+                cachedApplications = validApplications;
+
                 if (validApplications.length === 0) {
                     tbody.innerHTML = `
                         <tr>
@@ -1532,21 +1535,41 @@
                         actionBtn = `<span class="badge badge-pending">⏳ Awaiting Test</span>`;
                     }
 
+                    // Get candidate contact info
+                    const email = candidate.User?.email || '-';
+                    const phone = candidate.User?.phone || '-';
+                    const location = [candidate.city, candidate.state, candidate.country].filter(Boolean).join(', ') || '-';
+                    const resumeUrl = candidate.resumeUrl || null;
+
                     // Format status display
                     const statusDisplay = getStatusDisplayForHR(app.status, testPassed);
+
+                    // Resume download button
+                    const resumeBtn = resumeUrl
+                        ? `<a href="${resumeUrl}" target="_blank" download class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 11px; margin-right: 4px;">📄 Resume</a>`
+                        : `<span style="color: var(--text-dim); font-size: 11px;">No Resume</span>`;
 
                     return `
                         <tr>
                             <td>
                                 <div class="job-title">${candidate.firstName || 'Unknown'} ${candidate.lastName || ''}</div>
-                                <div class="job-company">${candidate.headline || candidate.currentCompany || '-'}</div>
+                                <div class="job-company" style="font-size: 11px; color: var(--text-dim);">${candidate.headline || candidate.currentCompany || '-'}</div>
+                                <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">📍 ${location}</div>
                             </td>
                             <td>${job.title || '-'}</td>
                             <td>${candidate.totalExperience || 0} years</td>
                             <td>${app.testScore ? app.testScore.toFixed(0) + '%' : '-'}</td>
                             <td>${statusDisplay}</td>
                             <td>${new Date(app.createdAt).toLocaleDateString()}</td>
-                            <td>${actionBtn}</td>
+                            <td>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                        ${resumeBtn}
+                                        <button class="btn btn-outline btn-sm" onclick="viewCandidateProfile('${app.id}')" style="padding: 4px 8px; font-size: 11px;">👤 Profile</button>
+                                    </div>
+                                    <div style="margin-top: 4px;">${actionBtn}</div>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 }).join('');
@@ -2173,6 +2196,121 @@
                     btn.innerHTML = `Confirm ${outcomeLabel}`;
                 }
             };
+        }
+
+        // View Candidate Profile Modal
+        let cachedApplications = [];
+
+        function viewCandidateProfile(applicationId) {
+            // Find application from cached data
+            const app = cachedApplications.find(a => a.id === applicationId);
+            if (!app || !app.Candidate) {
+                showToast('Candidate data not available', 'error');
+                return;
+            }
+
+            const candidate = app.Candidate;
+            const email = candidate.User?.email || '-';
+            const phone = candidate.User?.phone || '-';
+            const location = [candidate.city, candidate.state, candidate.country].filter(Boolean).join(', ') || 'Not specified';
+            const resumeUrl = candidate.resumeUrl;
+
+            // Skills
+            const skillsHtml = (candidate.CandidateSkill || []).map(s =>
+                `<span style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; padding: 3px 8px; border-radius: 12px; font-size: 11px; margin: 2px;">${s.name}</span>`
+            ).join('') || '<span style="color: var(--text-dim);">No skills listed</span>';
+
+            // Experience
+            const expHtml = (candidate.CandidateExperience || []).map(exp => `
+                <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-weight: 600; color: #fff;">${exp.title}</div>
+                    <div style="font-size: 12px; color: var(--text-dim);">${exp.company} ${exp.isCurrent ? '(Current)' : ''}</div>
+                </div>
+            `).join('') || '<div style="color: var(--text-dim);">No experience listed</div>';
+
+            // Education
+            const eduHtml = (candidate.CandidateEducation || []).map(edu => `
+                <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-weight: 600; color: #fff;">${edu.degree}</div>
+                    <div style="font-size: 12px; color: var(--text-dim);">${edu.institution} (${edu.year || ''})</div>
+                </div>
+            `).join('') || '<div style="color: var(--text-dim);">No education listed</div>';
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'candidateProfileModal';
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target === this) this.remove();">
+                    <div style="background: linear-gradient(145deg, #1e1e2e, #16161d); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 16px; padding: 24px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="margin: 0; color: #fff; font-size: 22px;">👤 ${candidate.firstName || ''} ${candidate.lastName || ''}</h2>
+                                <p style="margin: 4px 0 0; color: var(--text-dim);">${candidate.headline || candidate.currentCompany || 'Candidate'}</p>
+                                <p style="margin: 4px 0 0; color: var(--text-dim); font-size: 12px;">📍 ${location}</p>
+                            </div>
+                            <button onclick="this.closest('#candidateProfileModal').remove()" style="background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0;">&times;</button>
+                        </div>
+                        
+                        <!-- Contact Info -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; padding: 16px; background: rgba(99, 102, 241, 0.1); border-radius: 12px;">
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 2px;">📧 Email</div>
+                                <div style="color: #fff; font-size: 13px;">${email}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 2px;">📱 Phone</div>
+                                <div style="color: #fff; font-size: 13px;">${phone}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 2px;">💼 Experience</div>
+                                <div style="color: #fff; font-size: 13px;">${candidate.totalExperience || 0} years</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 2px;">🏢 Current Company</div>
+                                <div style="color: #fff; font-size: 13px;">${candidate.currentCompany || '-'}</div>
+                            </div>
+                        </div>
+
+                        <!-- Resume Download -->
+                        ${resumeUrl ? `
+                            <div style="margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="color: #fff; font-weight: 600;">📄 Resume Available</div>
+                                        <div style="font-size: 12px; color: var(--text-dim);">Download candidate's resume</div>
+                                    </div>
+                                    <a href="${resumeUrl}" target="_blank" download class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669);">⬇️ Download PDF</a>
+                                </div>
+                            </div>
+                        ` : `
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px;">
+                                <div style="color: rgba(239, 68, 68, 0.8);">⚠️ No resume uploaded by candidate</div>
+                            </div>
+                        `}
+
+                        <!-- Skills -->
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #fff; font-size: 14px; margin-bottom: 8px;">🛠️ Skills</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">${skillsHtml}</div>
+                        </div>
+
+                        <!-- Experience -->
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #fff; font-size: 14px; margin-bottom: 8px;">💼 Experience</h3>
+                            ${expHtml}
+                        </div>
+
+                        <!-- Education -->
+                        <div style="margin-bottom: 16px;">
+                            <h3 style="color: #fff; font-size: 14px; margin-bottom: 8px;">🎓 Education</h3>
+                            ${eduHtml}
+                        </div>
+
+                        <button onclick="this.closest('#candidateProfileModal').remove()" class="btn btn-outline" style="width: 100%;">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         // Initialize

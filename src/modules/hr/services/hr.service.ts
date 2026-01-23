@@ -845,12 +845,13 @@ export class HRService {
                             totalExperience: true,
                             currentCompany: true,
                             resumeUrl: true,           // Resume link for HR
-                            location: true,            // Location
-                            linkedIn: true,            // LinkedIn profile
-                            phone: true,               // Contact phone
-                            user: {
+                            city: true,                // Location components
+                            state: true,
+                            country: true,
+                            User: {
                                 select: {
-                                    email: true,       // Email for HR to contact
+                                    email: true,       // Contact info from User model
+                                    phone: true,
                                 },
                             },
                             CandidateSkill: {
@@ -868,7 +869,7 @@ export class HRService {
                                     isCurrent: true,
                                 },
                                 orderBy: { startDate: 'desc' },
-                                take: 3,  // Last 3 experiences
+                                take: 3,
                             },
                             CandidateEducation: {
                                 select: {
@@ -877,7 +878,7 @@ export class HRService {
                                     year: true,
                                 },
                                 orderBy: { year: 'desc' },
-                                take: 2,  // Last 2 education entries
+                                take: 2,
                             },
                         },
                     },

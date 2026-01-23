@@ -778,7 +778,12 @@
 
                 <div class="form-group">
                     <label class="form-label">Phone Number</label>
-                    <input type="tel" id="editPhone" class="form-input" placeholder="+91 98765 43210">
+                    <div class="phone-input-group">
+                        <span class="phone-prefix">+91</span>
+                        <input type="tel" id="editPhone" class="form-input phone-input" placeholder="98765 43210"
+                            maxlength="14" pattern="[0-9\s]*" oninput="formatPhoneNumber(this)">
+                    </div>
+                    <small class="form-hint">Enter 10-digit mobile number without +91</small>
                 </div>
 
                 <div class="form-group">
@@ -805,17 +810,77 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Preferred Location</label>
-                    <select id="editLocation" class="form-input">
-                        <option value="">Select location</option>
-                        <option value="bangalore">Bangalore</option>
-                        <option value="mumbai">Mumbai</option>
-                        <option value="delhi">Delhi NCR</option>
-                        <option value="hyderabad">Hyderabad</option>
-                        <option value="pune">Pune</option>
-                        <option value="chennai">Chennai</option>
-                        <option value="remote">Remote</option>
-                    </select>
+                    <label class="form-label">Preferred Locations <span class="location-count">(Select up to
+                            3)</span></label>
+                    <div class="location-checkboxes" id="locationCheckboxes">
+                        <label class="location-checkbox pan-india">
+                            <input type="checkbox" value="pan-india" onchange="handlePanIndiaChange(this)">
+                            <span class="checkbox-label">🇮🇳 PAN India (All Locations)</span>
+                        </label>
+                        <div class="location-grid" id="locationGrid">
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="bangalore" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Bangalore</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="mumbai" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Mumbai</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="delhi" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Delhi NCR</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="hyderabad" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Hyderabad</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="pune" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Pune</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="chennai" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Chennai</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="kolkata" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Kolkata</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="ahmedabad" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Ahmedabad</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="jaipur" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Jaipur</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="noida" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Noida</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="gurgaon" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">Gurgaon</span>
+                            </label>
+                            <label class="location-checkbox">
+                                <input type="checkbox" value="remote" class="city-checkbox"
+                                    onchange="checkLocationLimit()">
+                                <span class="checkbox-label">🌐 Remote</span>
+                            </label>
+                        </div>
+                    </div>
+                    <small class="form-hint" id="locationHint">Select your preferred work locations</small>
                 </div>
 
                 <div class="form-group">

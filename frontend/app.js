@@ -1565,7 +1565,10 @@ function showProfileModal() {
     if (state.user) {
         document.getElementById('editFirstName').value = state.user.firstName || '';
         document.getElementById('editLastName').value = state.user.lastName || '';
-        document.getElementById('editPhone').value = state.user.phone || '';
+
+        // Set phone number (strip +91 for display)
+        setPhoneDisplay(state.user.phone || '');
+
         document.getElementById('editLinkedIn').value = state.user.linkedIn || '';
         document.getElementById('editSkills').value = state.user.skills?.join(', ') || '';
 
@@ -1575,11 +1578,8 @@ function showProfileModal() {
             expSelect.value = state.user.experience;
         }
 
-        // Set location dropdown
-        const locSelect = document.getElementById('editLocation');
-        if (locSelect && state.user.preferredLocation) {
-            locSelect.value = state.user.preferredLocation;
-        }
+        // Set location checkboxes
+        setSelectedLocations(state.user.preferredLocations || state.user.preferredLocation);
 
         const initial = getUserDisplayName().charAt(0).toUpperCase();
         document.getElementById('avatarPreview').textContent = initial;
@@ -1624,11 +1624,11 @@ async function handleProfileUpdate(event) {
     // Get form values (some may not exist on the form, handle gracefully)
     const firstName = document.getElementById('editFirstName')?.value || '';
     const lastName = document.getElementById('editLastName')?.value || '';
-    const phone = document.getElementById('editPhone')?.value || '';
+    const phone = getFullPhoneNumber(); // Get phone with +91 prefix
     const linkedIn = document.getElementById('editLinkedIn')?.value || '';
     const skillsValue = document.getElementById('editSkills')?.value || '';
     const experience = document.getElementById('editExperience')?.value || '';
-    const locationValue = document.getElementById('editLocation')?.value || '';
+    const selectedLocations = getSelectedLocations(); // Get array of selected locations
     const currentCompany = document.getElementById('editCurrentCompany')?.value || '';
     const currentRole = document.getElementById('editCurrentRole')?.value || '';
     const expectedSalary = document.getElementById('editExpectedSalary')?.value || '';
@@ -1636,11 +1636,8 @@ async function handleProfileUpdate(event) {
     const headline = document.getElementById('editHeadline')?.value || '';
     const bio = document.getElementById('editBio')?.value || '';
 
-    // Parse location into city, state, country
-    const locationParts = locationValue.split(',').map(p => p.trim());
-    const city = locationParts[0] || '';
-    const state = locationParts[1] || '';
-    const country = locationParts[2] || '';
+    // Determine city based on selected locations (use first city or empty if pan-india)
+    const city = selectedLocations.includes('pan-india') ? '' : (selectedLocations[0] || '');
 
     // Build profile data matching backend DTO (UpdateCandidateProfileDto)
     const profileData = {
@@ -1651,8 +1648,8 @@ async function handleProfileUpdate(event) {
         currentCompany,
         currentRole,
         city,
-        state,
-        country
+        state: '',
+        country: 'India'
     };
 
     // Add numeric fields only if provided
@@ -1671,7 +1668,9 @@ async function handleProfileUpdate(event) {
         phone,
         linkedIn,
         skills: skillsValue.split(',').map(s => s.trim()).filter(s => s),
-        preferredLocation: locationValue
+        preferredLocations: selectedLocations,
+        preferredLocation: selectedLocations.join(', '),
+        experience
     };
 
     try {
@@ -1711,6 +1710,156 @@ async function handleProfileUpdate(event) {
         showToast('success', 'Profile saved locally!');
         updateDashboard();
         updateProfileCompletion();
+    }
+}
+
+// =============================================
+// Phone Number Formatting
+// =============================================
+function formatPhoneNumber(input) {
+    // Remove all non-digits
+    let value = input.value.replace(/\D/g, '');
+
+    // Limit to 10 digits
+    if (value.length > 10) {
+        value = value.substring(0, 10);
+    }
+
+    // Format with space after 5th digit: XXXXX XXXXX
+    if (value.length > 5) {
+        value = value.substring(0, 5) + ' ' + value.substring(5);
+    }
+
+    input.value = value;
+}
+
+// Get phone number with +91 prefix for saving
+function getFullPhoneNumber() {
+    const phoneInput = document.getElementById('editPhone');
+    if (!phoneInput) return '';
+
+    const digits = phoneInput.value.replace(/\D/g, '');
+    if (digits.length === 10) {
+        return '+91' + digits;
+    }
+    return digits ? '+91' + digits : '';
+}
+
+// Set phone number (strip +91 prefix for display)
+function setPhoneDisplay(fullNumber) {
+    const phoneInput = document.getElementById('editPhone');
+    if (!phoneInput || !fullNumber) return;
+
+    // Remove +91 prefix if present
+    let digits = fullNumber.replace(/^\+91/, '').replace(/\D/g, '');
+
+    // Format for display
+    if (digits.length > 5) {
+        digits = digits.substring(0, 5) + ' ' + digits.substring(5, 10);
+    }
+
+    phoneInput.value = digits;
+}
+
+// =============================================
+// Location Checkbox Handling
+// =============================================
+function handlePanIndiaChange(checkbox) {
+    const locationGrid = document.getElementById('locationGrid');
+    const cityCheckboxes = document.querySelectorAll('.city-checkbox');
+
+    if (checkbox.checked) {
+        // Disable all city checkboxes when PAN India is selected
+        locationGrid.classList.add('disabled');
+        cityCheckboxes.forEach(cb => {
+            cb.checked = false;
+            cb.disabled = true;
+        });
+        updateLocationHint('PAN India selected - open to all locations');
+    } else {
+        // Enable city checkboxes when PAN India is deselected
+        locationGrid.classList.remove('disabled');
+        cityCheckboxes.forEach(cb => {
+            cb.disabled = false;
+        });
+        updateLocationHint('Select your preferred work locations');
+    }
+}
+
+function checkLocationLimit() {
+    const cityCheckboxes = document.querySelectorAll('.city-checkbox:checked');
+    const allCityCheckboxes = document.querySelectorAll('.city-checkbox');
+    const count = cityCheckboxes.length;
+
+    if (count >= 3) {
+        // Disable unchecked checkboxes
+        allCityCheckboxes.forEach(cb => {
+            if (!cb.checked) {
+                cb.disabled = true;
+                cb.closest('.location-checkbox').classList.add('disabled');
+            }
+        });
+        updateLocationHint(`${count}/3 locations selected (maximum reached)`);
+    } else {
+        // Enable all checkboxes
+        allCityCheckboxes.forEach(cb => {
+            cb.disabled = false;
+            cb.closest('.location-checkbox')?.classList.remove('disabled');
+        });
+        updateLocationHint(count > 0 ? `${count}/3 locations selected` : 'Select your preferred work locations');
+    }
+}
+
+function updateLocationHint(message) {
+    const hint = document.getElementById('locationHint');
+    if (hint) {
+        hint.textContent = message;
+    }
+}
+
+function getSelectedLocations() {
+    const panIndiaCheckbox = document.querySelector('input[value="pan-india"]');
+    if (panIndiaCheckbox?.checked) {
+        return ['pan-india'];
+    }
+
+    const selectedCheckboxes = document.querySelectorAll('.city-checkbox:checked');
+    return Array.from(selectedCheckboxes).map(cb => cb.value);
+}
+
+function setSelectedLocations(locations) {
+    // Reset all checkboxes first
+    const allCheckboxes = document.querySelectorAll('#locationCheckboxes input[type="checkbox"]');
+    allCheckboxes.forEach(cb => {
+        cb.checked = false;
+        cb.disabled = false;
+    });
+
+    const locationGrid = document.getElementById('locationGrid');
+    locationGrid?.classList.remove('disabled');
+
+    if (!locations || locations.length === 0) {
+        updateLocationHint('Select your preferred work locations');
+        return;
+    }
+
+    // Handle array or string
+    const locationArray = Array.isArray(locations) ? locations : [locations];
+
+    if (locationArray.includes('pan-india')) {
+        const panCheckbox = document.querySelector('input[value="pan-india"]');
+        if (panCheckbox) {
+            panCheckbox.checked = true;
+            handlePanIndiaChange(panCheckbox);
+        }
+    } else {
+        locationArray.forEach(loc => {
+            const checkbox = document.querySelector(`input[value="${loc}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+        checkLocationLimit();
     }
 }
 

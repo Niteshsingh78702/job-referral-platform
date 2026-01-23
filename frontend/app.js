@@ -1672,12 +1672,10 @@ async function handleProfileUpdate(event) {
     const city = selectedLocations.includes('pan-india') ? '' : (selectedLocations[0] || '');
 
     // Build profile data matching backend DTO (UpdateCandidateProfileDto)
-    // Now includes phone and linkedIn for full sync
+    // Only send fields the backend definitely supports to avoid 400 errors
     const profileData = {
         firstName,
         lastName,
-        phone,           // Phone saved to User table
-        linkedIn,        // LinkedIn saved to Candidate table
         headline,
         bio,
         currentCompany,
@@ -1698,7 +1696,7 @@ async function handleProfileUpdate(event) {
         profileData.noticePeriod = parseInt(noticePeriod);
     }
 
-    // Store additional fields locally for UI
+    // Store additional fields locally for UI (phone, linkedIn saved locally until backend supports them)
     const localExtras = {
         phone,
         linkedIn,

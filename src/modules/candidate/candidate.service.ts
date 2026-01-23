@@ -52,15 +52,43 @@ export class CandidateService {
             throw new NotFoundException('Candidate profile not found');
         }
 
-        return this.prisma.candidate.update({
-            where: { userId },
-            data: dto,
-            include: {
-                CandidateSkill: true,
-                Experience: true,
-                Education: true,
-            },
+        // Extract phone from DTO (phone is stored in User table)
+        const { phone, linkedIn, ...candidateData } = dto;
+
+        // Use transaction to update both User and Candidate
+        const result = await this.prisma.$transaction(async (tx) => {
+            // Update phone in User table if provided
+            if (phone !== undefined) {
+                await tx.user.update({
+                    where: { id: userId },
+                    data: { phone },
+                });
+            }
+
+            // Update candidate data (including linkedIn)
+            const updatedCandidate = await tx.candidate.update({
+                where: { userId },
+                data: {
+                    ...candidateData,
+                    linkedIn,
+                },
+                include: {
+                    CandidateSkill: true,
+                    CandidateExperience: true,
+                    CandidateEducation: true,
+                    User: {
+                        select: {
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                },
+            });
+
+            return updatedCandidate;
         });
+
+        return result;
     }
 
     // Upload resume

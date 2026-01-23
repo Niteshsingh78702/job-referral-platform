@@ -44,6 +44,7 @@ model Candidate {
   lastName          String
   headline          String?
   bio               String?
+  linkedIn          String?
   avatarUrl         String?
   resumeUrl         String?
   totalExperience   Float?

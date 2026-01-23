@@ -1672,9 +1672,12 @@ async function handleProfileUpdate(event) {
     const city = selectedLocations.includes('pan-india') ? '' : (selectedLocations[0] || '');
 
     // Build profile data matching backend DTO (UpdateCandidateProfileDto)
+    // Now includes phone and linkedIn for full sync
     const profileData = {
         firstName,
         lastName,
+        phone,           // Phone saved to User table
+        linkedIn,        // LinkedIn saved to Candidate table
         headline,
         bio,
         currentCompany,
@@ -1695,7 +1698,7 @@ async function handleProfileUpdate(event) {
         profileData.noticePeriod = parseInt(noticePeriod);
     }
 
-    // Store additional fields locally (not in backend DTO but useful for UI)
+    // Store additional fields locally for UI
     const localExtras = {
         phone,
         linkedIn,
@@ -1717,6 +1720,10 @@ async function handleProfileUpdate(event) {
         });
 
         if (response.ok) {
+            // Also sync skills to backend
+            const skills = skillsValue.split(',').map(s => s.trim()).filter(s => s);
+            await syncSkillsToBackend(skills);
+
             // Update local state with both backend data and local extras
             state.user = { ...state.user, ...profileData, ...localExtras };
             localStorage.setItem('user', JSON.stringify(state.user));
@@ -1726,22 +1733,60 @@ async function handleProfileUpdate(event) {
             updateDashboard();
             updateProfileCompletion();
         } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Profile update failed:', errorData);
             // If API fails, just update locally
             state.user = { ...state.user, ...profileData, ...localExtras };
             localStorage.setItem('user', JSON.stringify(state.user));
             closeProfileModal();
-            showToast('success', 'Profile saved locally!');
+            showToast('warning', 'Profile saved locally (sync pending)');
             updateDashboard();
             updateProfileCompletion();
         }
     } catch (error) {
+        console.error('Profile update error:', error);
         // API not available, save locally
         state.user = { ...state.user, ...profileData, ...localExtras };
         localStorage.setItem('user', JSON.stringify(state.user));
         closeProfileModal();
-        showToast('success', 'Profile saved locally!');
+        showToast('warning', 'Profile saved locally (sync pending)');
         updateDashboard();
         updateProfileCompletion();
+    }
+}
+
+// Sync skills to backend
+async function syncSkillsToBackend(skills) {
+    if (!skills || skills.length === 0 || !state.token) return;
+
+    try {
+        // First, get current skills from profile to avoid duplicates
+        const profileRes = await fetch(`${API_BASE_URL}/candidates/profile`, {
+            headers: { 'Authorization': `Bearer ${state.token}` }
+        });
+
+        let existingSkills = [];
+        if (profileRes.ok) {
+            const profile = await profileRes.json();
+            existingSkills = (profile.data?.CandidateSkill || profile.CandidateSkill || []).map(s => s.name.toLowerCase());
+        }
+
+        // Add new skills that don't exist
+        for (const skillName of skills) {
+            if (skillName && !existingSkills.includes(skillName.toLowerCase())) {
+                await fetch(`${API_BASE_URL}/candidates/skills`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({ name: skillName, level: 3 })
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Skills sync error:', error);
+        // Continue silently - skills will be saved locally
     }
 }
 

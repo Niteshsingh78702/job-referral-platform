@@ -20,6 +20,14 @@ export class UpdateCandidateProfileDto {
 
     @IsString()
     @IsOptional()
+    phone?: string;
+
+    @IsString()
+    @IsOptional()
+    linkedIn?: string;
+
+    @IsString()
+    @IsOptional()
     headline?: string;
 
     @IsString()

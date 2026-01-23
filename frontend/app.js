@@ -1293,8 +1293,28 @@ function closeModal() {
 // =============================================
 // Toast Notifications
 // =============================================
+const MAX_TOASTS = 3; // Maximum toasts shown at once
+const activeToasts = new Set(); // Track active toast messages to prevent duplicates
+
 function showToast(type, message) {
     const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    // Prevent duplicate toasts with same message
+    const messageKey = `${type}:${message}`;
+    if (activeToasts.has(messageKey)) {
+        return; // Don't show duplicate
+    }
+
+    // Remove oldest toasts if we're at the limit
+    const existingToasts = container.querySelectorAll('.toast');
+    while (existingToasts.length >= MAX_TOASTS) {
+        const oldestToast = existingToasts[0];
+        if (oldestToast) {
+            oldestToast.remove();
+        }
+        break;
+    }
 
     const icons = {
         success: '✓',
@@ -1306,17 +1326,29 @@ function showToast(type, message) {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `
-        <span class="toast-icon">${icons[type]}</span>
+        <span class="toast-icon">${icons[type] || 'ℹ'}</span>
         <span class="toast-message">${message}</span>
+        <button class="toast-close" onclick="this.parentElement.remove(); activeToasts.delete('${messageKey}');">×</button>
     `;
 
     container.appendChild(toast);
+    activeToasts.add(messageKey);
 
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        toast.style.animation = 'slideIn 0.3s ease reverse';
-        setTimeout(() => toast.remove(), 300);
-    }, 5000);
+    // Auto remove after 4 seconds (reduced from 5 for snappier UX)
+    const toastTimeout = setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'slideIn 0.3s ease reverse';
+            setTimeout(() => {
+                toast.remove();
+                activeToasts.delete(messageKey);
+            }, 300);
+        }
+    }, 4000);
+
+    // Clear timeout if manually closed
+    toast.addEventListener('click', () => {
+        clearTimeout(toastTimeout);
+    });
 }
 
 // =============================================
@@ -1993,7 +2025,7 @@ function calculateProfileCompletion() {
         { name: 'linkedIn', weight: 15, filled: !!state.user.linkedIn },
         { name: 'skills', weight: 15, filled: state.user.skills?.length > 0 },
         { name: 'experience', weight: 10, filled: !!state.user.experience },
-        { name: 'preferredLocation', weight: 10, filled: !!state.user.preferredLocation },
+        { name: 'preferredLocation', weight: 10, filled: (state.user.preferredLocations?.length > 0) || !!state.user.preferredLocation },
         { name: 'resume', weight: 10, filled: !!state.user.resume?.filename }
     ];
 
@@ -2022,7 +2054,9 @@ function getMissingProfileFields() {
     if (!state.user.linkedIn) missing.push(fieldLabels.linkedIn);
     if (!state.user.skills?.length) missing.push(fieldLabels.skills);
     if (!state.user.experience) missing.push(fieldLabels.experience);
-    if (!state.user.preferredLocation) missing.push(fieldLabels.preferredLocation);
+    // Support both preferredLocations (array) and preferredLocation (string)
+    const hasLocation = (state.user.preferredLocations?.length > 0) || !!state.user.preferredLocation;
+    if (!hasLocation) missing.push(fieldLabels.preferredLocation);
     if (!state.user.resume?.filename) missing.push(fieldLabels.resume);
 
     return missing;
@@ -2030,7 +2064,7 @@ function getMissingProfileFields() {
 
 function updateProfileCompletion() {
     const completion = calculateProfileCompletion();
-    const missing = getMissingProfileFields();
+    const missing = getMissingProfileFields() || []; // Safety check
 
     // Update dashboard progress bar
     const progressFill = document.getElementById('progressFill');
@@ -2044,8 +2078,9 @@ function updateProfileCompletion() {
         profileCompletion.textContent = `${completion}%`;
     }
     if (progressTip) {
-        if (missing.length > 0) {
-            progressTip.innerHTML = `💡 Add: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ` (+${missing.length - 3} more)` : ''}`;
+        if (missing && missing.length > 0) {
+            const displayFields = missing.slice(0, 3);
+            progressTip.innerHTML = `💡 Add: ${displayFields.join(', ')}${missing.length > 3 ? ` (+${missing.length - 3} more)` : ''}`;
         } else {
             progressTip.innerHTML = '🎉 Profile complete! You\'re all set.';
         }

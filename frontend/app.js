@@ -1672,10 +1672,11 @@ async function handleProfileUpdate(event) {
     const city = selectedLocations.includes('pan-india') ? '' : (selectedLocations[0] || '');
 
     // Build profile data matching backend DTO (UpdateCandidateProfileDto)
-    // Note: phone/linkedIn saved locally until backend deployment is updated
     const profileData = {
         firstName,
         lastName,
+        phone,
+        linkedIn,
         headline,
         bio,
         currentCompany,

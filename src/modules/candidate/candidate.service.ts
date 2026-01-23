@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { randomUUID } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 import {
     UpdateCandidateProfileDto,
     AddSkillDto,
@@ -161,34 +161,41 @@ export class CandidateService {
 
     // Add skill
     async addSkill(userId: string, dto: AddSkillDto) {
-        const candidate = await this.prisma.candidate.findUnique({
-            where: { userId },
-        });
+        console.log(`Adding skill for user ${userId}:`, dto);
+        try {
+            const candidate = await this.prisma.candidate.findUnique({
+                where: { userId },
+            });
 
-        if (!candidate) {
-            throw new NotFoundException('Candidate profile not found');
-        }
+            if (!candidate) {
+                console.error(`Candidate profile not found for user ${userId}`);
+                throw new NotFoundException('Candidate profile not found');
+            }
 
-        // Use upsert to handle duplicates gracefully
-        return this.prisma.candidateSkill.upsert({
-            where: {
-                candidateId_name: {
+            // Use upsert to handle duplicates gracefully
+            return await this.prisma.candidateSkill.upsert({
+                where: {
+                    candidateId_name: {
+                        candidateId: candidate.id,
+                        name: dto.name,
+                    },
+                },
+                update: {
+                    level: dto.level || 1,
+                    yearsOfExp: dto.yearsOfExp,
+                },
+                create: {
+                    id: uuidv4(),
                     candidateId: candidate.id,
                     name: dto.name,
+                    level: dto.level || 1,
+                    yearsOfExp: dto.yearsOfExp,
                 },
-            },
-            update: {
-                level: dto.level || 1,
-                yearsOfExp: dto.yearsOfExp,
-            },
-            create: {
-                id: crypto.randomUUID(),
-                candidateId: candidate.id,
-                name: dto.name,
-                level: dto.level || 1,
-                yearsOfExp: dto.yearsOfExp,
-            },
-        });
+            });
+        } catch (error) {
+            console.error('Error adding skill:', error);
+            throw error;
+        }
     }
 
     // Remove skill

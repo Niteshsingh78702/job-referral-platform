@@ -168,8 +168,20 @@ export class CandidateService {
             throw new NotFoundException('Candidate profile not found');
         }
 
-        return this.prisma.candidateSkill.create({
-            data: {
+        // Use upsert to handle duplicates gracefully
+        return this.prisma.candidateSkill.upsert({
+            where: {
+                candidateId_name: {
+                    candidateId: candidate.id,
+                    name: dto.name,
+                },
+            },
+            update: {
+                level: dto.level || 1,
+                yearsOfExp: dto.yearsOfExp,
+            },
+            create: {
+                id: crypto.randomUUID(),
                 candidateId: candidate.id,
                 name: dto.name,
                 level: dto.level || 1,

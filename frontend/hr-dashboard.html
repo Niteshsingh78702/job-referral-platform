@@ -2216,23 +2216,25 @@
             const resumeUrl = candidate.resumeUrl;
 
             // Skills
-            const skillsHtml = (candidate.CandidateSkill || []).map(s =>
+            const skillsHtml = (candidate.CandidateSkill || candidate.skills || []).map(s =>
                 `<span style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; padding: 3px 8px; border-radius: 12px; font-size: 11px; margin: 2px;">${s.name}</span>`
             ).join('') || '<span style="color: var(--text-dim);">No skills listed</span>';
 
-            // Experience
-            const expHtml = (candidate.CandidateExperience || []).map(exp => `
+            // Experience - handle both relation names and field names
+            const experiences = candidate.Experience || candidate.CandidateExperience || [];
+            const expHtml = experiences.map(exp => `
                 <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                    <div style="font-weight: 600; color: #fff;">${exp.title}</div>
+                    <div style="font-weight: 600; color: #fff;">${exp.role || exp.title || 'N/A'}</div>
                     <div style="font-size: 12px; color: var(--text-dim);">${exp.company} ${exp.isCurrent ? '(Current)' : ''}</div>
                 </div>
             `).join('') || '<div style="color: var(--text-dim);">No experience listed</div>';
 
-            // Education
-            const eduHtml = (candidate.CandidateEducation || []).map(edu => `
+            // Education - handle both relation names and field names
+            const education = candidate.Education || candidate.CandidateEducation || [];
+            const eduHtml = education.map(edu => `
                 <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px;">
                     <div style="font-weight: 600; color: #fff;">${edu.degree}</div>
-                    <div style="font-size: 12px; color: var(--text-dim);">${edu.institution} (${edu.year || ''})</div>
+                    <div style="font-size: 12px; color: var(--text-dim);">${edu.institution} (${edu.endYear || edu.year || ''})</div>
                 </div>
             `).join('') || '<div style="color: var(--text-dim);">No education listed</div>';
 

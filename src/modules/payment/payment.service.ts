@@ -496,9 +496,12 @@ export class PaymentService {
             throw new BadRequestException('No interview request found for this application');
         }
 
-        if (application.interview.status !== 'PAYMENT_PENDING') {
+        // Allow payment when interview is INTERVIEW_CONFIRMED (HR confirmed, awaiting payment)
+        // or PAYMENT_PENDING (legacy flow)
+        const allowedStatuses = ['INTERVIEW_CONFIRMED', 'PAYMENT_PENDING'];
+        if (!allowedStatuses.includes(application.interview.status)) {
             throw new BadRequestException(
-                `Interview is in ${application.interview.status} status. Payment not required.`,
+                `Interview is in ${application.interview.status} status. Payment not available.`,
             );
         }
 
@@ -641,13 +644,22 @@ export class PaymentService {
                 },
             });
 
-            // Update interview status to READY_TO_SCHEDULE
+            // Update interview status to PAYMENT_SUCCESS
             await tx.interview.update({
                 where: { id: interview.id },
                 data: {
-                    status: 'READY_TO_SCHEDULE' as any,
+                    status: 'PAYMENT_SUCCESS' as any,
                     paymentStatus: PaymentStatus.SUCCESS as any,
                     paidAt: new Date(),
+                },
+            });
+
+            // CRITICAL: Also update application status to PAYMENT_SUCCESS
+            await tx.jobApplication.update({
+                where: { id: payment.applicationId },
+                data: {
+                    status: ApplicationStatus.PAYMENT_SUCCESS as any,
+                    contactUnlockedAt: new Date(),
                 },
             });
 

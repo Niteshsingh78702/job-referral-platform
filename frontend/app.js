@@ -3977,8 +3977,15 @@ function openRazorpayForInterview(orderData, applicationId) {
 
                 const data = await verifyResponse.json();
                 if (data.success) {
-                    showToast('success', '✅ Payment successful! HR will schedule your interview soon.');
-                    loadApplications();
+                    showToast('success', '✅ Payment successful! Interview details unlocked.');
+
+                    // Force refresh applications list
+                    await loadApplications();
+
+                    // Reload page after short delay to ensure fresh data from server
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
                 } else {
                     showToast('error', data.message || 'Payment verification failed.');
                 }

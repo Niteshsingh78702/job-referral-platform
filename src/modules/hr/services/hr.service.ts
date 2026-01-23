@@ -860,9 +860,9 @@ export class HRService {
                                     level: true,
                                 },
                             },
-                            CandidateExperience: {
+                            Experience: {
                                 select: {
-                                    title: true,
+                                    role: true,
                                     company: true,
                                     startDate: true,
                                     endDate: true,
@@ -871,13 +871,13 @@ export class HRService {
                                 orderBy: { startDate: 'desc' },
                                 take: 3,
                             },
-                            CandidateEducation: {
+                            Education: {
                                 select: {
                                     degree: true,
                                     institution: true,
-                                    year: true,
+                                    endYear: true,
                                 },
-                                orderBy: { year: 'desc' },
+                                orderBy: { endYear: 'desc' },
                                 take: 2,
                             },
                         },

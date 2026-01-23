@@ -74,8 +74,8 @@ export class CandidateService {
                 },
                 include: {
                     CandidateSkill: true,
-                    CandidateExperience: true,
-                    CandidateEducation: true,
+                    Experience: true,
+                    Education: true,
                     User: {
                         select: {
                             email: true,

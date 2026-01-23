@@ -1672,10 +1672,12 @@ async function handleProfileUpdate(event) {
     const city = selectedLocations.includes('pan-india') ? '' : (selectedLocations[0] || '');
 
     // Build profile data matching backend DTO (UpdateCandidateProfileDto)
-    // Only send fields the backend definitely supports to avoid 400 errors
+    // Includes phone (saved to User table) and linkedIn (saved to Candidate table)
     const profileData = {
         firstName,
         lastName,
+        phone,           // Phone saved to User table via backend transaction
+        linkedIn,        // LinkedIn saved to Candidate table
         headline,
         bio,
         currentCompany,
@@ -2000,15 +2002,23 @@ async function tryUploadResumeAPI(file) {
             const result = await response.json();
             console.log('✅ Resume uploaded to Cloudinary:', result);
 
-            // Update state with server response (includes Cloudinary URL)
-            if (result.data?.resumeUrl) {
-                state.user.resumeUrl = result.data.resumeUrl;
+            // Update state with server response (handle both response formats)
+            const resumeUrl = result.data?.resumeUrl || result.resumeUrl;
+            if (resumeUrl) {
+                state.user.resumeUrl = resumeUrl;
+                state.user.resume = {
+                    ...state.user.resume,
+                    url: resumeUrl,
+                    filename: result.fileName || file.name
+                };
                 localStorage.setItem('user', JSON.stringify(state.user));
+                showToast('success', 'Resume uploaded to server successfully!');
             }
 
             // Show parsed skills if available
-            if (result.data?.parsedData?.skills?.length > 0) {
-                showToast('success', `Found ${result.data.parsedData.skills.length} skills in your resume!`);
+            const skills = result.data?.parsedData?.skills || result.parsedData?.JobSkill || [];
+            if (skills.length > 0) {
+                showToast('success', `Found ${skills.length} skills in your resume!`);
             }
         } else {
             const errorData = await response.json().catch(() => ({}));

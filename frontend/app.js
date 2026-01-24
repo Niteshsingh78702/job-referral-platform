@@ -2481,12 +2481,9 @@ async function loadApplications() {
         );
 
         // Determine the correct action button based on application state
-        // CRITICAL: Check for payment success FIRST before any other status checks
-        // Also check paidApplicationIds in localStorage for persistence across API refreshes
-        const paidAppIds = JSON.parse(localStorage.getItem('paidApplicationIds') || '[]');
-        const isAppPaid = paidAppIds.includes(app.id);
-
-        const interviewPaymentDone = isAppPaid ||
+        // CRITICAL: Only trust API response (database) for payment status
+        // Do NOT use localStorage as it can have stale/fake data
+        const interviewPaymentDone =
             app.interview?.paymentStatus === 'SUCCESS' ||
             app.interview?.status === 'PAYMENT_SUCCESS' ||
             app.Payment?.status === 'SUCCESS' ||

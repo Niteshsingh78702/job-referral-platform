@@ -2941,8 +2941,8 @@ async function initiatePayment(applicationId, interviewId) {
     try {
         showToast('info', 'Initiating payment...');
 
-        // Create payment order
-        const response = await fetch(`${API_BASE_URL}/payments/create-order`, {
+        // Create INTERVIEW payment order (correct endpoint)
+        const response = await fetch(`${API_BASE_URL}/payments/interview/create-order`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${state.token}`,
@@ -2964,10 +2964,10 @@ async function initiatePayment(applicationId, interviewId) {
             // Load Razorpay script if not loaded
             const script = document.createElement('script');
             script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.onload = () => openRazorpayCheckout(order, applicationId);
+            script.onload = () => openRazorpayForInterview(order, applicationId);
             document.head.appendChild(script);
         } else {
-            openRazorpayCheckout(order, applicationId);
+            openRazorpayForInterview(order, applicationId);
         }
     } catch (error) {
         console.error('Payment error:', error);

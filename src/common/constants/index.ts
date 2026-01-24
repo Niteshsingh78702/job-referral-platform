@@ -36,6 +36,8 @@ export enum ApplicationStatus {
   PAYMENT_PENDING = 'PAYMENT_PENDING',
   PAYMENT_SUCCESS = 'PAYMENT_SUCCESS',
   INTERVIEW_COMPLETED = 'INTERVIEW_COMPLETED',
+  SELECTED = 'SELECTED',  // Candidate selected after interview
+  INTERVIEW_REJECTED = 'INTERVIEW_REJECTED',  // Candidate not selected after interview
   CANDIDATE_NO_SHOW = 'CANDIDATE_NO_SHOW',
   HR_NO_SHOW = 'HR_NO_SHOW',
   REJECTED = 'REJECTED',

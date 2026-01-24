@@ -771,8 +771,8 @@ let InterviewService = class InterviewService {
         };
         // Map outcome to application status
         const applicationStatusMap = {
-            'SELECTED': 'INTERVIEW_COMPLETED',
-            'NOT_SELECTED': 'REJECTED',
+            'SELECTED': 'SELECTED',
+            'NOT_SELECTED': 'INTERVIEW_REJECTED',
             'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW'
         };
         const newStatus = statusMap[dto.outcome] || 'INTERVIEW_COMPLETED';

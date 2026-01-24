@@ -2520,6 +2520,12 @@ async function loadApplications() {
         } else if (app.status === 'PAYMENT_PENDING') {
             // Payment in progress
             actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
+        } else if (app.status === 'SELECTED') {
+            // Candidate was selected after interview!
+            actionButton = `<button class="btn btn-success btn-sm" disabled style="background: linear-gradient(135deg, #10b981, #059669);">🎉 Selected!</button>`;
+        } else if (app.status === 'INTERVIEW_REJECTED') {
+            // Candidate was not selected after interview
+            actionButton = `<button class="btn btn-outline btn-sm" disabled style="border-color: #ef4444; color: #ef4444;">❌ Not Selected</button>`;
         } else if (app.status === 'INTERVIEW_COMPLETED' || app.interview?.status === 'INTERVIEW_COMPLETED') {
             // Interview completed successfully
             actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
@@ -2711,6 +2717,10 @@ function renderApplicationRows(applications, tableBody) {
             actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
         } else if (app.status === 'PAYMENT_SUCCESS') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.id}')">📅 View Interview Details</button>`;
+        } else if (app.status === 'SELECTED') {
+            actionButton = `<button class="btn btn-success btn-sm" disabled style="background: linear-gradient(135deg, #10b981, #059669);">🎉 Selected!</button>`;
+        } else if (app.status === 'INTERVIEW_REJECTED') {
+            actionButton = `<button class="btn btn-outline btn-sm" disabled style="border-color: #ef4444; color: #ef4444;">❌ Not Selected</button>`;
         } else if (app.status === 'INTERVIEW_COMPLETED') {
             actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else if (app.status === 'CANDIDATE_NO_SHOW' || app.status === 'HR_NO_SHOW') {

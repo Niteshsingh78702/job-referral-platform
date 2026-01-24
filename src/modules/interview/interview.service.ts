@@ -737,8 +737,8 @@ export class InterviewService {
 
         // Map outcome to application status
         const applicationStatusMap: Record<string, string> = {
-            'SELECTED': 'INTERVIEW_COMPLETED',  // or could add SELECTED to ApplicationStatus enum
-            'NOT_SELECTED': 'REJECTED',
+            'SELECTED': 'SELECTED',  // Candidate selected after interview
+            'NOT_SELECTED': 'INTERVIEW_REJECTED',  // Candidate not selected after interview
             'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW',
         };
 

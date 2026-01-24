@@ -2516,7 +2516,7 @@ async function loadApplications() {
     // Render applications using div structure (matching HTML)
     tableBody.innerHTML = applications.map(app => {
         const initial = (app.company || 'U').charAt(0);
-        const statusLabel = getStatusLabel(app.status);
+        const statusLabel = getStatusLabel(app.status, app);
         const statusClass = getStatusClass(app.status);
         const appliedDate = new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -2638,7 +2638,23 @@ async function loadApplications() {
     console.log('✅ Applications loaded:', applications.length);
 }
 
-function getStatusLabel(status) {
+function getStatusLabel(status, app = null) {
+    // For APPLIED status, check if test was actually passed
+    if (status === 'APPLIED' && app) {
+        const testPassed = !!(
+            app.testPassedAt ||
+            app.testSession?.isPassed === true ||
+            (app.testSession?.score && app.testSession.score >= 70) ||
+            (app.testScore && app.testScore >= 70)
+        );
+
+        if (testPassed) {
+            return 'Test Passed - Waiting for HR';
+        } else {
+            return 'Test Required';  // Test not taken or not passed
+        }
+    }
+
     const labels = {
         'TEST_PENDING': 'Test Required',
         'TEST_REQUIRED': 'Test Required',
@@ -2647,11 +2663,13 @@ function getStatusLabel(status) {
         'TEST_FAILED': 'Test Failed',
         'REFERRAL_PENDING': 'Pending Referral',
         'REFERRED': 'Referred',
-        'APPLIED': 'Test Passed - Waiting for HR',
+        'APPLIED': 'Application Submitted',  // Default for APPLIED without app context
         'INTERVIEW_CONFIRMED': '📅 Interview Confirmed - Pay to Unlock',
         'PAYMENT_PENDING': '⏳ Payment Processing',
         'PAYMENT_SUCCESS': '✅ Paid - View Details',
         'INTERVIEW_COMPLETED': '✅ Interview Completed',
+        'SELECTED': '🎉 Selected!',
+        'INTERVIEW_REJECTED': '❌ Not Selected',
         'CANDIDATE_NO_SHOW': '⚠️ Missed Interview',
         'HR_NO_SHOW': '⚠️ HR No-Show',
         'REJECTED': 'Rejected'
@@ -2758,7 +2776,7 @@ function filterApplications(status) {
 function renderApplicationRows(applications, tableBody) {
     tableBody.innerHTML = applications.map(app => {
         const initial = (app.company || 'U').charAt(0);
-        const statusLabel = getStatusLabel(app.status);
+        const statusLabel = getStatusLabel(app.status, app);
         const statusClass = getStatusClass(app.status);
         const appliedDate = new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const hasNote = applicationNotes[app.id] ? '📝' : '';

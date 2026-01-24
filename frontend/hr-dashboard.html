@@ -2325,29 +2325,53 @@
         }
 
         // Resume download function - handles Cloudinary URLs properly
-        function downloadResume(url, candidateName) {
+        async function downloadResume(url, candidateName) {
             if (!url) {
                 showToast('No resume URL available', 'error');
                 return;
             }
 
-            // For Cloudinary URLs, add fl_attachment to force download as PDF
-            let downloadUrl = url;
-            if (url.includes('cloudinary.com')) {
-                // Insert fl_attachment flag before the file path
-                // Cloudinary URL format: .../raw/upload/v123456/folder/file.pdf
-                // We need: .../raw/upload/fl_attachment/v123456/folder/file.pdf
-                downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
-            }
+            try {
+                // Show loading indicator
+                showToast('Downloading resume...', 'info');
 
-            // Open in new tab - browser will download due to fl_attachment flag
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.target = '_blank';
-            link.download = `${candidateName || 'resume'}_resume.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                // For Cloudinary URLs, add fl_attachment to force download
+                let downloadUrl = url;
+                if (url.includes('cloudinary.com')) {
+                    downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
+                }
+
+                // Fetch the file as blob to ensure proper download
+                const response = await fetch(downloadUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch resume');
+                }
+
+                const blob = await response.blob();
+
+                // Determine the file extension from URL or default to pdf
+                const urlParts = url.split('.');
+                const extension = urlParts[urlParts.length - 1].split('?')[0] || 'pdf';
+
+                // Create blob URL and trigger download
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = `${candidateName || 'resume'}_resume.${extension}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Clean up blob URL
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+
+                showToast('Resume downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Download error:', error);
+                // Fallback: open in new tab
+                window.open(url, '_blank');
+                showToast('Opening resume in new tab', 'info');
+            }
         }
 
         // Initialize

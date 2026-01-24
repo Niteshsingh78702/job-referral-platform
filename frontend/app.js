@@ -104,28 +104,35 @@ async function fetchCandidateProfile() {
             const result = await response.json();
             const profile = result.data || result;
 
-            // Extract skills from CandidateSkill array
-            const skills = (profile.CandidateSkill || []).map(s => s.name);
+            // Extract skills from CandidateSkill array with safety check
+            const skills = (profile.CandidateSkill || []).map(s => s?.name).filter(Boolean);
 
-            // Merge profile data with existing user data
+            // Safely extract resume filename
+            let resumeData = state.user?.resume;
+            if (profile.resumeUrl && typeof profile.resumeUrl === 'string') {
+                const parts = profile.resumeUrl.split('/');
+                resumeData = { filename: parts[parts.length - 1] || profile.resumeUrl };
+            }
+
+            // Merge profile data with existing user data (with safety checks)
             const profileData = {
                 ...state.user,
-                firstName: profile.firstName || state.user.firstName,
-                lastName: profile.lastName || state.user.lastName,
-                phone: profile.User?.phone || profile.phone || state.user.phone,
-                linkedIn: profile.linkedIn || state.user.linkedIn,
-                experience: profile.totalExperience || profile.experience || state.user.experience,
-                skills: skills.length > 0 ? skills : state.user.skills,
-                preferredLocations: profile.preferredLocations || state.user.preferredLocations,
-                preferredLocation: profile.preferredLocation || state.user.preferredLocation,
-                resume: profile.resumeUrl ? { filename: profile.resumeUrl.split('/').pop() } : state.user.resume,
-                resumeUrl: profile.resumeUrl || state.user.resumeUrl
+                firstName: profile.firstName || state.user?.firstName,
+                lastName: profile.lastName || state.user?.lastName,
+                phone: profile.User?.phone || profile.phone || state.user?.phone,
+                linkedIn: profile.linkedIn || state.user?.linkedIn,
+                experience: profile.totalExperience || profile.experience || state.user?.experience,
+                skills: skills.length > 0 ? skills : (state.user?.skills || []),
+                preferredLocations: profile.preferredLocations || state.user?.preferredLocations || [],
+                preferredLocation: profile.preferredLocation || state.user?.preferredLocation,
+                resume: resumeData,
+                resumeUrl: profile.resumeUrl || state.user?.resumeUrl
             };
 
             state.user = profileData;
             localStorage.setItem('user', JSON.stringify(state.user));
 
-            // Update UI
+            // Update UI silently (no toasts)
             updateDashboard();
             updateProfileCompletion();
         }

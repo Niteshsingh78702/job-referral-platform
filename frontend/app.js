@@ -2481,22 +2481,33 @@ async function loadApplications() {
         );
 
         // Determine the correct action button based on application state
-        if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
+        // CRITICAL: Check for payment success FIRST before any other status checks
+        // Also check paidApplicationIds in localStorage for persistence across API refreshes
+        const paidAppIds = JSON.parse(localStorage.getItem('paidApplicationIds') || '[]');
+        const isAppPaid = paidAppIds.includes(app.id);
+
+        const interviewPaymentDone = isAppPaid ||
+            app.interview?.paymentStatus === 'SUCCESS' ||
+            app.interview?.status === 'PAYMENT_SUCCESS' ||
+            app.Payment?.status === 'SUCCESS' ||
+            app.payment?.status === 'SUCCESS';
+
+        if (interviewPaymentDone || app.status === 'PAYMENT_SUCCESS') {
+            // Payment successful - disable button and show waiting for HR to schedule
+            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #6366f1, #4f46e5);">✅ Paid - Waiting for HR to Schedule</button>`;
+        } else if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">Take Test</button>`;
         } else if (app.status === 'TEST_IN_PROGRESS') {
             actionButton = `<button class="btn btn-warning btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">⏳ Resume Test</button>`;
         } else if (app.status === 'TEST_FAILED') {
             actionButton = `<button class="btn btn-outline btn-sm" disabled>❌ Test Failed</button>`;
-        } else if (app.status === 'INTERVIEW_CONFIRMED') {
+        } else if (app.status === 'INTERVIEW_CONFIRMED' || app.interview?.status === 'INTERVIEW_CONFIRMED') {
             // HR confirmed interview details - candidate pays to unlock
             actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
         } else if (app.status === 'PAYMENT_PENDING') {
             // Payment in progress
             actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
-        } else if (app.status === 'PAYMENT_SUCCESS') {
-            // Payment successful - show interview details
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview?.id || app.id}')">📅 View Interview Details</button>`;
-        } else if (app.status === 'INTERVIEW_COMPLETED') {
+        } else if (app.status === 'INTERVIEW_COMPLETED' || app.interview?.status === 'INTERVIEW_COMPLETED') {
             // Interview completed successfully
             actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else if (app.status === 'CANDIDATE_NO_SHOW' || app.status === 'HR_NO_SHOW') {
@@ -2511,14 +2522,6 @@ async function loadApplications() {
         } else if (app.status === 'APPLIED' && !testPassed && !app.testSession) {
             // Just applied, no test taken yet (shouldn't happen normally)
             actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
-        } else if (app.interview?.status === 'INTERVIEW_CONFIRMED') {
-            // Interview confirmed via interview object
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
-        } else if (app.interview?.status === 'PAYMENT_SUCCESS') {
-            // Payment done via interview object
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview.id}')">📅 View Interview Details</button>`;
-        } else if (app.interview?.status === 'INTERVIEW_COMPLETED') {
-            actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else {
             // Default fallback
             actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
@@ -3910,6 +3913,13 @@ async function payForInterview(applicationId) {
 async function simulateInterviewPaymentSuccess(applicationId) {
     showToast('success', '✅ Payment successful! Interview details unlocked.');
 
+    // CRITICAL: Store paid application ID separately so it persists across API refreshes
+    const paidAppIds = JSON.parse(localStorage.getItem('paidApplicationIds') || '[]');
+    if (!paidAppIds.includes(applicationId)) {
+        paidAppIds.push(applicationId);
+        localStorage.setItem('paidApplicationIds', JSON.stringify(paidAppIds));
+    }
+
     // Update local application status
     const apps = JSON.parse(localStorage.getItem('demoApplications') || '[]');
     const appIndex = apps.findIndex(a => a.id === applicationId);
@@ -3941,10 +3951,9 @@ async function simulateInterviewPaymentSuccess(applicationId) {
     // Force reload applications from server
     await loadApplications();
 
-    // Small delay then refresh to show updated data
-    setTimeout(() => {
-        location.reload();
-    }, 1500);
+    // Stay on applications page and show updated UI (no page reload needed)
+    // The loadApplications call above already updated the UI
+    console.log('✅ Payment successful - applications refreshed');
 }
 
 /**
@@ -3979,13 +3988,9 @@ function openRazorpayForInterview(orderData, applicationId) {
                 if (data.success) {
                     showToast('success', '✅ Payment successful! Interview details unlocked.');
 
-                    // Force refresh applications list
+                    // Force refresh applications list and stay on page
                     await loadApplications();
-
-                    // Reload page after short delay to ensure fresh data from server
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+                    console.log('✅ Payment successful - applications refreshed');
                 } else {
                     showToast('error', data.message || 'Payment verification failed.');
                 }

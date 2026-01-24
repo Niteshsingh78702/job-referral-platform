@@ -10,6 +10,7 @@ Object.defineProperty(exports, "CandidateService", {
 });
 const _common = require("@nestjs/common");
 const _prismaservice = require("../../prisma/prisma.service");
+const _uuid = require("uuid");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -63,17 +64,45 @@ let CandidateService = class CandidateService {
         if (!candidate) {
             throw new _common.NotFoundException('Candidate profile not found');
         }
-        return this.prisma.candidate.update({
-            where: {
-                userId
-            },
-            data: dto,
-            include: {
-                CandidateSkill: true,
-                Experience: true,
-                Education: true
+        // Extract phone from DTO (phone is stored in User table)
+        const { phone, linkedIn, ...candidateData } = dto;
+        // Use transaction to update both User and Candidate
+        const result = await this.prisma.$transaction(async (tx)=>{
+            // Update phone in User table if provided
+            if (phone !== undefined) {
+                await tx.user.update({
+                    where: {
+                        id: userId
+                    },
+                    data: {
+                        phone
+                    }
+                });
             }
+            // Update candidate data (including linkedIn)
+            const updatedCandidate = await tx.candidate.update({
+                where: {
+                    userId
+                },
+                data: {
+                    ...candidateData,
+                    linkedIn
+                },
+                include: {
+                    CandidateSkill: true,
+                    Experience: true,
+                    Education: true,
+                    User: {
+                        select: {
+                            email: true,
+                            phone: true
+                        }
+                    }
+                }
+            });
+            return updatedCandidate;
         });
+        return result;
     }
     // Upload resume
     async updateResume(userId, resumeUrl) {
@@ -139,22 +168,41 @@ let CandidateService = class CandidateService {
     }
     // Add skill
     async addSkill(userId, dto) {
-        const candidate = await this.prisma.candidate.findUnique({
-            where: {
-                userId
+        console.log(`Adding skill for user ${userId}:`, dto);
+        try {
+            const candidate = await this.prisma.candidate.findUnique({
+                where: {
+                    userId
+                }
+            });
+            if (!candidate) {
+                console.error(`Candidate profile not found for user ${userId}`);
+                throw new _common.NotFoundException('Candidate profile not found');
             }
-        });
-        if (!candidate) {
-            throw new _common.NotFoundException('Candidate profile not found');
+            // Use upsert to handle duplicates gracefully
+            return await this.prisma.candidateSkill.upsert({
+                where: {
+                    candidateId_name: {
+                        candidateId: candidate.id,
+                        name: dto.name
+                    }
+                },
+                update: {
+                    level: dto.level || 1,
+                    yearsOfExp: dto.yearsOfExp
+                },
+                create: {
+                    id: (0, _uuid.v4)(),
+                    candidateId: candidate.id,
+                    name: dto.name,
+                    level: dto.level || 1,
+                    yearsOfExp: dto.yearsOfExp
+                }
+            });
+        } catch (error) {
+            console.error('Error adding skill:', error);
+            throw error;
         }
-        return this.prisma.candidateSkill.create({
-            data: {
-                candidateId: candidate.id,
-                name: dto.name,
-                level: dto.level || 1,
-                yearsOfExp: dto.yearsOfExp
-            }
-        });
     }
     // Remove skill
     async removeSkill(userId, skillId) {

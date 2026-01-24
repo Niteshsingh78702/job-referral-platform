@@ -918,11 +918,45 @@ let HRService = class HRService {
                             headline: true,
                             totalExperience: true,
                             currentCompany: true,
+                            resumeUrl: true,
+                            city: true,
+                            state: true,
+                            country: true,
+                            User: {
+                                select: {
+                                    email: true,
+                                    phone: true
+                                }
+                            },
                             CandidateSkill: {
                                 select: {
                                     name: true,
                                     level: true
                                 }
+                            },
+                            Experience: {
+                                select: {
+                                    role: true,
+                                    company: true,
+                                    startDate: true,
+                                    endDate: true,
+                                    isCurrent: true
+                                },
+                                orderBy: {
+                                    startDate: 'desc'
+                                },
+                                take: 3
+                            },
+                            Education: {
+                                select: {
+                                    degree: true,
+                                    institution: true,
+                                    endYear: true
+                                },
+                                orderBy: {
+                                    endYear: 'desc'
+                                },
+                                take: 2
                             }
                         }
                     },
@@ -958,6 +992,48 @@ let HRService = class HRService {
                 total: validApplications.length,
                 totalPages: Math.ceil(validApplications.length / limit)
             }
+        };
+    }
+    // Reject an application
+    async rejectApplication(userId, applicationId, reason) {
+        // First verify the HR has access to this application
+        const hr = await this.prisma.hR.findUnique({
+            where: {
+                userId
+            }
+        });
+        if (!hr) {
+            throw new _common.NotFoundException('HR profile not found');
+        }
+        // Find the application and verify it belongs to one of HR's jobs
+        const application = await this.prisma.jobApplication.findUnique({
+            where: {
+                id: applicationId
+            },
+            include: {
+                Job: true
+            }
+        });
+        if (!application) {
+            throw new _common.NotFoundException('Application not found');
+        }
+        if (application.Job.hrId !== hr.id) {
+            throw new _common.ForbiddenException('You do not have access to this application');
+        }
+        // Update the application status to REJECTED
+        const updatedApplication = await this.prisma.jobApplication.update({
+            where: {
+                id: applicationId
+            },
+            data: {
+                status: 'REJECTED',
+                updatedAt: new Date()
+            }
+        });
+        return {
+            message: 'Application rejected successfully',
+            applicationId: updatedApplication.id,
+            status: 'REJECTED'
         };
     }
     constructor(prisma, tokenService){

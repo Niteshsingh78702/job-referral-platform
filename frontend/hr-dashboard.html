@@ -1514,7 +1514,7 @@
                         actionBtn = `<span class="badge badge-closed">❌ Test Failed</span>`;
                     } else if (hasInterview && interview.status === 'INTERVIEW_CONFIRMED') {
                         actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
-                    } else if (hasInterview && interview.status === 'PAYMENT_SUCCESS') {
+                    } else if (hasInterview && (interview.status === 'PAYMENT_SUCCESS' || app.status === 'PAYMENT_SUCCESS')) {
                         // Payment received - show interview outcome options
                         actionBtn = `
                             <div style="display: flex; gap: 4px; flex-wrap: wrap;">

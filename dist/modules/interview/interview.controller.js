@@ -83,6 +83,11 @@ let InterviewController = class InterviewController {
      */ async markCompleted(adminUserId, interviewId) {
         return this.interviewService.markCompleted(interviewId, adminUserId);
     }
+    /**
+     * HR marks interview outcome (Selected/Not Selected/No Show)
+     */ async markInterviewOutcome(userId, interviewId, dto) {
+        return this.interviewService.markInterviewOutcome(userId, interviewId, dto);
+    }
     constructor(interviewService){
         this.interviewService = interviewService;
     }
@@ -193,6 +198,22 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], InterviewController.prototype, "markCompleted", null);
+_ts_decorate([
+    (0, _common.Post)(':interviewId/outcome'),
+    (0, _common.UseGuards)(_guards.RolesGuard),
+    (0, _decorators.Roles)(_constants.UserRole.HR),
+    (0, _common.HttpCode)(_common.HttpStatus.OK),
+    _ts_param(0, (0, _decorators.CurrentUser)('sub')),
+    _ts_param(1, (0, _common.Param)('interviewId')),
+    _ts_param(2, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        Object
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], InterviewController.prototype, "markInterviewOutcome", null);
 InterviewController = _ts_decorate([
     (0, _common.Controller)('interviews'),
     _ts_metadata("design:type", Function),

@@ -129,6 +129,81 @@ export class InterviewService {
     }
 
     /**
+     * HR schedules interview after candidate has paid.
+     * Updates interview with date, time, meeting link, and details.
+     */
+    async scheduleInterview(
+        userId: string,
+        interviewId: string,
+        dto: { scheduledDate: string; scheduledTime: string; interviewLink?: string; callDetails?: string },
+    ) {
+        // Get HR record
+        const hr = await this.prisma.hR.findUnique({
+            where: { userId },
+        });
+
+        if (!hr) {
+            throw new NotFoundException('HR profile not found');
+        }
+
+        // Get interview and verify ownership
+        const interview = await this.prisma.interview.findUnique({
+            where: { id: interviewId },
+            include: {
+                JobApplication: {
+                    include: {
+                        Job: true,
+                        Candidate: {
+                            include: {
+                                User: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!interview) {
+            throw new NotFoundException('Interview not found');
+        }
+
+        // Verify HR owns this job
+        if (interview.JobApplication.Job.hrId !== hr.id) {
+            throw new ForbiddenException('You do not have permission to schedule this interview');
+        }
+
+        // Verify payment was successful
+        if (interview.paymentStatus !== 'SUCCESS' && interview.status !== 'PAYMENT_SUCCESS') {
+            throw new BadRequestException('Cannot schedule interview - payment not received');
+        }
+
+        // Update interview with schedule details
+        const updatedInterview = await this.prisma.interview.update({
+            where: { id: interviewId },
+            data: {
+                scheduledDate: new Date(dto.scheduledDate),
+                scheduledTime: dto.scheduledTime,
+                interviewLink: dto.interviewLink || null,
+                callDetails: dto.callDetails || null,
+                scheduledAt: new Date(),
+                updatedAt: new Date(),
+            },
+        });
+
+        return {
+            success: true,
+            message: 'Interview scheduled successfully. Candidate has been notified.',
+            interview: {
+                id: updatedInterview.id,
+                scheduledDate: updatedInterview.scheduledDate,
+                scheduledTime: updatedInterview.scheduledTime,
+                interviewLink: updatedInterview.interviewLink,
+                callDetails: updatedInterview.callDetails,
+            },
+        };
+    }
+
+    /**
      * Process successful payment - called by payment service.
      * Transitions interview from INTERVIEW_CONFIRMED to PAYMENT_SUCCESS.
      * Now candidate can see interview details.

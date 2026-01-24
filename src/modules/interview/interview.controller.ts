@@ -40,6 +40,22 @@ export class InterviewController {
     }
 
     /**
+     * HR schedules interview after candidate has paid
+     * Sets date, time, meeting link, and additional details
+     */
+    @Post('schedule/:interviewId')
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.HR)
+    @HttpCode(HttpStatus.OK)
+    async scheduleInterview(
+        @CurrentUser('sub') userId: string,
+        @Param('interviewId') interviewId: string,
+        @Body() dto: { scheduledDate: string; scheduledTime: string; interviewLink?: string; callDetails?: string },
+    ) {
+        return this.interviewService.scheduleInterview(userId, interviewId, dto);
+    }
+
+    /**
      * Get all interviews for HR's jobs
      */
     @Get('hr')

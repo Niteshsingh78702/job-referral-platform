@@ -39,6 +39,12 @@ let InterviewController = class InterviewController {
         return this.interviewService.confirmInterview(userId, applicationId, dto);
     }
     /**
+     * HR schedules interview after candidate has paid
+     * Sets date, time, meeting link, and additional details
+     */ async scheduleInterview(userId, interviewId, dto) {
+        return this.interviewService.scheduleInterview(userId, interviewId, dto);
+    }
+    /**
      * Get all interviews for HR's jobs
      */ async getHRInterviews(userId, status, jobId) {
         return this.interviewService.getHRInterviews(userId, {
@@ -108,6 +114,22 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], InterviewController.prototype, "confirmInterview", null);
+_ts_decorate([
+    (0, _common.Post)('schedule/:interviewId'),
+    (0, _common.UseGuards)(_guards.RolesGuard),
+    (0, _decorators.Roles)(_constants.UserRole.HR),
+    (0, _common.HttpCode)(_common.HttpStatus.OK),
+    _ts_param(0, (0, _decorators.CurrentUser)('sub')),
+    _ts_param(1, (0, _common.Param)('interviewId')),
+    _ts_param(2, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String,
+        Object
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], InterviewController.prototype, "scheduleInterview", null);
 _ts_decorate([
     (0, _common.Get)('hr'),
     (0, _common.UseGuards)(_guards.RolesGuard),

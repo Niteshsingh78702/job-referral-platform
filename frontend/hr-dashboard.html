@@ -1515,14 +1515,31 @@
                     } else if (hasInterview && interview.status === 'INTERVIEW_CONFIRMED' && interview.paymentStatus !== 'SUCCESS') {
                         actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
                     } else if (hasInterview && (interview.status === 'PAYMENT_SUCCESS' || interview.paymentStatus === 'SUCCESS' || app.status === 'PAYMENT_SUCCESS')) {
-                        // Payment received - show interview outcome options
-                        actionBtn = `
-                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                <button class="btn btn-success btn-sm" onclick="markInterviewOutcome('${interview.id}', '${app.id}', 'SELECTED')" style="background: linear-gradient(135deg, #10b981, #059669); padding: 4px 8px; font-size: 11px;">✅ Selected</button>
-                                <button class="btn btn-warning btn-sm" onclick="markInterviewOutcome('${interview.id}', '${app.id}', 'NOT_SELECTED')" style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 4px 8px; font-size: 11px;">❌ Not Selected</button>
-                                <button class="btn btn-danger btn-sm" onclick="markInterviewOutcome('${interview.id}', '${app.id}', 'CANDIDATE_NO_SHOW')" style="background: linear-gradient(135deg, #ef4444, #dc2626); padding: 4px 8px; font-size: 11px;">🚫 No Show</button>
-                            </div>
-                        `;
+                        // Payment received - check if interview is scheduled
+                        const isScheduled = interview.scheduledDate || interview.scheduledAt;
+
+                        if (!isScheduled) {
+                            // Payment done but NOT scheduled yet - show Schedule Interview button
+                            actionBtn = `
+                                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                    <button class="btn btn-primary btn-sm" onclick="openScheduleModal('${interview.id}')" style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 4px 10px; font-size: 11px;">📅 Schedule Interview</button>
+                                </div>
+                            `;
+                        } else {
+                            // Interview is scheduled - show interview date and outcome options
+                            const schedDate = interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+                            const schedTime = interview.scheduledTime || '';
+                            actionBtn = `
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="font-size: 10px; color: var(--primary); font-weight: 500;">📅 ${schedDate} ${schedTime}</div>
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                        <button class="btn btn-success btn-sm" onclick="markInterviewOutcome('${interview.id}', '${app.id}', 'SELECTED')" style="background: linear-gradient(135deg, #10b981, #059669); padding: 4px 8px; font-size: 11px;">✅ Selected</button>
+                                        <button class="btn btn-warning btn-sm" onclick="markInterviewOutcome('${interview.id}', '${app.id}', 'NOT_SELECTED')" style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 4px 8px; font-size: 11px;">❌ Not Selected</button>
+                                        <button class="btn btn-danger btn-sm" onclick="markInterviewOutcome('${interview.id}', '${app.id}', 'CANDIDATE_NO_SHOW')" style="background: linear-gradient(135deg, #ef4444, #dc2626); padding: 4px 8px; font-size: 11px;">🚫 No Show</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
                     } else if (hasInterview && interview.status === 'INTERVIEW_COMPLETED') {
                         actionBtn = `<span class="badge badge-active">✅ Completed</span>`;
                     } else if (hasInterview && (interview.status === 'SELECTED' || app.status === 'SELECTED')) {

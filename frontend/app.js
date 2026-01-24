@@ -2490,8 +2490,24 @@ async function loadApplications() {
             app.payment?.status === 'SUCCESS';
 
         if (interviewPaymentDone || app.status === 'PAYMENT_SUCCESS') {
-            // Payment successful - disable button and show waiting for HR to schedule
-            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #6366f1, #4f46e5);">✅ Paid - Waiting for HR to Schedule</button>`;
+            // Payment successful - check if interview is scheduled
+            const interview = app.interview || app.Interview;
+            const isScheduled = interview?.scheduledDate || interview?.scheduledAt;
+
+            if (isScheduled) {
+                // Interview is scheduled - show date/time and View Details button
+                const schedDate = interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+                const schedTime = interview.scheduledTime || '';
+                actionButton = `
+                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                        <span style="font-size: 11px; color: var(--primary); font-weight: 500;">📅 ${schedDate} ${schedTime}</span>
+                        <button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">View Interview Details</button>
+                    </div>
+                `;
+            } else {
+                // Paid but not scheduled yet
+                actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #6366f1, #4f46e5);">✅ Paid - Waiting for HR to Schedule</button>`;
+            }
         } else if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">Take Test</button>`;
         } else if (app.status === 'TEST_IN_PROGRESS') {
@@ -3914,6 +3930,80 @@ async function payForInterview(applicationId) {
         console.error('Payment error:', error);
         showToast('error', 'Payment service is currently unavailable. Please try again later.');
     }
+}
+
+/**
+ * View interview details after payment - shows scheduled date, time, meeting link
+ */
+async function viewInterviewDetails(applicationId) {
+    // Find the application in state
+    const app = state.applications?.find(a => a.id === applicationId);
+    if (!app) {
+        showToast('error', 'Application not found');
+        return;
+    }
+
+    const interview = app.interview || app.Interview;
+    if (!interview) {
+        showToast('error', 'Interview details not found');
+        return;
+    }
+
+    const schedDate = interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Not set';
+    const schedTime = interview.scheduledTime || 'Not set';
+    const meetingLink = interview.interviewLink || interview.callDetails || 'Will be shared soon';
+    const mode = interview.mode || 'VIDEO';
+
+    // Create modal content
+    const content = `
+        <div style="padding: 16px;">
+            <h3 style="color: var(--primary); margin-bottom: 16px;">📅 Interview Scheduled!</h3>
+            
+            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                <div style="display: grid; gap: 12px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim);">Date</div>
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text);">📆 ${schedDate}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim);">Time</div>
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text);">⏰ ${schedTime}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim);">Mode</div>
+                        <div style="font-size: 16px; font-weight: 600; color: var(--text);">${mode === 'VIDEO' ? '📹 Video Call' : mode === 'PHONE' ? '📞 Phone Call' : '🏢 In-Person'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim);">Meeting Link / Details</div>
+                        <div style="font-size: 14px; color: var(--primary); word-break: break-all;">
+                            ${meetingLink.startsWith('http') ? '<a href="' + meetingLink + '" target="_blank" style="color: var(--primary);">' + meetingLink + '</a>' : meetingLink}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: rgba(16, 185, 129, 0.1); border-radius: 8px; padding: 12px; text-align: center;">
+                <p style="color: var(--success); font-size: 14px; margin: 0;">✅ Payment Complete - Interview Details Unlocked</p>
+            </div>
+        </div>
+    `;
+
+    // Show in a modal (using existing showModal or create alert)
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Interview Details</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="modal-body">${content}</div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">Got It!</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 }
 
 /**

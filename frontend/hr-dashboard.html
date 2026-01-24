@@ -1513,6 +1513,17 @@
                         actionBtn = `<span class="badge badge-closed">❌ Test Failed</span>`;
                     } else if (hasInterview && interview.status === 'INTERVIEW_CONFIRMED' && interview.paymentStatus !== 'SUCCESS') {
                         actionBtn = `<span class="badge badge-pending">⏳ Awaiting Payment</span>`;
+                    } else if (hasInterview && (app.status === 'SELECTED' || interview.status === 'SELECTED')) {
+                        // SELECTED takes priority - show final badge, hide buttons
+                        actionBtn = `<span class="badge badge-active" style="background: linear-gradient(135deg, #10b981, #059669);">🎉 Selected</span>`;
+                    } else if (hasInterview && (app.status === 'INTERVIEW_REJECTED' || interview.status === 'NOT_SELECTED')) {
+                        // NOT SELECTED takes priority - show final badge, hide buttons
+                        actionBtn = `<span class="badge badge-closed" style="background: linear-gradient(135deg, #ef4444, #dc2626);">❌ Not Selected</span>`;
+                    } else if (hasInterview && (app.status === 'CANDIDATE_NO_SHOW' || interview.status === 'CANDIDATE_NO_SHOW')) {
+                        // NO SHOW takes priority - show final badge, hide buttons
+                        actionBtn = `<span class="badge badge-closed" style="background: linear-gradient(135deg, #6b7280, #4b5563);">🚫 No Show</span>`;
+                    } else if (hasInterview && interview.status === 'INTERVIEW_COMPLETED') {
+                        actionBtn = `<span class="badge badge-active">✅ Completed</span>`;
                     } else if (hasInterview && (interview.status === 'PAYMENT_SUCCESS' || interview.paymentStatus === 'SUCCESS' || app.status === 'PAYMENT_SUCCESS')) {
                         // Payment received - check if interview is scheduled
                         const isScheduled = interview.scheduledDate || interview.scheduledAt;
@@ -1539,14 +1550,6 @@
                                 </div>
                             `;
                         }
-                    } else if (hasInterview && interview.status === 'INTERVIEW_COMPLETED') {
-                        actionBtn = `<span class="badge badge-active">✅ Completed</span>`;
-                    } else if (hasInterview && (interview.status === 'SELECTED' || app.status === 'SELECTED')) {
-                        actionBtn = `<span class="badge badge-active" style="background: linear-gradient(135deg, #10b981, #059669);">🎉 Selected</span>`;
-                    } else if (hasInterview && (interview.status === 'NOT_SELECTED' || app.status === 'INTERVIEW_REJECTED')) {
-                        actionBtn = `<span class="badge badge-closed" style="background: linear-gradient(135deg, #ef4444, #dc2626);">❌ Not Selected</span>`;
-                    } else if (hasInterview && interview.status === 'CANDIDATE_NO_SHOW') {
-                        actionBtn = `<span class="badge badge-closed" style="background: linear-gradient(135deg, #6b7280, #4b5563);">🚫 No Show</span>`;
                     } else if (!testPassed && !hasInterview) {
                         actionBtn = `<span class="badge badge-pending">⏳ Awaiting Test</span>`;
                     }

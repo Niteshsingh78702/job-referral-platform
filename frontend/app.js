@@ -2489,7 +2489,20 @@ async function loadApplications() {
             app.Payment?.status === 'SUCCESS' ||
             app.payment?.status === 'SUCCESS';
 
-        if (interviewPaymentDone || app.status === 'PAYMENT_SUCCESS') {
+        // Check for final outcome statuses FIRST - these take priority over payment status
+        if (app.status === 'SELECTED') {
+            // Candidate was selected after interview!
+            actionButton = `<button class="btn btn-success btn-sm" disabled style="background: linear-gradient(135deg, #10b981, #059669);">🎉 Selected!</button>`;
+        } else if (app.status === 'INTERVIEW_REJECTED') {
+            // Candidate was not selected after interview
+            actionButton = `<button class="btn btn-outline btn-sm" disabled style="border-color: #ef4444; color: #ef4444;">❌ Not Selected</button>`;
+        } else if (app.status === 'CANDIDATE_NO_SHOW') {
+            // Candidate no-show
+            actionButton = `<button class="btn btn-danger btn-sm" disabled>🚫 Missed Interview</button>`;
+        } else if (app.status === 'HR_NO_SHOW') {
+            // HR no-show
+            actionButton = `<button class="btn btn-warning btn-sm" disabled>⚠️ HR No-Show</button>`;
+        } else if (interviewPaymentDone || app.status === 'PAYMENT_SUCCESS') {
             // Payment successful - check if interview is scheduled
             const interview = app.interview || app.Interview;
             const isScheduled = interview?.scheduledDate || interview?.scheduledAt;
@@ -2715,17 +2728,17 @@ function renderApplicationRows(applications, tableBody) {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
         } else if (app.status === 'PAYMENT_PENDING') {
             actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
-        } else if (app.status === 'PAYMENT_SUCCESS') {
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.id}')">📅 View Interview Details</button>`;
         } else if (app.status === 'SELECTED') {
             actionButton = `<button class="btn btn-success btn-sm" disabled style="background: linear-gradient(135deg, #10b981, #059669);">🎉 Selected!</button>`;
         } else if (app.status === 'INTERVIEW_REJECTED') {
             actionButton = `<button class="btn btn-outline btn-sm" disabled style="border-color: #ef4444; color: #ef4444;">❌ Not Selected</button>`;
-        } else if (app.status === 'INTERVIEW_COMPLETED') {
-            actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else if (app.status === 'CANDIDATE_NO_SHOW' || app.status === 'HR_NO_SHOW') {
             const noShowLabel = app.status === 'CANDIDATE_NO_SHOW' ? 'Missed Interview' : 'HR No-Show';
             actionButton = `<button class="btn btn-danger btn-sm" disabled>⚠️ ${noShowLabel}</button>`;
+        } else if (app.status === 'INTERVIEW_COMPLETED') {
+            actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
+        } else if (app.status === 'PAYMENT_SUCCESS') {
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.id}')">📅 View Interview Details</button>`;
         } else if (app.status === 'REJECTED') {
             actionButton = `<button class="btn btn-outline btn-sm" disabled>Application Rejected</button>`;
         } else if (app.status === 'APPLIED' && testPassed) {

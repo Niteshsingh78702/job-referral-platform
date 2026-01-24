@@ -3889,18 +3889,30 @@ async function payForInterview(applicationId) {
 
         const data = await response.json();
 
-        if (data.success && data.data.orderId) {
-            // Open Razorpay checkout
-            openRazorpayForInterview(data.data, applicationId);
+        if (data.success && data.data) {
+            // Check if test mode (Razorpay bypassed on backend)
+            if (data.data.testMode) {
+                console.log('TEST MODE: Payment completed on backend');
+                showToast('success', '✅ Payment successful! Interview details unlocked.');
+                await loadApplications();
+                return;
+            }
+
+            // Production mode - open Razorpay checkout
+            if (data.data.orderId) {
+                openRazorpayForInterview(data.data, applicationId);
+            } else {
+                showToast('error', 'Failed to create payment order. Please try again.');
+            }
         } else {
-            // For demo/testing - simulate successful payment
-            console.log('Payment API not available, simulating payment success');
-            await simulateInterviewPaymentSuccess(applicationId);
+            // Show actual error to user - do NOT simulate payment
+            const errorMessage = data.message || 'Payment service is currently unavailable. Please try again later.';
+            console.error('Payment order creation failed:', errorMessage);
+            showToast('error', errorMessage);
         }
     } catch (error) {
         console.error('Payment error:', error);
-        // For demo - simulate payment
-        await simulateInterviewPaymentSuccess(applicationId);
+        showToast('error', 'Payment service is currently unavailable. Please try again later.');
     }
 }
 

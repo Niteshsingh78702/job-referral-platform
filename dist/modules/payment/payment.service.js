@@ -556,7 +556,59 @@ let PaymentService = class PaymentService {
             };
         }
         const amount = 9900; // ₹99 in paise
-        // Create Razorpay order
+        // Check for test mode - bypasses Razorpay and directly creates successful payment
+        const testMode = this.configService.get('PAYMENT_TEST_MODE') === 'true';
+        if (testMode) {
+            // TEST MODE: Directly create successful payment and update interview
+            const paymentId = _crypto.randomUUID();
+            const testOrderId = `test_order_${Date.now()}`;
+            await this.prisma.$transaction(async (tx)=>{
+                // Create payment record as SUCCESS
+                await tx.payment.create({
+                    data: {
+                        id: paymentId,
+                        applicationId: application.id,
+                        razorpayOrderId: testOrderId,
+                        razorpayPaymentId: `test_pay_${Date.now()}`,
+                        amount: 99,
+                        currency: 'INR',
+                        status: _constants.PaymentStatus.SUCCESS,
+                        orderCreatedAt: new Date(),
+                        paidAt: new Date()
+                    }
+                });
+                // Update interview status
+                await tx.interview.update({
+                    where: {
+                        id: application.Interview.id
+                    },
+                    data: {
+                        status: 'PAYMENT_SUCCESS',
+                        paymentStatus: _constants.PaymentStatus.SUCCESS,
+                        paidAt: new Date()
+                    }
+                });
+                // Update application status
+                await tx.jobApplication.update({
+                    where: {
+                        id: application.id
+                    },
+                    data: {
+                        status: 'PAYMENT_SUCCESS',
+                        contactUnlockedAt: new Date()
+                    }
+                });
+            });
+            // Return test mode response - frontend will show success directly
+            return {
+                testMode: true,
+                success: true,
+                message: 'TEST MODE: Payment completed successfully',
+                orderId: testOrderId,
+                paymentId: paymentId
+            };
+        }
+        // PRODUCTION MODE: Create Razorpay order
         const razorpay = this.ensureRazorpay();
         const order = await razorpay.orders.create({
             amount,

@@ -893,6 +893,8 @@ export class HRService {
                         select: {
                             id: true,
                             status: true,
+                            paymentStatus: true,
+                            paidAt: true,
                             scheduledDate: true,
                             scheduledTime: true,
                             mode: true,

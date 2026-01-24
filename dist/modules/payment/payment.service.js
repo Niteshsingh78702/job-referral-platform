@@ -136,6 +136,7 @@ let PaymentService = class PaymentService {
         // Create payment record
         const payment = await this.prisma.payment.create({
             data: {
+                id: _crypto.randomUUID(),
                 applicationId: application.id,
                 razorpayOrderId: order.id,
                 amount: application.job.referralFee,
@@ -571,6 +572,7 @@ let PaymentService = class PaymentService {
         // Create payment record
         const payment = await this.prisma.payment.create({
             data: {
+                id: _crypto.randomUUID(),
                 applicationId: application.id,
                 razorpayOrderId: order.id,
                 amount: 99,

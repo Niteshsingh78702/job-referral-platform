@@ -762,15 +762,17 @@ let InterviewService = class InterviewService {
         if (interview.JobApplication.Job.hrId !== hr.id) {
             throw new _common.ForbiddenException('You do not have access to this interview');
         }
-        // Map outcome to status
+        // Map outcome to interview status (must be valid InterviewStatus enum values)
+        // SELECTED and NOT_SELECTED both mean the interview is completed
         const statusMap = {
-            'SELECTED': 'SELECTED',
-            'NOT_SELECTED': 'NOT_SELECTED',
+            'SELECTED': 'INTERVIEW_COMPLETED',
+            'NOT_SELECTED': 'INTERVIEW_COMPLETED',
             'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW'
         };
+        // Map outcome to application status
         const applicationStatusMap = {
-            'SELECTED': 'SELECTED',
-            'NOT_SELECTED': 'INTERVIEW_REJECTED',
+            'SELECTED': 'INTERVIEW_COMPLETED',
+            'NOT_SELECTED': 'REJECTED',
             'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW'
         };
         const newStatus = statusMap[dto.outcome] || 'INTERVIEW_COMPLETED';

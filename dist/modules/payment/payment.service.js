@@ -93,7 +93,7 @@ let PaymentService = class PaymentService {
         if (!application) {
             throw new _common.NotFoundException('Application not found');
         }
-        if (application.candidate.userId !== userId) {
+        if (application.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
         // Verify eligibility - now uses INTERVIEW_CONFIRMED for interview payments
@@ -101,16 +101,16 @@ let PaymentService = class PaymentService {
         if (application.status !== _constants.ApplicationStatus.APPLIED && application.status !== _constants.ApplicationStatus.INTERVIEW_CONFIRMED) {
             throw new _common.BadRequestException('Payment not available for this application status.');
         }
-        if (!application.Referral || application.referral.status !== _constants.ReferralStatus.CONFIRMED) {
+        if (!application.Referral || application.Referral.status !== _constants.ReferralStatus.CONFIRMED) {
             throw new _common.BadRequestException('Referral not confirmed');
         }
         // Check if already paid
-        const successfulPayment = application.payments.find((p)=>p.status === _constants.PaymentStatus.SUCCESS);
+        const successfulPayment = application.Payment.find((p)=>p.status === _constants.PaymentStatus.SUCCESS);
         if (successfulPayment) {
             throw new _common.BadRequestException('Payment already completed');
         }
         // Check for pending payment
-        const pendingPayment = application.payments.find((p)=>p.status === _constants.PaymentStatus.ORDER_CREATED || p.status === _constants.PaymentStatus.PENDING);
+        const pendingPayment = application.Payment.find((p)=>p.status === _constants.PaymentStatus.ORDER_CREATED || p.status === _constants.PaymentStatus.PENDING);
         if (pendingPayment && pendingPayment.razorpayOrderId) {
             // Return existing order
             return {
@@ -134,7 +134,7 @@ let PaymentService = class PaymentService {
             }
         });
         // Create payment record
-        const payment1 = await this.prisma.payment.create({
+        const payment = await this.prisma.payment.create({
             data: {
                 applicationId: application.id,
                 razorpayOrderId: order.id,
@@ -169,7 +169,7 @@ let PaymentService = class PaymentService {
                 userId,
                 action: _constants.AuditAction.PAYMENT_INITIATED,
                 entityType: 'Payment',
-                entityId: payment1.id,
+                entityId: payment.id,
                 metadata: {
                     orderId: order.id,
                     amount: application.job.referralFee
@@ -180,7 +180,7 @@ let PaymentService = class PaymentService {
             orderId: order.id,
             amount: application.job.referralFee,
             currency: 'INR',
-            paymentId: payment1.id,
+            paymentId: payment.id,
             keyId: this.configService.get('RAZORPAY_KEY_ID')
         };
     }
@@ -192,7 +192,7 @@ let PaymentService = class PaymentService {
             throw new _common.BadRequestException('Invalid payment signature');
         }
         // Get payment
-        const payment1 = await this.prisma.payment.findUnique({
+        const payment = await this.prisma.payment.findUnique({
             where: {
                 razorpayOrderId: dto.razorpayOrderId
             },
@@ -204,13 +204,13 @@ let PaymentService = class PaymentService {
                 }
             }
         });
-        if (!payment1) {
+        if (!payment) {
             throw new _common.NotFoundException('Payment not found');
         }
-        if (payment1.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
-        if (payment1.status === _constants.PaymentStatus.SUCCESS) {
+        if (payment.status === _constants.PaymentStatus.SUCCESS) {
             return {
                 success: true,
                 message: 'Payment already verified'
@@ -219,7 +219,7 @@ let PaymentService = class PaymentService {
         // Update payment
         await this.prisma.payment.update({
             where: {
-                id: payment1.id
+                id: payment.id
             },
             data: {
                 razorpayPaymentId: dto.razorpayPaymentId,
@@ -248,37 +248,37 @@ let PaymentService = class PaymentService {
         }
         const orderId = paymentData.order_id;
         // Idempotency check
-        const payment1 = await this.prisma.payment.findUnique({
+        const payment = await this.prisma.payment.findUnique({
             where: {
                 razorpayOrderId: orderId
             },
             include: {
-                application: true
+                JobApplication: true
             }
         });
-        if (!payment1) {
+        if (!payment) {
             return {
                 success: true,
                 message: 'Payment not found'
             };
         }
         // Already processed
-        if (payment1.status === _constants.PaymentStatus.SUCCESS || payment1.status === _constants.PaymentStatus.REFUNDED) {
+        if (payment.status === _constants.PaymentStatus.SUCCESS || payment.status === _constants.PaymentStatus.REFUNDED) {
             return {
                 success: true,
                 message: 'Already processed'
             };
         }
         if (event === 'payment.captured' || event === 'payment.authorized') {
-            await this.processSuccessfulPayment(payment1, paymentData);
+            await this.processSuccessfulPayment(payment, paymentData);
         } else if (event === 'payment.failed') {
-            await this.processFailedPayment(payment1, paymentData);
+            await this.processFailedPayment(payment, paymentData);
         }
         return {
             success: true
         };
     }
-    async processSuccessfulPayment(Payment, paymentData) {
+    async processSuccessfulPayment(payment, paymentData) {
         await this.prisma.$transaction(async (tx)=>{
             // Update payment
             await tx.payment.update({
@@ -346,7 +346,7 @@ let PaymentService = class PaymentService {
             });
         });
     }
-    async processFailedPayment(Payment, paymentData) {
+    async processFailedPayment(payment, paymentData) {
         await this.prisma.payment.update({
             where: {
                 id: payment.id
@@ -406,7 +406,7 @@ let PaymentService = class PaymentService {
     }
     // Get payment by ID
     async getPaymentById(userId, paymentId) {
-        const payment1 = await this.prisma.payment.findUnique({
+        const payment = await this.prisma.payment.findUnique({
             where: {
                 id: paymentId
             },
@@ -420,17 +420,17 @@ let PaymentService = class PaymentService {
                 Refund: true
             }
         });
-        if (!payment1) {
+        if (!payment) {
             throw new _common.NotFoundException('Payment not found');
         }
-        if (payment1.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
-        return payment1;
+        return payment;
     }
     // Request refund
     async requestRefund(userId, dto) {
-        const payment1 = await this.prisma.payment.findUnique({
+        const payment = await this.prisma.payment.findUnique({
             where: {
                 id: dto.paymentId
             },
@@ -444,27 +444,27 @@ let PaymentService = class PaymentService {
                 Refund: true
             }
         });
-        if (!payment1) {
+        if (!payment) {
             throw new _common.NotFoundException('Payment not found');
         }
-        if (payment1.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
-        if (payment1.status !== _constants.PaymentStatus.SUCCESS) {
+        if (payment.status !== _constants.PaymentStatus.SUCCESS) {
             throw new _common.BadRequestException('Only successful payments can be refunded');
         }
-        if (payment1.Refund) {
+        if (payment.Refund) {
             throw new _common.BadRequestException('Refund already requested');
         }
         // Check if interview details were already unlocked
-        if (payment1.application.status === _constants.ApplicationStatus.PAYMENT_SUCCESS || payment1.application.Referral?.status === _constants.ReferralStatus.CONTACTED) {
+        if (payment.JobApplication.status === _constants.ApplicationStatus.PAYMENT_SUCCESS || payment.JobApplication.Referral?.status === _constants.ReferralStatus.CONTACTED) {
             throw new _common.BadRequestException('Refund not available after details have been shared');
         }
         // Create refund request
         const refund = await this.prisma.refund.create({
             data: {
-                paymentId: payment1.id,
-                amount: payment1.amount,
+                paymentId: payment.id,
+                amount: payment.amount,
                 reason: dto.reason,
                 status: _constants.RefundStatus.REQUESTED
             }
@@ -478,7 +478,7 @@ let PaymentService = class PaymentService {
                 entityType: 'Refund',
                 entityId: refund.id,
                 metadata: {
-                    paymentId: payment1.id,
+                    paymentId: payment.id,
                     reason: dto.reason
                 }
             }
@@ -505,7 +505,7 @@ let PaymentService = class PaymentService {
         if (!application) {
             throw new _common.NotFoundException('Application not found');
         }
-        if (application.candidate.userId !== userId) {
+        if (application.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
         // Verify interview exists and is pending payment
@@ -518,8 +518,8 @@ let PaymentService = class PaymentService {
             'INTERVIEW_CONFIRMED',
             'PAYMENT_PENDING'
         ];
-        if (!allowedStatuses.includes(application.interview.status)) {
-            throw new _common.BadRequestException(`Interview is in ${application.interview.status} status. Payment not available.`);
+        if (!allowedStatuses.includes(application.Interview.status)) {
+            throw new _common.BadRequestException(`Interview is in ${application.Interview.status} status. Payment not available.`);
         }
         // Check for existing successful payment for this interview
         const existingPayment = await this.prisma.payment.findFirst({
@@ -563,13 +563,13 @@ let PaymentService = class PaymentService {
             receipt: `int_${application.id.slice(0, 18)}`,
             notes: {
                 applicationId: application.id,
-                interviewId: application.interview.id,
+                interviewId: application.Interview.id,
                 candidateId: application.candidateId,
                 type: 'INTERVIEW'
             }
         });
         // Create payment record
-        const payment1 = await this.prisma.payment.create({
+        const payment = await this.prisma.payment.create({
             data: {
                 applicationId: application.id,
                 razorpayOrderId: order.id,
@@ -586,11 +586,11 @@ let PaymentService = class PaymentService {
                 userId,
                 action: _constants.AuditAction.PAYMENT_INITIATED,
                 entityType: 'InterviewPayment',
-                entityId: payment1.id,
+                entityId: payment.id,
                 metadata: {
                     orderId: order.id,
                     amount: 99,
-                    interviewId: application.interview.id
+                    interviewId: application.Interview.id
                 }
             }
         });
@@ -598,7 +598,7 @@ let PaymentService = class PaymentService {
             orderId: order.id,
             amount: 99,
             currency: 'INR',
-            paymentId: payment1.id,
+            paymentId: payment.id,
             keyId: this.configService.get('RAZORPAY_KEY_ID')
         };
     }
@@ -611,7 +611,7 @@ let PaymentService = class PaymentService {
             throw new _common.BadRequestException('Invalid payment signature');
         }
         // Get payment
-        const payment1 = await this.prisma.payment.findUnique({
+        const payment = await this.prisma.payment.findUnique({
             where: {
                 razorpayOrderId: dto.razorpayOrderId
             },
@@ -637,19 +637,19 @@ let PaymentService = class PaymentService {
                 }
             }
         });
-        if (!payment1) {
+        if (!payment) {
             throw new _common.NotFoundException('Payment not found');
         }
-        if (payment1.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
-        if (payment1.status === _constants.PaymentStatus.SUCCESS) {
+        if (payment.status === _constants.PaymentStatus.SUCCESS) {
             return {
                 success: true,
                 message: 'Payment already verified'
             };
         }
-        const interview = payment1.application.Interview;
+        const interview = payment.JobApplication.Interview;
         if (!interview) {
             throw new _common.BadRequestException('Interview not found');
         }
@@ -658,7 +658,7 @@ let PaymentService = class PaymentService {
             // Update payment status
             await tx.payment.update({
                 where: {
-                    id: payment1.id
+                    id: payment.id
                 },
                 data: {
                     razorpayPaymentId: dto.razorpayPaymentId,
@@ -680,7 +680,7 @@ let PaymentService = class PaymentService {
             // CRITICAL: Also update application status to PAYMENT_SUCCESS
             await tx.jobApplication.update({
                 where: {
-                    id: payment1.applicationId
+                    id: payment.applicationId
                 },
                 data: {
                     status: _constants.ApplicationStatus.PAYMENT_SUCCESS,
@@ -694,7 +694,7 @@ let PaymentService = class PaymentService {
                     userId,
                     action: _constants.AuditAction.PAYMENT_SUCCESS,
                     entityType: 'InterviewPayment',
-                    entityId: payment1.id,
+                    entityId: payment.id,
                     metadata: {
                         razorpayPaymentId: dto.razorpayPaymentId,
                         interviewId: interview.id

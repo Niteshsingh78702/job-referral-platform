@@ -67,7 +67,7 @@ export class PaymentService {
             throw new NotFoundException('Application not found');
         }
 
-        if (application.candidate.userId !== userId) {
+        if (application.Candidate.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -80,12 +80,12 @@ export class PaymentService {
             );
         }
 
-        if (!application.Referral || application.referral.status !== ReferralStatus.CONFIRMED) {
+        if (!application.Referral || application.Referral.status !== ReferralStatus.CONFIRMED) {
             throw new BadRequestException('Referral not confirmed');
         }
 
         // Check if already paid
-        const successfulPayment = application.payments.find(
+        const successfulPayment = application.Payment.find(
             (p) => p.status === PaymentStatus.SUCCESS,
         );
 
@@ -94,7 +94,7 @@ export class PaymentService {
         }
 
         // Check for pending payment
-        const pendingPayment = application.payments.find(
+        const pendingPayment = application.Payment.find(
             (p) => p.status === PaymentStatus.ORDER_CREATED || p.status === PaymentStatus.PENDING,
         );
 
@@ -195,7 +195,7 @@ export class PaymentService {
             throw new NotFoundException('Payment not found');
         }
 
-        if (payment.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -237,7 +237,7 @@ export class PaymentService {
         // Idempotency check
         const payment = await this.prisma.payment.findUnique({
             where: { razorpayOrderId: orderId },
-            include: { application: true },
+            include: { JobApplication: true },
         });
 
         if (!payment) {
@@ -258,7 +258,7 @@ export class PaymentService {
         return { success: true };
     }
 
-    private async processSuccessfulPayment(Payment: any, paymentData: any) {
+    private async processSuccessfulPayment(payment: any, paymentData: any) {
         await this.prisma.$transaction(async (tx) => {
             // Update payment
             await tx.payment.update({
@@ -318,7 +318,7 @@ export class PaymentService {
         });
     }
 
-    private async processFailedPayment(Payment: any, paymentData: any) {
+    private async processFailedPayment(payment: any, paymentData: any) {
         await this.prisma.payment.update({
             where: { id: payment.id },
             data: {
@@ -392,7 +392,7 @@ export class PaymentService {
             throw new NotFoundException('Payment not found');
         }
 
-        if (payment.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -418,7 +418,7 @@ export class PaymentService {
             throw new NotFoundException('Payment not found');
         }
 
-        if (payment.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -432,8 +432,8 @@ export class PaymentService {
 
         // Check if interview details were already unlocked
         if (
-            payment.application.status === ApplicationStatus.PAYMENT_SUCCESS ||
-            payment.application.Referral?.status === ReferralStatus.CONTACTED
+            payment.JobApplication.status === ApplicationStatus.PAYMENT_SUCCESS ||
+            payment.JobApplication.Referral?.status === ReferralStatus.CONTACTED
         ) {
             throw new BadRequestException(
                 'Refund not available after details have been shared',
@@ -487,7 +487,7 @@ export class PaymentService {
             throw new NotFoundException('Application not found');
         }
 
-        if (application.candidate.userId !== userId) {
+        if (application.Candidate.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -499,9 +499,9 @@ export class PaymentService {
         // Allow payment when interview is INTERVIEW_CONFIRMED (HR confirmed, awaiting payment)
         // or PAYMENT_PENDING (legacy flow)
         const allowedStatuses = ['INTERVIEW_CONFIRMED', 'PAYMENT_PENDING'];
-        if (!allowedStatuses.includes(application.interview.status)) {
+        if (!allowedStatuses.includes(application.Interview.status)) {
             throw new BadRequestException(
-                `Interview is in ${application.interview.status} status. Payment not available.`,
+                `Interview is in ${application.Interview.status} status. Payment not available.`,
             );
         }
 
@@ -547,7 +547,7 @@ export class PaymentService {
             receipt: `int_${application.id.slice(0, 18)}`,
             notes: {
                 applicationId: application.id,
-                interviewId: application.interview.id,
+                interviewId: application.Interview.id,
                 candidateId: application.candidateId,
                 type: 'INTERVIEW',
             },
@@ -573,7 +573,7 @@ export class PaymentService {
                 action: AuditAction.PAYMENT_INITIATED,
                 entityType: 'InterviewPayment',
                 entityId: payment.id,
-                metadata: { orderId: order.id, amount: 99, interviewId: application.interview.id },
+                metadata: { orderId: order.id, amount: 99, interviewId: application.Interview.id },
             },
         });
 
@@ -619,7 +619,7 @@ export class PaymentService {
             throw new NotFoundException('Payment not found');
         }
 
-        if (payment.application.candidate.userId !== userId) {
+        if (payment.JobApplication.Candidate.userId !== userId) {
             throw new ForbiddenException('Not authorized');
         }
 
@@ -627,7 +627,7 @@ export class PaymentService {
             return { success: true, message: 'Payment already verified' };
         }
 
-        const interview = payment.application.Interview;
+        const interview = payment.JobApplication.Interview;
         if (!interview) {
             throw new BadRequestException('Interview not found');
         }

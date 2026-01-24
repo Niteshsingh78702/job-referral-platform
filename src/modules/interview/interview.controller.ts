@@ -50,7 +50,7 @@ export class InterviewController {
     async scheduleInterview(
         @CurrentUser('sub') userId: string,
         @Param('interviewId') interviewId: string,
-        @Body() dto: { scheduledDate: string; scheduledTime: string; interviewLink?: string; callDetails?: string },
+        @Body() dto: { scheduledDate: string; scheduledTime: string; mode?: string; interviewLink?: string; callDetails?: string },
     ) {
         return this.interviewService.scheduleInterview(userId, interviewId, dto);
     }

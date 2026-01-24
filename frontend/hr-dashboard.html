@@ -981,6 +981,15 @@
                     <label for="scheduleTime">Time *</label>
                     <input type="text" id="scheduleTime" placeholder="e.g. 10:00 AM IST" required>
                 </div>
+                <div class="form-group">
+                    <label for="scheduleMode">Mode *</label>
+                    <select id="scheduleMode" required>
+                        <option value="">Select Mode</option>
+                        <option value="VIDEO">📹 Video Call</option>
+                        <option value="CALL">📞 Phone Call</option>
+                        <option value="ONSITE">🏢 On-site</option>
+                    </select>
+                </div>
                 <div class="form-group" id="interviewLinkGroup">
                     <label for="interviewLink">Meeting Link</label>
                     <input type="url" id="interviewLink" placeholder="https://meet.google.com/...">
@@ -2079,6 +2088,7 @@
             document.getElementById('scheduleInterviewModal').classList.remove('show');
             document.getElementById('scheduleDate').value = '';
             document.getElementById('scheduleTime').value = '';
+            document.getElementById('scheduleMode').value = '';
             document.getElementById('interviewLink').value = '';
             document.getElementById('callDetails').value = '';
         }
@@ -2088,9 +2098,10 @@
             const interviewId = document.getElementById('scheduleInterviewId').value;
             const date = document.getElementById('scheduleDate').value;
             const time = document.getElementById('scheduleTime').value;
+            const mode = document.getElementById('scheduleMode').value;
 
-            if (!date || !time) {
-                showToast('Please fill in date and time', 'error');
+            if (!date || !time || !mode) {
+                showToast('Please fill in date, time and mode', 'error');
                 return;
             }
 
@@ -2103,12 +2114,13 @@
                     body: JSON.stringify({
                         scheduledDate: date,
                         scheduledTime: time,
+                        mode: mode,
                         interviewLink: document.getElementById('interviewLink').value,
                         callDetails: document.getElementById('callDetails').value,
                     }),
                 });
 
-                showToast('Interview scheduled! Candidate will be notified.', 'success');
+                showToast('✅ Interview scheduled! Candidate will be notified.', 'success');
                 closeScheduleModal();
                 loadInterviews(); // Refresh interviews table
                 loadApplications(); // Also refresh applications

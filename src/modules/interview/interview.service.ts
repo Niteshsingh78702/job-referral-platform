@@ -136,7 +136,7 @@ export class InterviewService {
     async scheduleInterview(
         userId: string,
         interviewId: string,
-        dto: { scheduledDate: string; scheduledTime: string; interviewLink?: string; callDetails?: string },
+        dto: { scheduledDate: string; scheduledTime: string; mode?: string; interviewLink?: string; callDetails?: string },
     ) {
         // Get HR record
         const hr = await this.prisma.hR.findUnique({
@@ -184,6 +184,7 @@ export class InterviewService {
             data: {
                 scheduledDate: new Date(dto.scheduledDate),
                 scheduledTime: dto.scheduledTime,
+                mode: dto.mode || interview.mode, // Update mode if provided
                 interviewLink: dto.interviewLink || null,
                 callDetails: dto.callDetails || null,
                 scheduledAt: new Date(),

@@ -133,6 +133,7 @@ export class PaymentService {
                 currency: 'INR',
                 status: PaymentStatus.ORDER_CREATED,
                 orderCreatedAt: new Date(),
+                updatedAt: new Date(),
             },
         });
 
@@ -561,6 +562,7 @@ export class PaymentService {
                         status: PaymentStatus.SUCCESS,
                         orderCreatedAt: new Date(),
                         paidAt: new Date(),
+                        updatedAt: new Date(),
                     },
                 });
 
@@ -618,6 +620,7 @@ export class PaymentService {
                 currency: 'INR',
                 status: PaymentStatus.ORDER_CREATED,
                 orderCreatedAt: new Date(),
+                updatedAt: new Date(),
             },
         });
 

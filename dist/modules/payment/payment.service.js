@@ -142,7 +142,8 @@ let PaymentService = class PaymentService {
                 amount: application.job.referralFee,
                 currency: 'INR',
                 status: _constants.PaymentStatus.ORDER_CREATED,
-                orderCreatedAt: new Date()
+                orderCreatedAt: new Date(),
+                updatedAt: new Date()
             }
         });
         // Update application status
@@ -574,7 +575,8 @@ let PaymentService = class PaymentService {
                         currency: 'INR',
                         status: _constants.PaymentStatus.SUCCESS,
                         orderCreatedAt: new Date(),
-                        paidAt: new Date()
+                        paidAt: new Date(),
+                        updatedAt: new Date()
                     }
                 });
                 // Update interview status
@@ -630,7 +632,8 @@ let PaymentService = class PaymentService {
                 amount: 99,
                 currency: 'INR',
                 status: _constants.PaymentStatus.ORDER_CREATED,
-                orderCreatedAt: new Date()
+                orderCreatedAt: new Date(),
+                updatedAt: new Date()
             }
         });
         // Audit log

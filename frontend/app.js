@@ -3936,74 +3936,92 @@ async function payForInterview(applicationId) {
  * View interview details after payment - shows scheduled date, time, meeting link
  */
 async function viewInterviewDetails(applicationId) {
-    // Find the application in state
-    const app = state.applications?.find(a => a.id === applicationId);
-    if (!app) {
-        showToast('error', 'Application not found');
-        return;
-    }
+    try {
+        // Fetch application data from API to ensure we have latest details
+        const response = await fetch(`${API_BASE_URL}/candidates/applications`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
 
-    const interview = app.interview || app.Interview;
-    if (!interview) {
-        showToast('error', 'Interview details not found');
-        return;
-    }
+        const result = await response.json();
+        if (!result.success) {
+            showToast('error', 'Could not load application details');
+            return;
+        }
 
-    const schedDate = interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Not set';
-    const schedTime = interview.scheduledTime || 'Not set';
-    const meetingLink = interview.interviewLink || interview.callDetails || 'Will be shared soon';
-    const mode = interview.mode || 'VIDEO';
+        // Find the application
+        const app = result.data?.find(a => a.id === applicationId);
+        if (!app) {
+            showToast('error', 'Application not found');
+            return;
+        }
 
-    // Create modal content
-    const content = `
-        <div style="padding: 16px;">
-            <h3 style="color: var(--primary); margin-bottom: 16px;">📅 Interview Scheduled!</h3>
-            
-            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                <div style="display: grid; gap: 12px;">
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Date</div>
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text);">📆 ${schedDate}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Time</div>
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text);">⏰ ${schedTime}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Mode</div>
-                        <div style="font-size: 16px; font-weight: 600; color: var(--text);">${mode === 'VIDEO' ? '📹 Video Call' : mode === 'PHONE' ? '📞 Phone Call' : '🏢 In-Person'}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Meeting Link / Details</div>
-                        <div style="font-size: 14px; color: var(--primary); word-break: break-all;">
-                            ${meetingLink.startsWith('http') ? '<a href="' + meetingLink + '" target="_blank" style="color: var(--primary);">' + meetingLink + '</a>' : meetingLink}
+        const interview = app.interview || app.Interview;
+        if (!interview) {
+            showToast('error', 'Interview details not found');
+            return;
+        }
+
+        const schedDate = interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Not set';
+        const schedTime = interview.scheduledTime || 'Not set';
+        const meetingLink = interview.interviewLink || interview.callDetails || 'Will be shared soon';
+        const mode = interview.mode || 'VIDEO';
+
+        // Create modal content
+        const content = `
+            <div style="padding: 16px;">
+                <h3 style="color: var(--primary); margin-bottom: 16px;">📅 Interview Scheduled!</h3>
+                
+                <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <div style="display: grid; gap: 12px;">
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-dim);">Date</div>
+                            <div style="font-size: 16px; font-weight: 600; color: var(--text);">📆 ${schedDate}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-dim);">Time</div>
+                            <div style="font-size: 16px; font-weight: 600; color: var(--text);">⏰ ${schedTime}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-dim);">Mode</div>
+                            <div style="font-size: 16px; font-weight: 600; color: var(--text);">${mode === 'VIDEO' ? '📹 Video Call' : mode === 'PHONE' || mode === 'CALL' ? '📞 Phone Call' : '🏢 In-Person'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-dim);">Meeting Link / Details</div>
+                            <div style="font-size: 14px; color: var(--primary); word-break: break-all;">
+                                ${meetingLink.startsWith('http') ? '<a href="' + meetingLink + '" target="_blank" style="color: var(--primary);">' + meetingLink + '</a>' : meetingLink}
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <div style="background: rgba(16, 185, 129, 0.1); border-radius: 8px; padding: 12px; text-align: center;">
+                    <p style="color: var(--success); font-size: 14px; margin: 0;">✅ Payment Complete - Interview Details Unlocked</p>
+                </div>
             </div>
-            
-            <div style="background: rgba(16, 185, 129, 0.1); border-radius: 8px; padding: 12px; text-align: center;">
-                <p style="color: var(--success); font-size: 14px; margin: 0;">✅ Payment Complete - Interview Details Unlocked</p>
-            </div>
-        </div>
-    `;
+        `;
 
-    // Show in a modal (using existing showModal or create alert)
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay show';
-    modal.innerHTML = `
-        <div class="modal" style="max-width: 450px;">
-            <div class="modal-header">
-                <h3 class="modal-title">Interview Details</h3>
-                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+        // Show in a modal
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay show';
+        modal.innerHTML = `
+            <div class="modal" style="max-width: 450px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">Interview Details</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                </div>
+                <div class="modal-body">${content}</div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">Got It!</button>
+                </div>
             </div>
-            <div class="modal-body">${content}</div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">Got It!</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
+        `;
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error fetching interview details:', error);
+        showToast('error', 'Could not load interview details');
+    }
 }
 
 /**

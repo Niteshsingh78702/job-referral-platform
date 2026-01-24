@@ -2605,9 +2605,9 @@ async function loadApplications() {
         } else if (app.status === 'APPLIED' && testPassed) {
             // Test passed, waiting for HR to shortlist
             actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Awaiting HR Decision</button>`;
-        } else if (app.status === 'APPLIED' && !testPassed && !app.testSession) {
-            // Just applied, no test taken yet (shouldn't happen normally)
-            actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
+        } else if (app.status === 'APPLIED' && !testPassed) {
+            // Test not taken or not passed - show Take Test button
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company || ''}', '${app.jobTitle || ''}')" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">📝 Take Test</button>`;
         } else {
             // Default fallback
             actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
@@ -2815,6 +2815,9 @@ function renderApplicationRows(applications, tableBody) {
             actionButton = `<button class="btn btn-outline btn-sm" disabled>Application Rejected</button>`;
         } else if (app.status === 'APPLIED' && testPassed) {
             actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Waiting for Interview Schedule</button>`;
+        } else if (app.status === 'APPLIED' && !testPassed) {
+            // Test not taken - show Take Test button
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company || ''}', '${app.jobTitle || ''}')" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">📝 Take Test</button>`;
         } else if (app.interview?.status === 'INTERVIEW_CONFIRMED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
         } else if (app.interview?.status === 'PAYMENT_SUCCESS') {
@@ -2955,20 +2958,25 @@ function showApplicationDetails(appId) {
 
 function getTimelineSteps(status) {
     const steps = [
-        { id: 'applied', label: 'Applied', icon: '📝' },
-        { id: 'test', label: 'Test', icon: '🧠' },
-        { id: 'passed', label: 'Passed', icon: '✅' },
-        { id: 'referred', label: 'Referred', icon: '🎉' }
+        { id: 'applied', label: 'Applied', icon: '📝', completedIcon: '✅' },
+        { id: 'test', label: 'Test', icon: '🧠', completedIcon: '✅' },
+        { id: 'passed', label: 'Passed', icon: '⏳', completedIcon: '✅' },
+        { id: 'referred', label: 'Referred', icon: '📋', completedIcon: '🎉' }
     ];
 
     // Determine which steps are completed/active
     const statusOrder = {
         'APPLIED': 0,
         'TEST_PENDING': 0,
-        'TEST_FAILED': 1,
         'TEST_PASSED': 2,
+        'TEST_FAILED': 1,
         'REFERRAL_PENDING': 2,
-        'REFERRED': 3
+        'REFERRED': 3,
+        'INTERVIEW_CONFIRMED': 3,
+        'PAYMENT_SUCCESS': 3,
+        'INTERVIEW_COMPLETED': 3,
+        'SELECTED': 3,
+        'INTERVIEW_REJECTED': 3
     };
 
     const currentStep = statusOrder[status] ?? 0;
@@ -2976,13 +2984,14 @@ function getTimelineSteps(status) {
     return steps.map((step, index) => {
         if (index < currentStep) {
             step.state = 'completed';
+            step.icon = step.completedIcon;  // Use completed icon
         } else if (index === currentStep) {
             step.state = status === 'TEST_FAILED' ? 'failed' : 'active';
             if (status === 'TEST_FAILED' && index === 1) {
                 step.icon = '❌';
             }
         } else {
-            step.state = '';
+            step.state = 'pending';  // Not reached yet
         }
         return step;
     });

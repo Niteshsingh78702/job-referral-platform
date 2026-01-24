@@ -80,6 +80,9 @@ function checkAuthStatus() {
             }
 
             updateUIForLoggedInUser();
+
+            // Fetch full profile from backend to ensure data is up-to-date
+            fetchCandidateProfile();
         } catch (e) {
             // Invalid stored data, clear it
             localStorage.removeItem('token');
@@ -87,6 +90,50 @@ function checkAuthStatus() {
         }
     }
 }
+
+// Fetch candidate profile from backend and merge with state.user
+async function fetchCandidateProfile() {
+    if (!state.token || state.user?.role !== 'CANDIDATE') return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/candidates/profile`, {
+            headers: { 'Authorization': `Bearer ${state.token}` }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            const profile = result.data || result;
+
+            // Extract skills from CandidateSkill array
+            const skills = (profile.CandidateSkill || []).map(s => s.name);
+
+            // Merge profile data with existing user data
+            const profileData = {
+                ...state.user,
+                firstName: profile.firstName || state.user.firstName,
+                lastName: profile.lastName || state.user.lastName,
+                phone: profile.User?.phone || profile.phone || state.user.phone,
+                linkedIn: profile.linkedIn || state.user.linkedIn,
+                experience: profile.totalExperience || profile.experience || state.user.experience,
+                skills: skills.length > 0 ? skills : state.user.skills,
+                preferredLocations: profile.preferredLocations || state.user.preferredLocations,
+                preferredLocation: profile.preferredLocation || state.user.preferredLocation,
+                resume: profile.resumeUrl ? { filename: profile.resumeUrl.split('/').pop() } : state.user.resume,
+                resumeUrl: profile.resumeUrl || state.user.resumeUrl
+            };
+
+            state.user = profileData;
+            localStorage.setItem('user', JSON.stringify(state.user));
+
+            // Update UI
+            updateDashboard();
+            updateProfileCompletion();
+        }
+    } catch (error) {
+        console.log('Could not fetch profile from backend, using cached data');
+    }
+}
+
 
 function updateUIForLoggedInUser() {
     // Update navigation

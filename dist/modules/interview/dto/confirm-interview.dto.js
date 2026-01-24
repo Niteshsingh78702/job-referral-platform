@@ -35,10 +35,12 @@ var InterviewMode = /*#__PURE__*/ function(InterviewMode) {
 let ConfirmInterviewDto = class ConfirmInterviewDto {
 };
 _ts_decorate([
+    (0, _classvalidator.IsOptional)(),
     (0, _classvalidator.IsDateString)(),
     _ts_metadata("design:type", String)
 ], ConfirmInterviewDto.prototype, "scheduledDate", void 0);
 _ts_decorate([
+    (0, _classvalidator.IsOptional)(),
     (0, _classvalidator.IsString)(),
     (0, _classvalidator.MaxLength)(50),
     _ts_metadata("design:type", String)

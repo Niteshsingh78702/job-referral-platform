@@ -70,18 +70,19 @@ export class InterviewService {
 
         // Create interview with scheduling details and update application status
         const interview = await this.prisma.$transaction(async (tx) => {
-            // Create interview record with interview details already set
+            // Create interview record - shortlisting action
+            // scheduledDate/Time will be set AFTER payment via scheduleInterview
             const newInterview = await tx.interview.create({
                 data: {
                     id: crypto.randomUUID(), // Generate unique id
                     applicationId,
                     mode: dto.mode as any,
-                    scheduledDate: new Date(dto.scheduledDate),
-                    scheduledTime: dto.scheduledTime,
+                    scheduledDate: dto.scheduledDate ? new Date(dto.scheduledDate) : null, // Optional - set after payment
+                    scheduledTime: dto.scheduledTime || null, // Optional - set after payment
                     hrNotes: dto.hrNote,
                     status: InterviewStatus.INTERVIEW_CONFIRMED as any,
                     paymentStatus: PaymentStatus.ELIGIBLE as any,
-                    scheduledAt: new Date(), // HR confirmed at this time
+                    scheduledAt: null, // Will be set when HR schedules after payment
                     updatedAt: new Date(), // Required field without default
                 },
             });

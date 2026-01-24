@@ -7,17 +7,19 @@ export enum InterviewMode {
 }
 
 /**
- * DTO for HR to confirm an interview with scheduling details.
- * This is the primary action where HR sets date/time/mode.
- * Candidate must pay after this to unlock details.
+ * DTO for HR to shortlist a candidate for interview.
+ * Date/time are optional at this stage.
+ * Schedule will be set AFTER candidate pays.
  */
 export class ConfirmInterviewDto {
+    @IsOptional()
     @IsDateString()
-    scheduledDate: string; // ISO date string - REQUIRED
+    scheduledDate?: string; // Optional - will be set after payment
 
+    @IsOptional()
     @IsString()
     @MaxLength(50)
-    scheduledTime: string; // e.g., "10:00 AM IST" - REQUIRED
+    scheduledTime?: string; // Optional - will be set after payment
 
     @IsEnum(InterviewMode)
     mode: InterviewMode; // CALL, VIDEO, or ONSITE - REQUIRED
@@ -25,5 +27,5 @@ export class ConfirmInterviewDto {
     @IsOptional()
     @IsString()
     @MaxLength(1000)
-    hrNote?: string; // Optional note like "Google Meet link will be shared via email"
+    hrNote?: string; // Optional note
 }

@@ -115,18 +115,19 @@ let InterviewService = class InterviewService {
         }
         // Create interview with scheduling details and update application status
         const interview = await this.prisma.$transaction(async (tx)=>{
-            // Create interview record with interview details already set
+            // Create interview record - shortlisting action
+            // scheduledDate/Time will be set AFTER payment via scheduleInterview
             const newInterview = await tx.interview.create({
                 data: {
                     id: _crypto.randomUUID(),
                     applicationId,
                     mode: dto.mode,
-                    scheduledDate: new Date(dto.scheduledDate),
-                    scheduledTime: dto.scheduledTime,
+                    scheduledDate: dto.scheduledDate ? new Date(dto.scheduledDate) : null,
+                    scheduledTime: dto.scheduledTime || null,
                     hrNotes: dto.hrNote,
                     status: _constants.InterviewStatus.INTERVIEW_CONFIRMED,
                     paymentStatus: _constants.PaymentStatus.ELIGIBLE,
-                    scheduledAt: new Date(),
+                    scheduledAt: null,
                     updatedAt: new Date()
                 }
             });

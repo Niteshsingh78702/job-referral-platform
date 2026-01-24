@@ -925,7 +925,7 @@
     <div class="modal-overlay" id="interviewRequestModal">
         <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 class="modal-title">📅 Confirm Interview Scheduled</h3>
+                <h3 class="modal-title">✅ Shortlist Candidate</h3>
                 <button class="modal-close" onclick="closeInterviewRequestModal()">×</button>
             </div>
             <div class="modal-body">
@@ -934,19 +934,11 @@
                 <div
                     style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
                     <p style="color: #10b981; font-size: 13px; margin: 0;">
-                        ✅ <strong>Confirmation-First Flow:</strong> Enter interview details now. Candidate will pay ₹99
-                        to unlock these details.
+                        ✅ <strong>Shortlist Flow:</strong> After you shortlist, candidate will pay ₹99.
+                        <br>You'll then schedule the interview date/time.
                     </p>
                 </div>
 
-                <div class="form-group">
-                    <label for="confirmInterviewDate">Interview Date *</label>
-                    <input type="date" id="confirmInterviewDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirmInterviewTime">Interview Time *</label>
-                    <input type="text" id="confirmInterviewTime" placeholder="e.g. 10:00 AM IST" required>
-                </div>
                 <div class="form-group">
                     <label for="interviewMode">Interview Mode *</label>
                     <select id="interviewMode" required>
@@ -958,18 +950,16 @@
                 </div>
                 <div class="form-group">
                     <label for="interviewHRNote">Note for Candidate (Optional)</label>
-                    <textarea id="interviewHRNote"
-                        placeholder="e.g. Google Meet link will be shared before the interview..."></textarea>
+                    <textarea id="interviewHRNote" placeholder="e.g. Please keep your resume ready..."></textarea>
                 </div>
 
                 <p style="font-size: 13px; color: var(--text-dim); margin-top: 16px;">
-                    💡 Once you confirm, candidate will be notified to pay ₹99 to unlock interview details.
-                    <br><strong>You cannot edit after confirmation</strong> without admin approval.
+                    💡 After shortlisting, candidate pays ₹99 → You schedule interview → Candidate sees details.
                 </p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeInterviewRequestModal()">Cancel</button>
-                <button class="btn btn-primary" id="submitInterviewRequestBtn">Confirm Interview</button>
+                <button class="btn btn-primary" id="submitInterviewRequestBtn">✅ Shortlist Candidate</button>
             </div>
         </div>
     </div>
@@ -1499,10 +1489,10 @@
                     // Determine action button
                     let actionBtn = '';
                     if (canConfirmInterview) {
-                        // Show both Confirm and Reject options
+                        // Show both Shortlist and Reject options
                         actionBtn = `
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                <button class="btn btn-primary btn-sm" onclick="openInterviewRequestModal('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">📅 Confirm Interview</button>
+                                <button class="btn btn-primary btn-sm" onclick="openInterviewRequestModal('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">✅ Shortlist</button>
                                 <button class="btn btn-danger btn-sm" onclick="rejectApplication('${app.id}')" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🚫 Not Shortlisted</button>
                             </div>
                         `;
@@ -1988,8 +1978,6 @@
 
         function closeInterviewRequestModal() {
             document.getElementById('interviewRequestModal').classList.remove('show');
-            document.getElementById('confirmInterviewDate').value = '';
-            document.getElementById('confirmInterviewTime').value = '';
             document.getElementById('interviewMode').value = '';
             document.getElementById('interviewHRNote').value = '';
         }
@@ -1997,41 +1985,30 @@
         document.getElementById('submitInterviewRequestBtn').addEventListener('click', async () => {
             const btn = document.getElementById('submitInterviewRequestBtn');
             const applicationId = document.getElementById('interviewApplicationId').value;
-            const scheduledDate = document.getElementById('confirmInterviewDate').value;
-            const scheduledTime = document.getElementById('confirmInterviewTime').value;
             const mode = document.getElementById('interviewMode').value;
             const hrNote = document.getElementById('interviewHRNote').value;
 
-            // Validation
-            if (!scheduledDate) {
-                showToast('Please select interview date', 'error');
-                return;
-            }
-            if (!scheduledTime) {
-                showToast('Please enter interview time', 'error');
-                return;
-            }
+            // Validation - only mode is required now
             if (!mode) {
                 showToast('Please select interview mode', 'error');
                 return;
             }
 
             btn.disabled = true;
-            btn.innerHTML = 'Confirming...';
+            btn.innerHTML = 'Shortlisting...';
 
             try {
-                // Call new confirmInterview API endpoint
+                // Call confirmInterview API (now acts as shortlisting)
                 await api(`/interviews/confirm/${applicationId}`, {
                     method: 'POST',
                     body: JSON.stringify({
-                        scheduledDate,
-                        scheduledTime,
                         mode,
                         hrNote
+                        // NOTE: scheduledDate and scheduledTime omitted - will be set after payment
                     }),
                 });
 
-                showToast('Interview confirmed! Candidate will be notified to pay ₹99 to unlock details.', 'success');
+                showToast('✅ Candidate shortlisted! They will be notified to pay ₹99. You can schedule the interview after payment.', 'success');
                 closeInterviewRequestModal();
                 loadApplications(); // Refresh applications table
                 loadInterviews(); // Also refresh interviews table
@@ -2039,7 +2016,7 @@
                 showToast(error.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Confirm Interview';
+                btn.innerHTML = '✅ Shortlist Candidate';
             }
         });
 

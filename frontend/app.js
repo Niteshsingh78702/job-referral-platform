@@ -2515,8 +2515,8 @@ async function loadApplications() {
         } else if (app.status === 'TEST_FAILED') {
             actionButton = `<button class="btn btn-outline btn-sm" disabled>❌ Test Failed</button>`;
         } else if (app.status === 'INTERVIEW_CONFIRMED' || app.interview?.status === 'INTERVIEW_CONFIRMED') {
-            // HR confirmed interview details - candidate pays to unlock
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
+            // Candidate shortlisted - pays to proceed, then HR schedules interview
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Proceed</button>`;
         } else if (app.status === 'PAYMENT_PENDING') {
             // Payment in progress
             actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
@@ -2530,8 +2530,8 @@ async function loadApplications() {
         } else if (app.status === 'REJECTED') {
             actionButton = `<button class="btn btn-outline btn-sm" disabled>Application Rejected</button>`;
         } else if (app.status === 'APPLIED' && testPassed) {
-            // Test passed, waiting for HR to confirm interview
-            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Waiting for Interview Schedule</button>`;
+            // Test passed, waiting for HR to shortlist
+            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Awaiting HR Decision</button>`;
         } else if (app.status === 'APPLIED' && !testPassed && !app.testSession) {
             // Just applied, no test taken yet (shouldn't happen normally)
             actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;

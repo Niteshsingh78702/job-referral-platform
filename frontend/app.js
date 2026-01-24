@@ -2710,7 +2710,7 @@ function renderApplicationRows(applications, tableBody) {
         } else if (app.status === 'PAYMENT_PENDING') {
             actionButton = `<button class="btn btn-warning btn-sm" disabled>⏳ Payment Processing...</button>`;
         } else if (app.status === 'PAYMENT_SUCCESS') {
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview?.id || app.id}')">📅 View Interview Details</button>`;
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.id}')">📅 View Interview Details</button>`;
         } else if (app.status === 'INTERVIEW_COMPLETED') {
             actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else if (app.status === 'CANDIDATE_NO_SHOW' || app.status === 'HR_NO_SHOW') {
@@ -2723,7 +2723,7 @@ function renderApplicationRows(applications, tableBody) {
         } else if (app.interview?.status === 'INTERVIEW_CONFIRMED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="payForInterview('${app.id}')" style="background: linear-gradient(135deg, #10b981, #059669);">💳 Pay ₹99 to Unlock Interview</button>`;
         } else if (app.interview?.status === 'PAYMENT_SUCCESS') {
-            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.interview.id}')">📅 View Interview Details</button>`;
+            actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.id}')">📅 View Interview Details</button>`;
         } else if (app.interview?.status === 'INTERVIEW_COMPLETED') {
             actionButton = `<button class="btn btn-success btn-sm" disabled>✅ Interview Completed</button>`;
         } else {
@@ -3936,7 +3936,16 @@ async function payForInterview(applicationId) {
  * View interview details after payment - shows scheduled date, time, meeting link
  */
 async function viewInterviewDetails(applicationId) {
+    console.log('🔍 viewInterviewDetails called with applicationId:', applicationId);
+
+    if (!applicationId) {
+        showToast('error', 'Application ID is missing');
+        return;
+    }
+
     try {
+        showToast('info', 'Loading interview details...');
+
         // Fetch application data from API to ensure we have latest details
         const response = await fetch(`${API_BASE_URL}/candidates/applications`, {
             headers: {
@@ -4004,9 +4013,9 @@ async function viewInterviewDetails(applicationId) {
 
         // Show in a modal
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay show';
+        modal.className = 'modal-overlay active';
         modal.innerHTML = `
-            <div class="modal" style="max-width: 450px;">
+            <div class="modal active" style="max-width: 450px;">
                 <div class="modal-header">
                     <h3 class="modal-title">Interview Details</h3>
                     <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
@@ -4135,3 +4144,7 @@ function openRazorpayForInterview(orderData, applicationId) {
 
 // Note: viewInterviewDetails is defined earlier in the file (around line 3938)
 // and uses local state data instead of making an API call
+
+// Ensure critical functions are globally accessible for onclick handlers in dynamic HTML
+window.viewInterviewDetails = viewInterviewDetails;
+window.payForInterview = payForInterview;

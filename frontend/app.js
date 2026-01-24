@@ -4117,4 +4117,3 @@ function openRazorpayForInterview(orderData, applicationId) {
 
 // Note: viewInterviewDetails is defined earlier in the file (around line 3938)
 // and uses local state data instead of making an API call
-}

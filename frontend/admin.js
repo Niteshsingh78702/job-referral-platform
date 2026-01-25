@@ -2816,12 +2816,20 @@ async function loadRoleTypesDropdown() {
         if (data.success) {
             const select = document.getElementById('questionRoleFilter');
             if (select) {
+                // Preserve current selection
+                const currentValue = select.value;
+
                 select.innerHTML = '<option value="">All Roles</option>';
                 (data.data || []).forEach(role => {
                     if (role) {
                         select.innerHTML += `<option value="${role}">${role}</option>`;
                     }
                 });
+
+                // Restore selection if it still exists
+                if (currentValue && [...select.options].some(opt => opt.value === currentValue)) {
+                    select.value = currentValue;
+                }
             }
         }
     } catch (error) {

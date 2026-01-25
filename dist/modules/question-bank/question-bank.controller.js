@@ -99,16 +99,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Delete a question (soft delete)
-     */ async deleteQuestion(id) {
-        await this.questionBankService.deleteQuestion(id);
-        return {
-            success: true,
-            message: 'Question deleted successfully'
-        };
-    }
-    /**
      * Bulk delete all questions by role type
+     * NOTE: This route must be before :id routes to avoid conflict
      */ async deleteByRole(roleType) {
         const count = await this.questionBankService.deleteByRole(roleType);
         return {
@@ -117,6 +109,15 @@ let QuestionBankController = class QuestionBankController {
             data: {
                 deletedCount: count
             }
+        };
+    }
+    /**
+     * Delete a question (soft delete)
+     */ async deleteQuestion(id) {
+        await this.questionBankService.deleteQuestion(id);
+        return {
+            success: true,
+            message: 'Question deleted successfully'
         };
     }
     constructor(questionBankService){
@@ -187,15 +188,6 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], QuestionBankController.prototype, "updateQuestion", null);
 _ts_decorate([
-    (0, _common.Delete)(':id'),
-    _ts_param(0, (0, _common.Param)('id')),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        String
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], QuestionBankController.prototype, "deleteQuestion", null);
-_ts_decorate([
     (0, _common.Delete)('bulk/role/:roleType'),
     _ts_param(0, (0, _common.Param)('roleType')),
     _ts_metadata("design:type", Function),
@@ -204,6 +196,15 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], QuestionBankController.prototype, "deleteByRole", null);
+_ts_decorate([
+    (0, _common.Delete)(':id'),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], QuestionBankController.prototype, "deleteQuestion", null);
 QuestionBankController = _ts_decorate([
     (0, _common.Controller)('admin/questions'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),

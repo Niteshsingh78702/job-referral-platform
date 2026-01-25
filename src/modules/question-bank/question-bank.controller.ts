@@ -126,19 +126,8 @@ export class QuestionBankController {
     }
 
     /**
-     * Delete a question (soft delete)
-     */
-    @Delete(':id')
-    async deleteQuestion(@Param('id') id: string) {
-        await this.questionBankService.deleteQuestion(id);
-        return {
-            success: true,
-            message: 'Question deleted successfully',
-        };
-    }
-
-    /**
      * Bulk delete all questions by role type
+     * NOTE: This route must be before :id routes to avoid conflict
      */
     @Delete('bulk/role/:roleType')
     async deleteByRole(@Param('roleType') roleType: string) {
@@ -147,6 +136,18 @@ export class QuestionBankController {
             success: true,
             message: `Deleted ${count} questions for role ${roleType}`,
             data: { deletedCount: count },
+        };
+    }
+
+    /**
+     * Delete a question (soft delete)
+     */
+    @Delete(':id')
+    async deleteQuestion(@Param('id') id: string) {
+        await this.questionBankService.deleteQuestion(id);
+        return {
+            success: true,
+            message: 'Question deleted successfully',
         };
     }
 }

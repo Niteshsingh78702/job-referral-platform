@@ -8,7 +8,7 @@ datasource db {
 }
 
 model AuditLog {
-  id         String      @id
+  id         String      @id @default(uuid())
   userId     String?
   action     AuditAction
   entityType String
@@ -401,7 +401,7 @@ model Payment {
 }
 
 model QuestionBank {
-  id            String             @id
+  id            String             @id @default(uuid())
   question      String
   options       Json
   correctAnswer Int

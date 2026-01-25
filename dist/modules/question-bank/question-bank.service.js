@@ -110,7 +110,8 @@ let QuestionBankService = class QuestionBankService {
                         category: q.category,
                         tags,
                         roleType: q.roleType,
-                        createdById
+                        createdById,
+                        updatedAt: new Date()
                     }
                 });
                 createdQuestions.push(created);

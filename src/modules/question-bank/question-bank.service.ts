@@ -62,6 +62,7 @@ export class QuestionBankService {
                         tags,
                         roleType: q.roleType,
                         createdById,
+                        updatedAt: new Date(),
                     },
                 });
                 createdQuestions.push(created);

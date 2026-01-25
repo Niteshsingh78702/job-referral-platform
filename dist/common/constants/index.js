@@ -18,6 +18,9 @@ _export(exports, {
     get AuditAction () {
         return AuditAction;
     },
+    get CandidateTestAttemptStatus () {
+        return CandidateTestAttemptStatus;
+    },
     get EarningStatus () {
         return EarningStatus;
     },
@@ -94,6 +97,7 @@ var ApplicationStatus = /*#__PURE__*/ function(ApplicationStatus) {
     ApplicationStatus["TEST_REQUIRED"] = "TEST_REQUIRED";
     ApplicationStatus["TEST_IN_PROGRESS"] = "TEST_IN_PROGRESS";
     ApplicationStatus["TEST_FAILED"] = "TEST_FAILED";
+    ApplicationStatus["TEST_PASSED_WAITING_HR"] = "TEST_PASSED_WAITING_HR";
     ApplicationStatus["APPLIED"] = "APPLIED";
     ApplicationStatus["INTERVIEW_CONFIRMED"] = "INTERVIEW_CONFIRMED";
     ApplicationStatus["PAYMENT_PENDING"] = "PAYMENT_PENDING";
@@ -104,7 +108,16 @@ var ApplicationStatus = /*#__PURE__*/ function(ApplicationStatus) {
     ApplicationStatus["CANDIDATE_NO_SHOW"] = "CANDIDATE_NO_SHOW";
     ApplicationStatus["HR_NO_SHOW"] = "HR_NO_SHOW";
     ApplicationStatus["REJECTED"] = "REJECTED";
+    ApplicationStatus["EXPIRED"] = "EXPIRED";
     return ApplicationStatus;
+}({});
+var CandidateTestAttemptStatus = /*#__PURE__*/ function(CandidateTestAttemptStatus) {
+    CandidateTestAttemptStatus["NOT_STARTED"] = "NOT_STARTED";
+    CandidateTestAttemptStatus["IN_PROGRESS"] = "IN_PROGRESS";
+    CandidateTestAttemptStatus["PASSED"] = "PASSED";
+    CandidateTestAttemptStatus["FAILED"] = "FAILED";
+    CandidateTestAttemptStatus["EXPIRED"] = "EXPIRED";
+    return CandidateTestAttemptStatus;
 }({});
 var TestSessionStatus = /*#__PURE__*/ function(TestSessionStatus) {
     TestSessionStatus["ACTIVE"] = "ACTIVE";

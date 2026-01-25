@@ -64,6 +64,7 @@ model Candidate {
   Experience        Experience[]
   JobApplication    JobApplication[]
   SkillTestAttempt  SkillTestAttempt[]
+  CandidateTestAttempt CandidateTestAttempt[]
 
   @@index([userId])
 }
@@ -274,6 +275,7 @@ model Job {
   JobApplication         JobApplication[]
   JobRequiredSkillBucket JobRequiredSkillBucket[]
   JobSkill               JobSkill[]
+  CandidateTestAttempt   CandidateTestAttempt[]
 
   @@index([companyName])
   @@index([hrId])
@@ -561,12 +563,14 @@ model Test {
   maxTabSwitches   Int            @default(2)
   difficulty       String         @default("MEDIUM")
   isActive         Boolean        @default(true)
+  validityDays     Int            @default(7)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime
   Job              Job[]
   SkillBucket      SkillBucket?
   TestQuestion     TestQuestion[]
   TestSession      TestSession[]
+  CandidateTestAttempt CandidateTestAttempt[]
 
   @@index([isActive])
 }
@@ -637,6 +641,7 @@ model TestSession {
   JobApplication      JobApplication?   @relation(fields: [applicationId], references: [id])
   Test                Test?             @relation(fields: [testId], references: [id])
   TestTemplate        TestTemplate?     @relation(fields: [testTemplateId], references: [id])
+  CandidateTestAttempt CandidateTestAttempt?
 
   @@index([applicationId])
   @@index([status])
@@ -705,6 +710,7 @@ enum ApplicationStatus {
   APPLIED
   TEST_PENDING
   TEST_PASSED
+  TEST_PASSED_WAITING_HR
   TEST_FAILED
   REFERRAL_PENDING
   REFERRAL_CONFIRMED
@@ -869,4 +875,38 @@ enum UserStatus {
   ACTIVE
   BLOCKED
   DELETED
+}
+
+enum CandidateTestAttemptStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PASSED
+  FAILED
+  EXPIRED
+}
+
+model CandidateTestAttempt {
+  id            String                      @id @default(uuid())
+  candidateId   String
+  jobId         String
+  testId        String
+  status        CandidateTestAttemptStatus  @default(NOT_STARTED)
+  testSessionId String?                     @unique
+  expiresAt     DateTime
+  score         Float?
+  startedAt     DateTime                    @default(now())
+  completedAt   DateTime?
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+
+  Candidate     Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  Job           Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Test          Test         @relation(fields: [testId], references: [id])
+  TestSession   TestSession? @relation(fields: [testSessionId], references: [id])
+
+  @@unique([candidateId, jobId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@index([status])
+  @@index([expiresAt])
 }

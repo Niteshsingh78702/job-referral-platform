@@ -31,6 +31,7 @@ export enum ApplicationStatus {
   TEST_REQUIRED = 'TEST_REQUIRED',
   TEST_IN_PROGRESS = 'TEST_IN_PROGRESS',
   TEST_FAILED = 'TEST_FAILED',
+  TEST_PASSED_WAITING_HR = 'TEST_PASSED_WAITING_HR', // Passed test, waiting for HR review
   APPLIED = 'APPLIED',
   INTERVIEW_CONFIRMED = 'INTERVIEW_CONFIRMED',
   PAYMENT_PENDING = 'PAYMENT_PENDING',
@@ -41,6 +42,15 @@ export enum ApplicationStatus {
   CANDIDATE_NO_SHOW = 'CANDIDATE_NO_SHOW',
   HR_NO_SHOW = 'HR_NO_SHOW',
   REJECTED = 'REJECTED',
+  EXPIRED = 'EXPIRED', // Test expired
+}
+
+export enum CandidateTestAttemptStatus {
+  NOT_STARTED = 'NOT_STARTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  PASSED = 'PASSED',
+  FAILED = 'FAILED',
+  EXPIRED = 'EXPIRED',
 }
 
 export enum TestSessionStatus {

@@ -12,6 +12,9 @@ _export(exports, {
     get AddQuestionDto () {
         return AddQuestionDto;
     },
+    get CreateRoleTestDto () {
+        return CreateRoleTestDto;
+    },
     get CreateTestDto () {
         return CreateTestDto;
     },
@@ -20,6 +23,9 @@ _export(exports, {
     },
     get TestEventDto () {
         return TestEventDto;
+    },
+    get UpdateTestDto () {
+        return UpdateTestDto;
     }
 });
 const _classvalidator = require("class-validator");
@@ -40,6 +46,7 @@ let CreateTestDto = class CreateTestDto {
         this.shuffleQuestions = true;
         this.maxTabSwitches = 2;
         this.difficulty = 'MEDIUM';
+        this.validityDays = 7;
     }
 };
 _ts_decorate([
@@ -88,6 +95,111 @@ _ts_decorate([
     (0, _classvalidator.IsOptional)(),
     _ts_metadata("design:type", String)
 ], CreateTestDto.prototype, "difficulty", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.Max)(30),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], CreateTestDto.prototype, "validityDays", void 0);
+let CreateRoleTestDto = class CreateRoleTestDto {
+    constructor(){
+        this.duration = 30;
+        this.passingScore = 70;
+        this.totalQuestions = 20;
+        this.validityDays = 7;
+        this.isActive = false;
+    }
+};
+_ts_decorate([
+    (0, _classvalidator.IsString)(),
+    _ts_metadata("design:type", String)
+], CreateRoleTestDto.prototype, "skillBucketId", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsString)(),
+    _ts_metadata("design:type", String)
+], CreateRoleTestDto.prototype, "title", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateRoleTestDto.prototype, "description", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(5),
+    (0, _classvalidator.Max)(180),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], CreateRoleTestDto.prototype, "duration", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(0),
+    (0, _classvalidator.Max)(100),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], CreateRoleTestDto.prototype, "passingScore", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], CreateRoleTestDto.prototype, "totalQuestions", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.Max)(30),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], CreateRoleTestDto.prototype, "validityDays", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsBoolean)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Boolean)
+], CreateRoleTestDto.prototype, "isActive", void 0);
+let UpdateTestDto = class UpdateTestDto {
+};
+_ts_decorate([
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], UpdateTestDto.prototype, "title", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], UpdateTestDto.prototype, "description", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(5),
+    (0, _classvalidator.Max)(180),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], UpdateTestDto.prototype, "duration", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(0),
+    (0, _classvalidator.Max)(100),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], UpdateTestDto.prototype, "passingScore", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], UpdateTestDto.prototype, "totalQuestions", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsNumber)(),
+    (0, _classvalidator.Min)(1),
+    (0, _classvalidator.Max)(30),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Number)
+], UpdateTestDto.prototype, "validityDays", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsBoolean)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Boolean)
+], UpdateTestDto.prototype, "isActive", void 0);
 let AddQuestionDto = class AddQuestionDto {
     constructor(){
         this.points = 1;

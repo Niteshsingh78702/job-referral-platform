@@ -41,6 +41,46 @@ let TestController = class TestController {
         return this.testService.getTestById(testId);
     }
     // ===========================================
+    // ADMIN: Role-Based Test Management
+    // ===========================================
+    async createRoleTest(dto) {
+        return this.testService.createRoleTest(dto);
+    }
+    async getAllRoleTests() {
+        return this.testService.getAllRoleTests();
+    }
+    async getTestBySkillBucket(skillBucketId) {
+        return this.testService.getTestBySkillBucket(skillBucketId);
+    }
+    async updateTest(testId, dto) {
+        return this.testService.updateTest(testId, dto);
+    }
+    async activateTest(testId) {
+        return this.testService.activateTest(testId);
+    }
+    async deactivateTest(testId) {
+        return this.testService.deactivateTest(testId);
+    }
+    // ===========================================
+    // CANDIDATE: Test Eligibility
+    // ===========================================
+    async checkTestEligibility(jobId, userId) {
+        // Get candidate ID from user ID
+        const candidate = await this.testService['prisma'].candidate.findUnique({
+            where: {
+                userId
+            }
+        });
+        if (!candidate) {
+            return {
+                eligible: false,
+                reason: 'NO_PROFILE',
+                message: 'Candidate profile not found'
+            };
+        }
+        return this.testService.getTestEligibility(candidate.id, jobId);
+    }
+    // ===========================================
     // CANDIDATE: Test Taking
     // ===========================================
     async startTest(applicationId, userId) {
@@ -94,6 +134,77 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], TestController.prototype, "getTest", null);
+_ts_decorate([
+    (0, _common.Post)('role-tests'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        typeof _dto.CreateRoleTestDto === "undefined" ? Object : _dto.CreateRoleTestDto
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "createRoleTest", null);
+_ts_decorate([
+    (0, _common.Get)('role-tests/all'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "getAllRoleTests", null);
+_ts_decorate([
+    (0, _common.Get)('role-tests/skill-bucket/:skillBucketId'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('skillBucketId')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "getTestBySkillBucket", null);
+_ts_decorate([
+    (0, _common.Patch)(':testId'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_param(1, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        typeof _dto.UpdateTestDto === "undefined" ? Object : _dto.UpdateTestDto
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "updateTest", null);
+_ts_decorate([
+    (0, _common.Patch)(':testId/activate'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "activateTest", null);
+_ts_decorate([
+    (0, _common.Patch)(':testId/deactivate'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "deactivateTest", null);
+_ts_decorate([
+    (0, _common.Get)('eligibility/:jobId'),
+    (0, _decorators.Roles)(_constants.UserRole.CANDIDATE),
+    _ts_param(0, (0, _common.Param)('jobId')),
+    _ts_param(1, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "checkTestEligibility", null);
 _ts_decorate([
     (0, _common.Post)('application/:applicationId/start'),
     (0, _decorators.Roles)(_constants.UserRole.CANDIDATE),

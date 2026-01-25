@@ -19,6 +19,7 @@ const adminState = {
     questions: [],
     questionStats: {},
     skillBuckets: [],
+    roleTests: [],
     interviews: [],
     interviewStats: {},
     analytics: {},
@@ -26,6 +27,7 @@ const adminState = {
     currentJobId: null,
     currentQuestionId: null,
     currentSkillBucketId: null,
+    currentRoleTestId: null,
     currentInterviewId: null,
 };
 
@@ -245,6 +247,7 @@ function navigateToPage(page) {
         'dashboard': 'dashboardPage',
         'jobs': 'jobsPage',
         'skillBuckets': 'skillBucketsPage',
+        'roleTests': 'roleTestsPage',
         'interviews': 'interviewsPage',
         'questions': 'questionsPage',
         'users': 'usersPage',
@@ -260,6 +263,7 @@ function navigateToPage(page) {
         'dashboard': 'Dashboard',
         'jobs': 'Jobs',
         'skillBuckets': 'Skill Clusters',
+        'roleTests': 'Role Tests',
         'interviews': 'Interviews',
         'questions': 'Question Bank',
         'users': 'Users',
@@ -293,6 +297,9 @@ async function loadPageData(page) {
             break;
         case 'skillBuckets':
             await loadSkillBuckets();
+            break;
+        case 'roleTests':
+            await loadRoleTests();
             break;
         case 'interviews':
             await loadInterviews();
@@ -2344,4 +2351,342 @@ function updateRevenueUI() {
 
     document.getElementById('statNetRevenue').textContent = `₹${formatNumber(summary.netRevenue || 0)}`;
     document.getElementById('statTotalRefunds').textContent = `₹${formatNumber(summary.totalRefunds || 0)}`;
+}
+
+// ==========================================
+// ROLE TESTS MANAGEMENT
+// ==========================================
+
+async function loadRoleTests() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/tests/role-tests/all`);
+        const data = await response.json();
+
+        if (data) {
+            // data is an array of role tests
+            adminState.roleTests = Array.isArray(data) ? data : (data.data || []);
+            renderRoleTestsTable();
+            updateRoleTestsStats();
+        }
+    } catch (error) {
+        console.error('Error loading role tests:', error);
+        showToast('Failed to load role tests', 'error');
+    }
+}
+
+function updateRoleTestsStats() {
+    const tests = adminState.roleTests;
+
+    const totalTests = tests.filter(t => t.test).length;
+    const activeTests = tests.filter(t => t.test?.isActive).length;
+    const rolesWithoutTests = tests.filter(t => !t.test).length;
+    const testsWithoutQuestions = tests.filter(t => t.test && t.test.questionsCount === 0).length;
+
+    document.getElementById('statTotalRoleTests').textContent = totalTests;
+    document.getElementById('statActiveRoleTests').textContent = activeTests;
+    document.getElementById('statRolesWithoutTests').textContent = rolesWithoutTests;
+    document.getElementById('statTestsWithoutQuestions').textContent = testsWithoutQuestions;
+}
+
+function renderRoleTestsTable() {
+    const container = document.getElementById('roleTestsTableContainer');
+
+    if (!adminState.roleTests || adminState.roleTests.length === 0) {
+        container.innerHTML = '<p class="loading">No role tests found</p>';
+        return;
+    }
+
+    const table = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Test Title</th>
+                    <th>Duration</th>
+                    <th>Passing Score</th>
+                    <th>Questions</th>
+                    <th>Validity</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${adminState.roleTests.map(rt => {
+        if (!rt.test) {
+            return `
+                            <tr style="opacity: 0.6;">
+                                <td><strong>${rt.skillBucketName}</strong><br><small style="color: var(--text-dim);">${rt.skillBucketCode}</small></td>
+                                <td colspan="6" style="color: var(--warning);">No test configured</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="showCreateRoleTestModal('${rt.skillBucketId}', '${rt.skillBucketName}')">+ Create Test</button>
+                                </td>
+                            </tr>
+                        `;
+        }
+        const test = rt.test;
+        return `
+                        <tr>
+                            <td><strong>${rt.skillBucketName}</strong><br><small style="color: var(--text-dim);">${rt.skillBucketCode}</small></td>
+                            <td>${test.title}</td>
+                            <td>${test.duration} min</td>
+                            <td>${test.passingScore}%</td>
+                            <td>${test.questionsCount} <small style="color: var(--text-dim);">/ ${test.totalQuestions}</small></td>
+                            <td>${test.validityDays} days</td>
+                            <td>
+                                <span class="badge badge-${test.isActive ? 'success' : 'warning'}">${test.isActive ? 'Active' : 'Inactive'}</span>
+                                ${test.questionsCount === 0 ? '<br><small style="color: var(--danger);">⚠️ No questions</small>' : ''}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editRoleTest('${test.id}')">Edit</button>
+                                ${test.isActive
+                ? `<button class="btn btn-sm btn-warning" onclick="toggleRoleTestStatus('${test.id}', false)">Deactivate</button>`
+                : `<button class="btn btn-sm btn-success" onclick="toggleRoleTestStatus('${test.id}', true)" ${test.questionsCount === 0 ? 'disabled title="Add questions first"' : ''}>Activate</button>`
+            }
+                            </td>
+                        </tr>
+                    `;
+    }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = table;
+}
+
+async function showCreateRoleTestModal(skillBucketId = null, skillBucketName = null) {
+    adminState.currentRoleTestId = null;
+    document.getElementById('roleTestModalTitle').textContent = 'Create Role Test';
+    document.getElementById('roleTestForm').reset();
+
+    // Populate skill bucket dropdown with roles that don't have tests
+    const select = document.getElementById('roleTestSkillBucket');
+    select.innerHTML = '<option value="">Select Role</option>';
+
+    adminState.roleTests
+        .filter(rt => !rt.test) // Only show roles without tests
+        .forEach(rt => {
+            const option = document.createElement('option');
+            option.value = rt.skillBucketId;
+            option.textContent = `${rt.skillBucketName} (${rt.skillBucketCode})`;
+            select.appendChild(option);
+        });
+
+    // If specific skill bucket was provided, select it
+    if (skillBucketId) {
+        select.value = skillBucketId;
+        // Add the option if it doesn't exist (in case this role already has a test)
+        if (!select.value && skillBucketName) {
+            const option = document.createElement('option');
+            option.value = skillBucketId;
+            option.textContent = skillBucketName;
+            select.appendChild(option);
+            select.value = skillBucketId;
+        }
+    }
+
+    enableModalRequirements('roleTestModal');
+    document.getElementById('roleTestModal').classList.add('active');
+}
+
+function closeRoleTestModal() {
+    disableModalRequirements('roleTestModal');
+    document.getElementById('roleTestModal').classList.remove('active');
+}
+
+async function saveRoleTest(event) {
+    event.preventDefault();
+
+    const testData = {
+        skillBucketId: document.getElementById('roleTestSkillBucket').value,
+        title: document.getElementById('roleTestTitle').value,
+        description: document.getElementById('roleTestDescription').value || null,
+        duration: parseInt(document.getElementById('roleTestDuration').value) || 30,
+        passingScore: parseInt(document.getElementById('roleTestPassingScore').value) || 70,
+        totalQuestions: parseInt(document.getElementById('roleTestTotalQuestions').value) || 20,
+        validityDays: parseInt(document.getElementById('roleTestValidityDays').value) || 7,
+    };
+
+    try {
+        let url, method;
+        if (adminState.currentRoleTestId) {
+            // Update existing test
+            url = `${API_BASE_URL}/tests/${adminState.currentRoleTestId}`;
+            method = 'PATCH';
+            delete testData.skillBucketId; // Can't change skill bucket on update
+        } else {
+            // Create new test
+            url = `${API_BASE_URL}/tests/role-tests`;
+            method = 'POST';
+        }
+
+        const response = await apiCall(url, {
+            method,
+            body: JSON.stringify(testData),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(adminState.currentRoleTestId ? 'Test updated successfully' : 'Role test created successfully', 'success');
+            closeRoleTestModal();
+            await loadRoleTests();
+        } else {
+            showToast(data.message || 'Failed to save test', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving role test:', error);
+        showToast('Failed to save role test', 'error');
+    }
+
+    return false;
+}
+
+async function editRoleTest(testId) {
+    // Find the test in our state
+    const roleTest = adminState.roleTests.find(rt => rt.test?.id === testId);
+    if (!roleTest || !roleTest.test) {
+        showToast('Test not found', 'error');
+        return;
+    }
+
+    const test = roleTest.test;
+    adminState.currentRoleTestId = testId;
+
+    document.getElementById('roleTestModalTitle').textContent = 'Edit Role Test';
+
+    // Populate form
+    const select = document.getElementById('roleTestSkillBucket');
+    select.innerHTML = `<option value="${roleTest.skillBucketId}">${roleTest.skillBucketName} (${roleTest.skillBucketCode})</option>`;
+    select.value = roleTest.skillBucketId;
+    select.disabled = true; // Can't change skill bucket on edit
+
+    document.getElementById('roleTestTitle').value = test.title;
+    document.getElementById('roleTestDescription').value = test.description || '';
+    document.getElementById('roleTestDuration').value = test.duration;
+    document.getElementById('roleTestPassingScore').value = test.passingScore;
+    document.getElementById('roleTestTotalQuestions').value = test.totalQuestions;
+    document.getElementById('roleTestValidityDays').value = test.validityDays;
+
+    enableModalRequirements('roleTestModal');
+    document.getElementById('roleTestModal').classList.add('active');
+}
+
+async function toggleRoleTestStatus(testId, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    const confirmed = await showConfirmModal({
+        icon: activate ? '✅' : '⏸️',
+        title: `${activate ? 'Activate' : 'Deactivate'} Test`,
+        message: activate
+            ? 'Candidates will be able to take this test.'
+            : 'Candidates will no longer be able to take this test.',
+        confirmText: `Yes, ${activate ? 'Activate' : 'Deactivate'}`,
+        confirmClass: activate ? 'btn-success' : 'btn-warning'
+    });
+
+    if (!confirmed) return;
+
+    try {
+        const response = await apiCall(`${API_BASE_URL}/tests/${testId}/${action}`, {
+            method: 'PATCH',
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(`Test ${activate ? 'activated' : 'deactivated'} successfully`, 'success');
+            await loadRoleTests();
+        } else {
+            showToast(data.message || `Failed to ${action} test`, 'error');
+        }
+    } catch (error) {
+        console.error(`Error ${action}ing test:`, error);
+        showToast(`Failed to ${action} test`, 'error');
+    }
+}
+
+// Add loadSkillBuckets function if it doesn't exist
+async function loadSkillBuckets() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/skill-buckets`);
+        const data = await response.json();
+
+        if (data) {
+            adminState.skillBuckets = Array.isArray(data) ? data : (data.data || []);
+            renderSkillBucketsTable();
+        }
+    } catch (error) {
+        console.error('Error loading skill buckets:', error);
+        showToast('Failed to load skill buckets', 'error');
+    }
+}
+
+function renderSkillBucketsTable() {
+    const container = document.getElementById('skillBucketsTableContainer');
+
+    if (!adminState.skillBuckets || adminState.skillBuckets.length === 0) {
+        container.innerHTML = '<p class="loading">No skill clusters found</p>';
+        return;
+    }
+
+    const table = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Display Name</th>
+                    <th>Experience Range</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${adminState.skillBuckets.map(sb => `
+                    <tr>
+                        <td>${sb.name}</td>
+                        <td><code>${sb.code}</code></td>
+                        <td>${sb.displayName || sb.name}</td>
+                        <td>${sb.experienceMin || 0} - ${sb.experienceMax || '∞'} years</td>
+                        <td><span class="badge badge-${sb.isActive ? 'success' : 'warning'}">${sb.isActive ? 'Active' : 'Inactive'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="editSkillBucket('${sb.id}')">Edit</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = table;
+}
+
+function showCreateSkillBucketModal() {
+    adminState.currentSkillBucketId = null;
+    document.getElementById('skillBucketModalTitle').textContent = 'Create Skill Cluster';
+    document.getElementById('skillBucketForm').reset();
+    enableModalRequirements('skillBucketModal');
+    document.getElementById('skillBucketModal').classList.add('active');
+}
+
+function closeSkillBucketModal() {
+    disableModalRequirements('skillBucketModal');
+    document.getElementById('skillBucketModal').classList.remove('active');
+}
+
+async function editSkillBucket(id) {
+    const skillBucket = adminState.skillBuckets.find(sb => sb.id === id);
+    if (!skillBucket) return;
+
+    adminState.currentSkillBucketId = id;
+    document.getElementById('skillBucketModalTitle').textContent = 'Edit Skill Cluster';
+
+    document.getElementById('skillBucketName').value = skillBucket.name;
+    document.getElementById('skillBucketCode').value = skillBucket.code;
+    document.getElementById('skillBucketDisplayName').value = skillBucket.displayName || '';
+    document.getElementById('skillBucketDescription').value = skillBucket.description || '';
+    document.getElementById('skillBucketExpMin').value = skillBucket.experienceMin || 0;
+    document.getElementById('skillBucketExpMax').value = skillBucket.experienceMax || 3;
+
+    enableModalRequirements('skillBucketModal');
+    document.getElementById('skillBucketModal').classList.add('active');
 }

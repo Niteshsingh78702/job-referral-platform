@@ -204,6 +204,335 @@ let TestService = class TestService {
         return test;
     }
     // ===========================================
+    // ADMIN: Role-Based Test Management
+    // ===========================================
+    async createRoleTest(dto) {
+        // Check if test already exists for this skill bucket (role)
+        const existingTest = await this.prisma.skillBucket.findUnique({
+            where: {
+                id: dto.skillBucketId
+            },
+            include: {
+                Test: true
+            }
+        });
+        if (!existingTest) {
+            throw new _common.NotFoundException('Skill bucket (role) not found');
+        }
+        if (existingTest.testId) {
+            throw new _common.BadRequestException('Test already exists for this role. Each role can have only one test.');
+        }
+        // Create the test
+        const test = await this.prisma.test.create({
+            data: {
+                id: _crypto.randomUUID(),
+                title: dto.title,
+                description: dto.description,
+                duration: dto.duration || 30,
+                passingScore: dto.passingScore || 70,
+                totalQuestions: dto.totalQuestions || 20,
+                validityDays: dto.validityDays || 7,
+                isActive: dto.isActive || false,
+                updatedAt: new Date()
+            }
+        });
+        // Link test to skill bucket
+        await this.prisma.skillBucket.update({
+            where: {
+                id: dto.skillBucketId
+            },
+            data: {
+                testId: test.id
+            }
+        });
+        return test;
+    }
+    async getAllRoleTests() {
+        const skillBuckets = await this.prisma.skillBucket.findMany({
+            include: {
+                Test: {
+                    include: {
+                        TestQuestion: true,
+                        _count: {
+                            select: {
+                                TestSession: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        return skillBuckets.map((bucket)=>({
+                skillBucketId: bucket.id,
+                skillBucketName: bucket.name,
+                skillBucketCode: bucket.code,
+                test: bucket.Test ? {
+                    id: bucket.Test.id,
+                    title: bucket.Test.title,
+                    description: bucket.Test.description,
+                    duration: bucket.Test.duration,
+                    passingScore: bucket.Test.passingScore,
+                    totalQuestions: bucket.Test.totalQuestions,
+                    validityDays: bucket.Test.validityDays,
+                    isActive: bucket.Test.isActive,
+                    questionsCount: bucket.Test.TestQuestion.length,
+                    sessionsCount: bucket.Test._count.TestSession,
+                    createdAt: bucket.Test.createdAt
+                } : null
+            }));
+    }
+    async getTestBySkillBucket(skillBucketId) {
+        const skillBucket = await this.prisma.skillBucket.findUnique({
+            where: {
+                id: skillBucketId
+            },
+            include: {
+                Test: {
+                    include: {
+                        TestQuestion: {
+                            orderBy: {
+                                orderIndex: 'asc'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (!skillBucket) {
+            throw new _common.NotFoundException('Skill bucket not found');
+        }
+        if (!skillBucket.Test) {
+            throw new _common.NotFoundException('No test found for this role');
+        }
+        return {
+            skillBucket: {
+                id: skillBucket.id,
+                name: skillBucket.name,
+                code: skillBucket.code
+            },
+            test: skillBucket.Test
+        };
+    }
+    async updateTest(testId, dto) {
+        const test = await this.prisma.test.findUnique({
+            where: {
+                id: testId
+            },
+            include: {
+                TestQuestion: true
+            }
+        });
+        if (!test) {
+            throw new _common.NotFoundException('Test not found');
+        }
+        // Validate activation - cannot activate without questions
+        if (dto.isActive === true && test.TestQuestion.length === 0) {
+            throw new _common.BadRequestException('Cannot activate test without questions. Add at least one question first.');
+        }
+        return this.prisma.test.update({
+            where: {
+                id: testId
+            },
+            data: {
+                ...dto.title && {
+                    title: dto.title
+                },
+                ...dto.description !== undefined && {
+                    description: dto.description
+                },
+                ...dto.duration && {
+                    duration: dto.duration
+                },
+                ...dto.passingScore && {
+                    passingScore: dto.passingScore
+                },
+                ...dto.totalQuestions && {
+                    totalQuestions: dto.totalQuestions
+                },
+                ...dto.validityDays && {
+                    validityDays: dto.validityDays
+                },
+                ...dto.isActive !== undefined && {
+                    isActive: dto.isActive
+                },
+                updatedAt: new Date()
+            }
+        });
+    }
+    async activateTest(testId) {
+        const test = await this.prisma.test.findUnique({
+            where: {
+                id: testId
+            },
+            include: {
+                TestQuestion: true
+            }
+        });
+        if (!test) {
+            throw new _common.NotFoundException('Test not found');
+        }
+        if (test.TestQuestion.length === 0) {
+            throw new _common.BadRequestException('Cannot activate test without questions. Add at least one question first.');
+        }
+        return this.prisma.test.update({
+            where: {
+                id: testId
+            },
+            data: {
+                isActive: true,
+                updatedAt: new Date()
+            }
+        });
+    }
+    async deactivateTest(testId) {
+        const test = await this.prisma.test.findUnique({
+            where: {
+                id: testId
+            }
+        });
+        if (!test) {
+            throw new _common.NotFoundException('Test not found');
+        }
+        return this.prisma.test.update({
+            where: {
+                id: testId
+            },
+            data: {
+                isActive: false,
+                updatedAt: new Date()
+            }
+        });
+    }
+    // ===========================================
+    // Candidate: Test Eligibility & Taking
+    // ===========================================
+    async getTestEligibility(candidateId, jobId) {
+        // Get job with skill bucket and test info
+        const job = await this.prisma.job.findUnique({
+            where: {
+                id: jobId
+            },
+            include: {
+                SkillBucket: {
+                    include: {
+                        Test: true
+                    }
+                }
+            }
+        });
+        if (!job) {
+            throw new _common.NotFoundException('Job not found');
+        }
+        if (!job.SkillBucket || !job.SkillBucket.Test) {
+            return {
+                eligible: false,
+                reason: 'NO_TEST_CONFIGURED',
+                message: 'No test is configured for this job role.'
+            };
+        }
+        const test = job.SkillBucket.Test;
+        if (!test.isActive) {
+            return {
+                eligible: false,
+                reason: 'TEST_INACTIVE',
+                message: 'Test is currently not available for this role.'
+            };
+        }
+        // Check for existing attempt
+        const existingAttempt = await this.prisma.candidateTestAttempt.findUnique({
+            where: {
+                candidateId_jobId: {
+                    candidateId,
+                    jobId
+                }
+            }
+        });
+        if (existingAttempt) {
+            if (existingAttempt.status === _constants.CandidateTestAttemptStatus.PASSED) {
+                return {
+                    eligible: false,
+                    reason: 'ALREADY_PASSED',
+                    message: 'You have already passed the test for this job.',
+                    attemptStatus: existingAttempt.status,
+                    score: existingAttempt.score
+                };
+            }
+            if (existingAttempt.status === _constants.CandidateTestAttemptStatus.FAILED) {
+                return {
+                    eligible: false,
+                    reason: 'ALREADY_FAILED',
+                    message: 'You have already failed the test for this job. Re-attempts are not allowed.',
+                    attemptStatus: existingAttempt.status,
+                    score: existingAttempt.score
+                };
+            }
+            if (existingAttempt.status === _constants.CandidateTestAttemptStatus.EXPIRED) {
+                return {
+                    eligible: false,
+                    reason: 'TEST_EXPIRED',
+                    message: 'The test validity period has expired.',
+                    attemptStatus: existingAttempt.status
+                };
+            }
+            if (existingAttempt.status === _constants.CandidateTestAttemptStatus.IN_PROGRESS) {
+                return {
+                    eligible: true,
+                    reason: 'IN_PROGRESS',
+                    message: 'You have an ongoing test session.',
+                    attemptStatus: existingAttempt.status,
+                    testSessionId: existingAttempt.testSessionId
+                };
+            }
+            // NOT_STARTED - check if expired
+            if (new Date() > existingAttempt.expiresAt) {
+                // Mark as expired
+                await this.prisma.candidateTestAttempt.update({
+                    where: {
+                        id: existingAttempt.id
+                    },
+                    data: {
+                        status: _constants.CandidateTestAttemptStatus.EXPIRED
+                    }
+                });
+                return {
+                    eligible: false,
+                    reason: 'TEST_EXPIRED',
+                    message: 'The test validity period has expired.',
+                    attemptStatus: _constants.CandidateTestAttemptStatus.EXPIRED
+                };
+            }
+            // NOT_STARTED and still valid
+            return {
+                eligible: true,
+                reason: 'READY',
+                message: 'You can start the test.',
+                attemptStatus: existingAttempt.status,
+                expiresAt: existingAttempt.expiresAt,
+                test: {
+                    id: test.id,
+                    title: test.title,
+                    duration: test.duration,
+                    totalQuestions: test.totalQuestions,
+                    passingScore: test.passingScore
+                }
+            };
+        }
+        // No attempt exists - eligible to start
+        return {
+            eligible: true,
+            reason: 'NO_ATTEMPT',
+            message: 'You can start the test.',
+            test: {
+                id: test.id,
+                title: test.title,
+                duration: test.duration,
+                totalQuestions: test.totalQuestions,
+                passingScore: test.passingScore,
+                validityDays: test.validityDays
+            }
+        };
+    }
+    // ===========================================
     // Candidate: Test Taking
     // ===========================================
     async startTest(applicationId, userId) {
@@ -233,13 +562,13 @@ let TestService = class TestService {
         if (!application) {
             throw new _common.NotFoundException('Application not found');
         }
-        if (application.candidate.userId !== userId) {
+        if (application.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized to access this application');
         }
         if (application.status !== _constants.ApplicationStatus.TEST_REQUIRED && application.status !== _constants.ApplicationStatus.TEST_PENDING) {
             throw new _common.BadRequestException('Test not available for this application');
         }
-        if (!application.job.Test) {
+        if (!application.Job.Test) {
             throw new _common.BadRequestException('No test configured for this job');
         }
         // Defense-in-depth: Check skill test cooldown if job has skill bucket
@@ -255,7 +584,7 @@ let TestService = class TestService {
             }
         }
         // Check if already has an active or completed session
-        const existingSession = application.testSessions.find((s)=>s.status !== _constants.TestSessionStatus.EXPIRED);
+        const existingSession = application.TestSession.find((s)=>s.status !== _constants.TestSessionStatus.EXPIRED);
         if (existingSession) {
             if (existingSession.status === _constants.TestSessionStatus.ACTIVE) {
                 // Return existing session (resume)
@@ -263,7 +592,7 @@ let TestService = class TestService {
             }
             throw new _common.BadRequestException('Test already attempted for this application');
         }
-        const test = application.job.Test;
+        const test = application.Job.Test;
         const now = Date.now();
         const endsAt = now + test.duration * 60 * 1000;
         // Shuffle questions if enabled
@@ -562,8 +891,8 @@ let TestService = class TestService {
                 isPassed
             }
         });
-        // Update application status
-        const newStatus = isPassed ? _constants.ApplicationStatus.APPLIED : _constants.ApplicationStatus.TEST_FAILED;
+        // Update application status - PASSED goes to WAITING for HR review
+        const newStatus = isPassed ? _constants.ApplicationStatus.TEST_PASSED_WAITING_HR : _constants.ApplicationStatus.REJECTED;
         await this.prisma.jobApplication.update({
             where: {
                 id: session.applicationId
@@ -590,8 +919,8 @@ let TestService = class TestService {
                 }
             });
             if (application?.Job?.skillBucketId) {
-                await this.skillBucketService.recordSkillTestAttempt(application.candidate.id, application.job.skillBucketId, isPassed, score, session.id);
-                this.logger.log(`Recorded skill test attempt for candidate ${application.candidate.id} ` + `on skill bucket ${application.job.skillBucketId}: passed=${isPassed}`);
+                await this.skillBucketService.recordSkillTestAttempt(application.Candidate.id, application.Job.skillBucketId, isPassed, score, session.id);
+                this.logger.log(`Recorded skill test attempt for candidate ${application.Candidate.id} ` + `on skill bucket ${application.Job.skillBucketId}: passed=${isPassed}`);
             }
         } catch (error) {
             this.logger.error('Failed to record skill test attempt:', error);

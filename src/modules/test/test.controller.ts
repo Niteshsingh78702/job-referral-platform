@@ -2,11 +2,12 @@ import {
     Controller,
     Get,
     Post,
+    Patch,
     Body,
     Param,
 } from '@nestjs/common';
 import { TestService } from './test.service';
-import { CreateTestDto, AddQuestionDto, SubmitAnswerDto, TestEventDto } from './dto';
+import { CreateTestDto, CreateRoleTestDto, UpdateTestDto, AddQuestionDto, SubmitAnswerDto, TestEventDto } from './dto';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { UserRole } from '../../common/constants';
 
@@ -37,6 +38,69 @@ export class TestController {
     @Roles(UserRole.ADMIN)
     async getTest(@Param('testId') testId: string) {
         return this.testService.getTestById(testId);
+    }
+
+    // ===========================================
+    // ADMIN: Role-Based Test Management
+    // ===========================================
+
+    @Post('role-tests')
+    @Roles(UserRole.ADMIN)
+    async createRoleTest(@Body() dto: CreateRoleTestDto) {
+        return this.testService.createRoleTest(dto);
+    }
+
+    @Get('role-tests/all')
+    @Roles(UserRole.ADMIN)
+    async getAllRoleTests() {
+        return this.testService.getAllRoleTests();
+    }
+
+    @Get('role-tests/skill-bucket/:skillBucketId')
+    @Roles(UserRole.ADMIN)
+    async getTestBySkillBucket(@Param('skillBucketId') skillBucketId: string) {
+        return this.testService.getTestBySkillBucket(skillBucketId);
+    }
+
+    @Patch(':testId')
+    @Roles(UserRole.ADMIN)
+    async updateTest(
+        @Param('testId') testId: string,
+        @Body() dto: UpdateTestDto,
+    ) {
+        return this.testService.updateTest(testId, dto);
+    }
+
+    @Patch(':testId/activate')
+    @Roles(UserRole.ADMIN)
+    async activateTest(@Param('testId') testId: string) {
+        return this.testService.activateTest(testId);
+    }
+
+    @Patch(':testId/deactivate')
+    @Roles(UserRole.ADMIN)
+    async deactivateTest(@Param('testId') testId: string) {
+        return this.testService.deactivateTest(testId);
+    }
+
+    // ===========================================
+    // CANDIDATE: Test Eligibility
+    // ===========================================
+
+    @Get('eligibility/:jobId')
+    @Roles(UserRole.CANDIDATE)
+    async checkTestEligibility(
+        @Param('jobId') jobId: string,
+        @CurrentUser('sub') userId: string,
+    ) {
+        // Get candidate ID from user ID
+        const candidate = await this.testService['prisma'].candidate.findUnique({
+            where: { userId },
+        });
+        if (!candidate) {
+            return { eligible: false, reason: 'NO_PROFILE', message: 'Candidate profile not found' };
+        }
+        return this.testService.getTestEligibility(candidate.id, jobId);
     }
 
     // ===========================================

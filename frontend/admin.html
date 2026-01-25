@@ -542,6 +542,8 @@
                 <li><a href="#jobs" class="nav-link" data-page="jobs"><span class="sidebar-icon">💼</span> Jobs</a></li>
                 <li><a href="#skillBuckets" class="nav-link" data-page="skillBuckets"><span
                             class="sidebar-icon">🎯</span> Skill Clusters</a></li>
+                <li><a href="#roleTests" class="nav-link" data-page="roleTests"><span class="sidebar-icon">📝</span>
+                        Role Tests</a></li>
                 <li><a href="#interviews" class="nav-link" data-page="interviews"><span class="sidebar-icon">🎤</span>
                         Interviews</a></li>
                 <li><a href="#questions" class="nav-link" data-page="questions"><span class="sidebar-icon">❓</span>
@@ -778,6 +780,39 @@
                         Backend + React Frontend).
                     </p>
                     <div id="skillBucketsTableContainer"></div>
+                </div>
+            </div>
+
+            <!-- Role Tests Page -->
+            <div id="roleTestsPage" class="page-content hidden">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <h3>Total Role Tests</h3>
+                        <div class="value" id="statTotalRoleTests">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Tests</h3>
+                        <div class="value" style="color: var(--success);" id="statActiveRoleTests">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Roles Without Tests</h3>
+                        <div class="value" style="color: var(--warning);" id="statRolesWithoutTests">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Tests Without Questions</h3>
+                        <div class="value" style="color: var(--danger);" id="statTestsWithoutQuestions">0</div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <div class="section-header">
+                        <h3>Role Tests</h3>
+                        <button class="btn btn-primary" onclick="showCreateRoleTestModal()">+ Create Role Test</button>
+                    </div>
+                    <p style="color: var(--text-dim); margin-bottom: 20px;">
+                        Each skill cluster (role) can have one test. Candidates must pass the test before being reviewed
+                        by HR.
+                    </p>
+                    <div id="roleTestsTableContainer"></div>
                 </div>
             </div>
 
@@ -1073,6 +1108,60 @@
                 <div style="display:flex;gap:12px;margin-top:24px;">
                     <button type="submit" class="btn btn-primary" style="flex:1;">Save Skill Cluster</button>
                     <button type="button" class="btn btn-danger" onclick="closeSkillBucketModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Role Test Modal -->
+    <div id="roleTestModal" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3 id="roleTestModalTitle">Create Role Test</h3>
+                <button class="close-modal" onclick="closeRoleTestModal()">×</button>
+            </div>
+            <form id="roleTestForm" onsubmit="return saveRoleTest(event)">
+                <input type="hidden" id="roleTestId" value="">
+                <div class="form-group">
+                    <label>Skill Cluster (Role) *</label>
+                    <select id="roleTestSkillBucket" required style="width: 100%;">
+                        <option value="">Select Role</option>
+                    </select>
+                    <small style="color: var(--text-dim);">Each role can have only one test</small>
+                </div>
+                <div class="form-group">
+                    <label>Test Title *</label>
+                    <input type="text" id="roleTestTitle" placeholder="e.g., Java Backend Developer Assessment"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="roleTestDescription" rows="2"
+                        style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical;"
+                        placeholder="Optional description of the test..."></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>Duration (minutes)</label>
+                        <input type="number" id="roleTestDuration" value="30" min="5" max="180">
+                    </div>
+                    <div class="form-group">
+                        <label>Passing Score (%)</label>
+                        <input type="number" id="roleTestPassingScore" value="70" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Questions</label>
+                        <input type="number" id="roleTestTotalQuestions" value="20" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Validity (days)</label>
+                        <input type="number" id="roleTestValidityDays" value="7" min="1" max="30">
+                        <small style="color: var(--text-dim);">Time to take test after applying</small>
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:24px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">Save Test</button>
+                    <button type="button" class="btn btn-danger" onclick="closeRoleTestModal()">Cancel</button>
                 </div>
             </form>
         </div>

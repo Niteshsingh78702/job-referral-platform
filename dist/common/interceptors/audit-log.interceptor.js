@@ -12,6 +12,48 @@ const _common = require("@nestjs/common");
 const _operators = require("rxjs/operators");
 const _prismaservice = require("../../prisma/prisma.service");
 const _constants = require("../constants");
+const _crypto = /*#__PURE__*/ _interop_require_wildcard(require("crypto"));
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+}
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {
+        __proto__: null
+    };
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
+}
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -56,10 +98,11 @@ let AuditLogInterceptor = class AuditLogInterceptor {
                 try {
                     await this.prisma.auditLog.create({
                         data: {
-                            userId: user?.id,
+                            id: _crypto.randomUUID(),
+                            userId: user?.sub || user?.id,
                             action,
                             entityType: this.extractEntityType(url),
-                            entityId: response?.id || 'unknown',
+                            entityId: response?.id || response?.data?.id || 'unknown',
                             newValue: method !== 'DELETE' ? response : undefined,
                             metadata: {
                                 ip,

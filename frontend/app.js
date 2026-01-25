@@ -3430,7 +3430,7 @@ const sampleQuestions = [
     }
 ];
 
-function startTest(applicationId, company, position) {
+async function startTest(applicationId, company, position) {
     if (!state.token) {
         showToast('warning', 'Please login to take the test.');
         showModal('login');
@@ -3444,35 +3444,39 @@ function startTest(applicationId, company, position) {
     testState.answers = {};
     testState.tabSwitchCount = 0;
 
-    // Try to start test via API
-    tryStartTestAPI(applicationId).then(sessionData => {
-        if (sessionData) {
-            // Use API data
-            testState.sessionId = sessionData.sessionId;
-            testState.questions = sessionData.questions;
-            testState.remainingTime = sessionData.remainingTime;
-            testState.totalTime = sessionData.duration * 60;
-            testState.maxTabSwitches = sessionData.maxTabSwitches;
+    // Try to start test via API - NO demo mode for production
+    const result = await tryStartTestAPI(applicationId);
 
-            // Restore any previous answers
-            if (sessionData.answers) {
-                sessionData.answers.forEach(a => {
-                    testState.answers[a.questionId] = a.selectedAnswer;
-                });
-            }
-        } else {
-            // Use sample questions for demo
-            testState.sessionId = 'demo-session-' + Date.now();
-            testState.questions = sampleQuestions;
-            testState.remainingTime = 30 * 60; // 30 minutes
-            testState.totalTime = 30 * 60;
+    if (result.success) {
+        const sessionData = result.data;
+        // Use API data
+        testState.sessionId = sessionData.sessionId;
+        testState.questions = sessionData.questions;
+        testState.remainingTime = sessionData.remainingTime;
+        testState.totalTime = sessionData.duration * 60;
+        testState.maxTabSwitches = sessionData.maxTabSwitches;
+
+        // Restore any previous answers
+        if (sessionData.answers) {
+            sessionData.answers.forEach(a => {
+                testState.answers[a.questionId] = a.selectedAnswer;
+            });
         }
 
         showTestPage();
         startTimer();
         setupTabSwitchDetection();
         renderQuestion();
-    });
+    } else {
+        // Show error to user - no demo fallback
+        console.error('Failed to start test:', result.error);
+        showToast('error', result.error || 'Unable to start test. Please try again.');
+
+        // Reload applications to get updated status
+        if (typeof loadApplications === 'function') {
+            loadApplications();
+        }
+    }
 }
 
 async function tryStartTestAPI(applicationId) {
@@ -3485,16 +3489,26 @@ async function tryStartTestAPI(applicationId) {
             }
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success || data.sessionId) {
-                return data.data || data;
-            }
+        const data = await response.json();
+
+        if (response.ok && (data.success || data.sessionId)) {
+            return { success: true, data: data.data || data };
         }
+
+        // Return error from API
+        return {
+            success: false,
+            error: data.message || 'Failed to start test',
+            status: response.status
+        };
     } catch (error) {
-        console.log('API not available, using demo mode');
+        console.error('API error:', error);
+        return {
+            success: false,
+            error: 'Unable to connect to server. Please try again.',
+            status: 0
+        };
     }
-    return null;
 }
 
 function showTestPage() {

@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditAction } from '../constants';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuditLogInterceptor implements NestInterceptor {
@@ -45,10 +46,11 @@ export class AuditLogInterceptor implements NestInterceptor {
                     try {
                         await this.prisma.auditLog.create({
                             data: {
-                                userId: user?.id,
+                                id: crypto.randomUUID(),
+                                userId: user?.sub || user?.id,
                                 action,
                                 entityType: this.extractEntityType(url),
-                                entityId: response?.id || 'unknown',
+                                entityId: response?.id || response?.data?.id || 'unknown',
                                 newValue: method !== 'DELETE' ? response : undefined,
                                 metadata: {
                                     ip,

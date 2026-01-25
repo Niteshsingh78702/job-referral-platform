@@ -2690,3 +2690,66 @@ async function editSkillBucket(id) {
     enableModalRequirements('skillBucketModal');
     document.getElementById('skillBucketModal').classList.add('active');
 }
+
+// Setup skill bucket form listener
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('skillBucketForm');
+    if (form) {
+        form.addEventListener('submit', saveSkillBucket);
+    }
+});
+
+async function saveSkillBucket(event) {
+    event.preventDefault();
+
+    const code = document.getElementById('skillBucketCode').value.trim().toUpperCase().replace(/\s+/g, '_');
+    const name = document.getElementById('skillBucketName').value.trim();
+    const displayName = document.getElementById('skillBucketDisplayName').value.trim();
+    const description = document.getElementById('skillBucketDescription').value.trim();
+    const experienceMin = parseInt(document.getElementById('skillBucketExpMin').value) || 0;
+    const experienceMax = parseInt(document.getElementById('skillBucketExpMax').value) || 3;
+
+    if (!code || !name) {
+        showToast('Please fill in required fields', 'error');
+        return;
+    }
+
+    const payload = {
+        code,
+        name,
+        displayName: displayName || `HR Shortlisting Check - ${name}`,
+        description,
+        experienceMin,
+        experienceMax,
+    };
+
+    try {
+        let response;
+        if (adminState.currentSkillBucketId) {
+            // Update existing
+            response = await apiCall(`${API_BASE_URL}/skill-buckets/${adminState.currentSkillBucketId}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+            });
+        } else {
+            // Create new
+            response = await apiCall(`${API_BASE_URL}/skill-buckets`, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+        }
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast(data.message || 'Skill cluster saved successfully', 'success');
+            closeSkillBucketModal();
+            loadSkillBuckets();
+        } else {
+            showToast(data.message || 'Failed to save skill cluster', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving skill cluster:', error);
+        showToast('Failed to save skill cluster', 'error');
+    }
+}

@@ -3158,7 +3158,7 @@ async function uploadCSV() {
         try {
             const response = await apiCall(`${API_BASE_URL}/admin/questions/bulk`, {
                 method: 'POST',
-                body: JSON.stringify({ questions }),
+                body: JSON.stringify({ QuestionBank: questions }),
             });
 
             const data = await response.json();

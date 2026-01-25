@@ -962,7 +962,7 @@ export class AdminService {
     // ===========================================
 
     async getAllSkillBuckets(includeInactive = false) {
-        return this.prisma.skillBucket.findMany({
+        const buckets = await this.prisma.skillBucket.findMany({
             where: includeInactive ? {} : { isActive: true },
             include: {
                 Test: {
@@ -979,6 +979,8 @@ export class AdminService {
                         name: true,
                         duration: true,
                         passingCriteria: true,
+                        questionPoolSize: true,
+                        selectionRoleType: true,
                     },
                 },
                 _count: {
@@ -991,6 +993,26 @@ export class AdminService {
             },
             orderBy: { code: 'asc' },
         });
+
+        // For each bucket, count available questions from QuestionBank
+        const bucketsWithQuestionCount = await Promise.all(
+            buckets.map(async (bucket) => {
+                // Use testTemplate.selectionRoleType if set, otherwise use bucket.code
+                const roleType = bucket.testTemplate?.selectionRoleType || bucket.code;
+                const availableQuestions = await this.prisma.questionBank.count({
+                    where: {
+                        roleType: roleType,
+                        isActive: true,
+                    },
+                });
+                return {
+                    ...bucket,
+                    availableQuestions,
+                };
+            })
+        );
+
+        return bucketsWithQuestionCount;
     }
 
     async createSkillBucket(data: {

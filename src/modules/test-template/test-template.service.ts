@@ -101,9 +101,10 @@ export class TestTemplateService {
             throw new NotFoundException('Test template not found');
         }
 
-        // Get available question count
+        // Get available question count - use skill bucket code as fallback
+        const roleTypeForQuestions = template.selectionRoleType || template.SkillBucket?.[0]?.code;
         const questionCount = await this.getAvailableQuestionCount(
-            template.selectionRoleType,
+            roleTypeForQuestions,
             template.selectionTags,
         );
 

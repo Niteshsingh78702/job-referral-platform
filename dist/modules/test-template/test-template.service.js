@@ -155,8 +155,9 @@ let TestTemplateService = class TestTemplateService {
         if (!template) {
             throw new _common.NotFoundException('Test template not found');
         }
-        // Get available question count
-        const questionCount = await this.getAvailableQuestionCount(template.selectionRoleType, template.selectionTags);
+        // Get available question count - use skill bucket code as fallback
+        const roleTypeForQuestions = template.selectionRoleType || template.SkillBucket?.[0]?.code;
+        const questionCount = await this.getAvailableQuestionCount(roleTypeForQuestions, template.selectionTags);
         return {
             ...template,
             availableQuestionBank: questionCount

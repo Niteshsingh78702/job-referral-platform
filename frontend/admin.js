@@ -2753,3 +2753,427 @@ async function saveSkillBucket(event) {
         showToast('Failed to save skill cluster', 'error');
     }
 }
+
+// ==========================================
+// QUESTION BANK FUNCTIONS
+// ==========================================
+
+async function loadQuestions() {
+    try {
+        const search = document.getElementById('questionSearch')?.value || '';
+        const difficulty = document.getElementById('questionDifficultyFilter')?.value || '';
+        const category = document.getElementById('questionCategoryFilter')?.value || '';
+        const roleType = document.getElementById('questionRoleFilter')?.value || '';
+
+        let url = `${API_BASE_URL}/admin/questions?`;
+        if (search) url += `search=${encodeURIComponent(search)}&`;
+        if (difficulty) url += `difficulty=${difficulty}&`;
+        if (category) url += `category=${category}&`;
+        if (roleType) url += `roleType=${encodeURIComponent(roleType)}&`;
+
+        const response = await apiCall(url);
+        const data = await response.json();
+
+        if (data.success) {
+            adminState.questions = data.data || [];
+            renderQuestionsTable();
+            loadQuestionStats();
+            loadRoleTypesDropdown();
+        }
+    } catch (error) {
+        console.error('Error loading questions:', error);
+        showToast('Failed to load questions', 'error');
+    }
+}
+
+async function loadQuestionStats() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/questions/stats`);
+        const data = await response.json();
+
+        if (data.success) {
+            const stats = data.data;
+            document.getElementById('statTotalQuestions').textContent = stats.total || 0;
+
+            const easy = stats.byDifficulty?.find(d => d.difficulty === 'EASY')?.count || 0;
+            const medium = stats.byDifficulty?.find(d => d.difficulty === 'MEDIUM')?.count || 0;
+            const hard = stats.byDifficulty?.find(d => d.difficulty === 'HARD')?.count || 0;
+
+            document.getElementById('statEasyQuestions').textContent = easy;
+            document.getElementById('statMediumQuestions').textContent = medium;
+            document.getElementById('statHardQuestions').textContent = hard;
+        }
+    } catch (error) {
+        console.error('Error loading question stats:', error);
+    }
+}
+
+async function loadRoleTypesDropdown() {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/questions/role-types`);
+        const data = await response.json();
+
+        if (data.success) {
+            const select = document.getElementById('questionRoleFilter');
+            if (select) {
+                select.innerHTML = '<option value="">All Roles</option>';
+                (data.data || []).forEach(role => {
+                    if (role) {
+                        select.innerHTML += `<option value="${role}">${role}</option>`;
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading role types:', error);
+    }
+}
+
+function renderQuestionsTable() {
+    const container = document.getElementById('questionsTableContainer');
+    if (!container) return;
+
+    if (adminState.questions.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-dim); padding: 40px;">No questions found. Add questions or upload a CSV.</p>';
+        return;
+    }
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Role</th>
+                    <th>Difficulty</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    adminState.questions.forEach(q => {
+        const difficultyBadge = {
+            'EASY': 'badge-success',
+            'MEDIUM': 'badge-warning',
+            'HARD': 'badge-danger'
+        }[q.difficulty] || 'badge-info';
+
+        html += `
+            <tr>
+                <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(q.question)}</td>
+                <td>${q.roleType || '-'}</td>
+                <td><span class="badge ${difficultyBadge}">${q.difficulty}</span></td>
+                <td>${q.category}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editQuestion('${q.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteQuestion('${q.id}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Add Question Modal
+function showAddQuestionModal() {
+    document.getElementById('questionModalTitle').textContent = 'Add Question';
+    document.getElementById('questionId').value = '';
+    document.getElementById('questionForm').reset();
+    enableModalRequirements('questionModal');
+    document.getElementById('questionModal').classList.add('active');
+}
+
+function closeQuestionModal() {
+    document.getElementById('questionModal').classList.remove('active');
+}
+
+async function editQuestion(id) {
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/questions/${id}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const q = data.data;
+            document.getElementById('questionModalTitle').textContent = 'Edit Question';
+            document.getElementById('questionId').value = q.id;
+            document.getElementById('questionText').value = q.question;
+            document.getElementById('optionA').value = q.options[0] || '';
+            document.getElementById('optionB').value = q.options[1] || '';
+            document.getElementById('optionC').value = q.options[2] || '';
+            document.getElementById('optionD').value = q.options[3] || '';
+            document.getElementById('correctAnswer').value = q.correctAnswer;
+            document.getElementById('questionDifficulty').value = q.difficulty;
+            document.getElementById('questionCategory').value = q.category;
+            document.getElementById('questionRoleType').value = q.roleType || '';
+            document.getElementById('questionTags').value = (q.tags || []).join(', ');
+            document.getElementById('questionExplanation').value = q.explanation || '';
+
+            enableModalRequirements('questionModal');
+            document.getElementById('questionModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error loading question:', error);
+        showToast('Failed to load question', 'error');
+    }
+}
+
+async function saveQuestion(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('questionId').value;
+    const tagsInput = document.getElementById('questionTags').value;
+    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+
+    const payload = {
+        question: document.getElementById('questionText').value,
+        options: [
+            document.getElementById('optionA').value,
+            document.getElementById('optionB').value,
+            document.getElementById('optionC').value,
+            document.getElementById('optionD').value,
+        ],
+        correctAnswer: parseInt(document.getElementById('correctAnswer').value),
+        difficulty: document.getElementById('questionDifficulty').value,
+        category: document.getElementById('questionCategory').value,
+        roleType: document.getElementById('questionRoleType').value || undefined,
+        tags,
+        explanation: document.getElementById('questionExplanation').value || undefined,
+    };
+
+    try {
+        let response;
+        if (id) {
+            response = await apiCall(`${API_BASE_URL}/admin/questions/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+            });
+        } else {
+            response = await apiCall(`${API_BASE_URL}/admin/questions`, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+        }
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast(data.message || 'Question saved successfully', 'success');
+            closeQuestionModal();
+            loadQuestions();
+        } else {
+            showToast(data.message || 'Failed to save question', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving question:', error);
+        showToast('Failed to save question', 'error');
+    }
+}
+
+async function deleteQuestion(id) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/questions/${id}`, {
+            method: 'DELETE',
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast('Question deleted successfully', 'success');
+            loadQuestions();
+        } else {
+            showToast(data.message || 'Failed to delete question', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting question:', error);
+        showToast('Failed to delete question', 'error');
+    }
+}
+
+// CSV Upload Functions
+function showCSVUploadModal() {
+    document.getElementById('csvFileInput').value = '';
+    document.getElementById('csvPreview').style.display = 'none';
+    document.getElementById('csvUploadModal').classList.add('active');
+}
+
+function closeCSVUploadModal() {
+    document.getElementById('csvUploadModal').classList.remove('active');
+}
+
+// Preview CSV on file select
+document.addEventListener('DOMContentLoaded', () => {
+    const csvInput = document.getElementById('csvFileInput');
+    if (csvInput) {
+        csvInput.addEventListener('change', previewCSV);
+    }
+
+    // Add filter listeners
+    const searchInput = document.getElementById('questionSearch');
+    const difficultyFilter = document.getElementById('questionDifficultyFilter');
+    const categoryFilter = document.getElementById('questionCategoryFilter');
+    const roleFilter = document.getElementById('questionRoleFilter');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(loadQuestions, 500));
+    }
+    if (difficultyFilter) {
+        difficultyFilter.addEventListener('change', loadQuestions);
+    }
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', loadQuestions);
+    }
+    if (roleFilter) {
+        roleFilter.addEventListener('change', loadQuestions);
+    }
+});
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function previewCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const content = e.target.result;
+        const lines = content.split('\n').filter(line => line.trim());
+
+        if (lines.length < 2) {
+            showToast('CSV file must have header row and at least one data row', 'error');
+            return;
+        }
+
+        const previewDiv = document.getElementById('csvPreview');
+        const contentDiv = document.getElementById('csvPreviewContent');
+
+        let html = `<p style="color: var(--success);">✓ Found ${lines.length - 1} questions</p>`;
+        html += '<table style="width: 100%; font-size: 12px; margin-top: 8px;">';
+
+        // Show first 5 data rows
+        for (let i = 1; i < Math.min(6, lines.length); i++) {
+            const cols = parseCSVLine(lines[i]);
+            html += `<tr><td style="padding: 4px; border-bottom: 1px solid var(--border);">${i}. ${escapeHtml(cols[0] || '').substring(0, 50)}...</td></tr>`;
+        }
+
+        if (lines.length > 6) {
+            html += `<tr><td style="padding: 4px; color: var(--text-dim);">... and ${lines.length - 6} more</td></tr>`;
+        }
+
+        html += '</table>';
+
+        contentDiv.innerHTML = html;
+        previewDiv.style.display = 'block';
+    };
+    reader.readAsText(file);
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+
+    return result;
+}
+
+async function uploadCSV() {
+    const fileInput = document.getElementById('csvFileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        showToast('Please select a CSV file', 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        const content = e.target.result;
+        const lines = content.split('\n').filter(line => line.trim());
+
+        if (lines.length < 2) {
+            showToast('CSV file must have header row and at least one data row', 'error');
+            return;
+        }
+
+        // Parse questions from CSV
+        const questions = [];
+        for (let i = 1; i < lines.length; i++) {
+            const cols = parseCSVLine(lines[i]);
+            if (cols.length < 9) continue;
+
+            questions.push({
+                question: cols[0]?.replace(/^"|"$/g, ''),
+                optionA: cols[1]?.replace(/^"|"$/g, ''),
+                optionB: cols[2]?.replace(/^"|"$/g, ''),
+                optionC: cols[3]?.replace(/^"|"$/g, ''),
+                optionD: cols[4]?.replace(/^"|"$/g, ''),
+                correctAnswer: parseInt(cols[5]) || 0,
+                difficulty: cols[6]?.replace(/^"|"$/g, '').toUpperCase() || 'MEDIUM',
+                category: cols[7]?.replace(/^"|"$/g, '').toUpperCase() || 'TECHNICAL',
+                roleType: cols[8]?.replace(/^"|"$/g, '') || undefined,
+                tags: cols[9]?.replace(/^"|"$/g, '') || '',
+                explanation: cols[10]?.replace(/^"|"$/g, '') || undefined,
+            });
+        }
+
+        if (questions.length === 0) {
+            showToast('No valid questions found in CSV', 'error');
+            return;
+        }
+
+        try {
+            const response = await apiCall(`${API_BASE_URL}/admin/questions/bulk`, {
+                method: 'POST',
+                body: JSON.stringify({ questions }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showToast(`Uploaded ${data.data?.success || 0} questions. ${data.data?.failed || 0} failed.`, 'success');
+                closeCSVUploadModal();
+                loadQuestions();
+            } else {
+                showToast(data.message || 'Failed to upload questions', 'error');
+            }
+        } catch (error) {
+            console.error('Error uploading CSV:', error);
+            showToast('Failed to upload questions', 'error');
+        }
+    };
+    reader.readAsText(file);
+}

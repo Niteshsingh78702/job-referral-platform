@@ -626,7 +626,10 @@
                 <div class="data-section">
                     <div class="section-header">
                         <h3>Question Bank</h3>
-                        <button class="btn btn-primary" onclick="showCreateQuestionModal()">+ Add Question</button>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-success" onclick="showCSVUploadModal()">📤 Upload CSV</button>
+                            <button class="btn btn-primary" onclick="showCreateQuestionModal()">+ Add Question</button>
+                        </div>
                     </div>
                     <div class="stats-grid" style="margin-bottom: 24px;">
                         <div class="stat-card">
@@ -1198,6 +1201,128 @@
                 <button class="btn btn-primary" style="flex:1;" onclick="submitInterviewAction()">Submit Action</button>
                 <button class="btn btn-danger" onclick="closeInterviewActionModal()">Cancel</button>
             </div>
+        </div>
+    </div>
+
+    <!-- CSV Upload Modal -->
+    <div id="csvUploadModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>📤 Upload Questions CSV</h3>
+                <button class="close-modal" onclick="closeCSVUploadModal()">×</button>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <p style="color: var(--text-dim); margin-bottom: 12px;">
+                    Upload a CSV file with questions. Each row should have:
+                </p>
+                <div
+                    style="background: var(--bg-input); padding: 12px; border-radius: 8px; font-size: 13px; overflow-x: auto;">
+                    <code>question,optionA,optionB,optionC,optionD,correctAnswer,difficulty,category,roleType,tags,explanation</code>
+                </div>
+                <p style="color: var(--text-dim); margin-top: 12px; font-size: 13px;">
+                    • <strong>correctAnswer</strong>: 0=A, 1=B, 2=C, 3=D<br>
+                    • <strong>difficulty</strong>: EASY, MEDIUM, HARD<br>
+                    • <strong>category</strong>: TECHNICAL, APTITUDE, LOGICAL<br>
+                    • <strong>roleType</strong>: Must match Skill Cluster code (e.g., JAVA_BACKEND)
+                </p>
+            </div>
+            <div class="form-group">
+                <label>Select CSV File *</label>
+                <input type="file" id="csvFileInput" accept=".csv"
+                    style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
+            </div>
+            <div id="csvPreview" style="display: none; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 8px;">Preview (first 5 rows):</h4>
+                <div id="csvPreviewContent"
+                    style="background: var(--bg-input); padding: 12px; border-radius: 8px; max-height: 200px; overflow: auto;">
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-success" style="flex: 1;" onclick="uploadCSV()">Upload Questions</button>
+                <button class="btn btn-danger" onclick="closeCSVUploadModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Question Modal -->
+    <div id="questionModal" class="modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 id="questionModalTitle">Add Question</h3>
+                <button class="close-modal" onclick="closeQuestionModal()">×</button>
+            </div>
+            <form id="questionForm" onsubmit="return saveQuestion(event)">
+                <input type="hidden" id="questionId">
+                <div class="form-group">
+                    <label>Question *</label>
+                    <textarea id="questionText" rows="3" required
+                        style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical;"
+                        placeholder="Enter the question text..."></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>Option A *</label>
+                        <input type="text" id="optionA" required placeholder="Option A">
+                    </div>
+                    <div class="form-group">
+                        <label>Option B *</label>
+                        <input type="text" id="optionB" required placeholder="Option B">
+                    </div>
+                    <div class="form-group">
+                        <label>Option C *</label>
+                        <input type="text" id="optionC" required placeholder="Option C">
+                    </div>
+                    <div class="form-group">
+                        <label>Option D *</label>
+                        <input type="text" id="optionD" required placeholder="Option D">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Correct Answer *</label>
+                    <select id="correctAnswer" required style="width: 100%;">
+                        <option value="0">Option A</option>
+                        <option value="1">Option B</option>
+                        <option value="2">Option C</option>
+                        <option value="3">Option D</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>Difficulty *</label>
+                        <select id="questionDifficulty" required style="width: 100%;">
+                            <option value="EASY">Easy</option>
+                            <option value="MEDIUM" selected>Medium</option>
+                            <option value="HARD">Hard</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="questionCategory" required style="width: 100%;">
+                            <option value="TECHNICAL" selected>Technical</option>
+                            <option value="APTITUDE">Aptitude</option>
+                            <option value="LOGICAL">Logical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Role Type (e.g., JAVA_BACKEND, REACT_FRONTEND)</label>
+                    <input type="text" id="questionRoleType" placeholder="e.g., JAVA_BACKEND_0_3">
+                </div>
+                <div class="form-group">
+                    <label>Tags (comma separated)</label>
+                    <input type="text" id="questionTags" placeholder="e.g., Java, OOP, Design Patterns">
+                </div>
+                <div class="form-group">
+                    <label>Explanation (shown after answer)</label>
+                    <textarea id="questionExplanation" rows="2"
+                        style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical;"
+                        placeholder="Brief explanation of the correct answer..."></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Question</button>
+                    <button type="button" class="btn btn-danger" onclick="closeQuestionModal()">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 

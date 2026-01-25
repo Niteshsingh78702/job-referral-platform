@@ -236,27 +236,48 @@ export class TestService {
                         },
                     },
                 },
+                testTemplate: {
+                    select: {
+                        selectionRoleType: true,
+                    },
+                },
             },
         });
 
-        return skillBuckets.map(bucket => ({
-            skillBucketId: bucket.id,
-            skillBucketName: bucket.name,
-            skillBucketCode: bucket.code,
-            test: bucket.Test ? {
-                id: bucket.Test.id,
-                title: bucket.Test.title,
-                description: bucket.Test.description,
-                duration: bucket.Test.duration,
-                passingScore: bucket.Test.passingScore,
-                totalQuestions: bucket.Test.totalQuestions,
-                validityDays: bucket.Test.validityDays,
-                isActive: bucket.Test.isActive,
-                questionsCount: bucket.Test.TestQuestion.length,
-                sessionsCount: bucket.Test._count.TestSession,
-                createdAt: bucket.Test.createdAt,
-            } : null,
-        }));
+        // For each bucket, count available questions from QuestionBank
+        const roleTestsWithQuestionCount = await Promise.all(
+            skillBuckets.map(async (bucket) => {
+                // Use testTemplate.selectionRoleType if set, otherwise use bucket.code
+                const roleType = bucket.testTemplate?.selectionRoleType || bucket.code;
+                const availableQuestions = await this.prisma.questionBank.count({
+                    where: {
+                        roleType: roleType,
+                        isActive: true,
+                    },
+                });
+
+                return {
+                    skillBucketId: bucket.id,
+                    skillBucketName: bucket.name,
+                    skillBucketCode: bucket.code,
+                    test: bucket.Test ? {
+                        id: bucket.Test.id,
+                        title: bucket.Test.title,
+                        description: bucket.Test.description,
+                        duration: bucket.Test.duration,
+                        passingScore: bucket.Test.passingScore,
+                        totalQuestions: bucket.Test.totalQuestions,
+                        validityDays: bucket.Test.validityDays,
+                        isActive: bucket.Test.isActive,
+                        questionsCount: availableQuestions, // Now counts from QuestionBank
+                        sessionsCount: bucket.Test._count.TestSession,
+                        createdAt: bucket.Test.createdAt,
+                    } : null,
+                };
+            })
+        );
+
+        return roleTestsWithQuestionCount;
     }
 
     async getTestBySkillBucket(skillBucketId: string) {

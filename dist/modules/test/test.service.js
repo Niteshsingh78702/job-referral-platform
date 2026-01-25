@@ -259,10 +259,25 @@ let TestService = class TestService {
                             }
                         }
                     }
+                },
+                testTemplate: {
+                    select: {
+                        selectionRoleType: true
+                    }
                 }
             }
         });
-        return skillBuckets.map((bucket)=>({
+        // For each bucket, count available questions from QuestionBank
+        const roleTestsWithQuestionCount = await Promise.all(skillBuckets.map(async (bucket)=>{
+            // Use testTemplate.selectionRoleType if set, otherwise use bucket.code
+            const roleType = bucket.testTemplate?.selectionRoleType || bucket.code;
+            const availableQuestions = await this.prisma.questionBank.count({
+                where: {
+                    roleType: roleType,
+                    isActive: true
+                }
+            });
+            return {
                 skillBucketId: bucket.id,
                 skillBucketName: bucket.name,
                 skillBucketCode: bucket.code,
@@ -275,11 +290,13 @@ let TestService = class TestService {
                     totalQuestions: bucket.Test.totalQuestions,
                     validityDays: bucket.Test.validityDays,
                     isActive: bucket.Test.isActive,
-                    questionsCount: bucket.Test.TestQuestion.length,
+                    questionsCount: availableQuestions,
                     sessionsCount: bucket.Test._count.TestSession,
                     createdAt: bucket.Test.createdAt
                 } : null
-            }));
+            };
+        }));
+        return roleTestsWithQuestionCount;
     }
     async getTestBySkillBucket(skillBucketId) {
         const skillBucket = await this.prisma.skillBucket.findUnique({

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import * as crypto from 'crypto';
 import {
     CreateQuestionDto,
     UpdateQuestionDto,
@@ -22,6 +23,7 @@ export class QuestionBankService {
 
         return this.prisma.questionBank.create({
             data: {
+                id: crypto.randomUUID(),
                 question: dto.question,
                 options: dto.options,
                 correctAnswer: dto.correctAnswer,
@@ -50,6 +52,7 @@ export class QuestionBankService {
 
                 const created = await this.prisma.questionBank.create({
                     data: {
+                        id: crypto.randomUUID(),
                         question: q.question,
                         options,
                         correctAnswer: q.correctAnswer,

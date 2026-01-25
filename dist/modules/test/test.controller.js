@@ -34,14 +34,9 @@ let TestController = class TestController {
     async createTest(dto) {
         return this.testService.createTest(dto);
     }
-    async addQuestion(testId, dto) {
-        return this.testService.addQuestion(testId, dto);
-    }
-    async getTest(testId) {
-        return this.testService.getTestById(testId);
-    }
     // ===========================================
     // ADMIN: Role-Based Test Management
+    // IMPORTANT: These specific routes MUST come before :testId param route
     // ===========================================
     async createRoleTest(dto) {
         return this.testService.createRoleTest(dto);
@@ -52,17 +47,9 @@ let TestController = class TestController {
     async getTestBySkillBucket(skillBucketId) {
         return this.testService.getTestBySkillBucket(skillBucketId);
     }
-    async updateTest(testId, dto) {
-        return this.testService.updateTest(testId, dto);
-    }
-    async activateTest(testId) {
-        return this.testService.activateTest(testId);
-    }
-    async deactivateTest(testId) {
-        return this.testService.deactivateTest(testId);
-    }
     // ===========================================
     // CANDIDATE: Test Eligibility
+    // IMPORTANT: This must come before :testId param route
     // ===========================================
     async checkTestEligibility(jobId, userId) {
         // Get candidate ID from user ID
@@ -82,6 +69,7 @@ let TestController = class TestController {
     }
     // ===========================================
     // CANDIDATE: Test Taking
+    // IMPORTANT: These specific routes must come before :testId param route
     // ===========================================
     async startTest(applicationId, userId) {
         return this.testService.startTest(applicationId, userId);
@@ -98,6 +86,25 @@ let TestController = class TestController {
     async logEvent(sessionId, userId, dto) {
         return this.testService.logTestEvent(sessionId, userId, dto);
     }
+    // ===========================================
+    // PARAMETERIZED ROUTES - Must be LAST
+    // These catch-all param routes must come after all specific routes
+    // ===========================================
+    async addQuestion(testId, dto) {
+        return this.testService.addQuestion(testId, dto);
+    }
+    async getTest(testId) {
+        return this.testService.getTestById(testId);
+    }
+    async updateTest(testId, dto) {
+        return this.testService.updateTest(testId, dto);
+    }
+    async activateTest(testId) {
+        return this.testService.activateTest(testId);
+    }
+    async deactivateTest(testId) {
+        return this.testService.deactivateTest(testId);
+    }
     constructor(testService){
         this.testService = testService;
     }
@@ -112,28 +119,6 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], TestController.prototype, "createTest", null);
-_ts_decorate([
-    (0, _common.Post)(':testId/questions'),
-    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
-    _ts_param(0, (0, _common.Param)('testId')),
-    _ts_param(1, (0, _common.Body)()),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        String,
-        typeof _dto.AddQuestionDto === "undefined" ? Object : _dto.AddQuestionDto
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], TestController.prototype, "addQuestion", null);
-_ts_decorate([
-    (0, _common.Get)(':testId'),
-    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
-    _ts_param(0, (0, _common.Param)('testId')),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        String
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], TestController.prototype, "getTest", null);
 _ts_decorate([
     (0, _common.Post)('role-tests'),
     (0, _decorators.Roles)(_constants.UserRole.ADMIN),
@@ -161,38 +146,6 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], TestController.prototype, "getTestBySkillBucket", null);
-_ts_decorate([
-    (0, _common.Patch)(':testId'),
-    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
-    _ts_param(0, (0, _common.Param)('testId')),
-    _ts_param(1, (0, _common.Body)()),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        String,
-        typeof _dto.UpdateTestDto === "undefined" ? Object : _dto.UpdateTestDto
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], TestController.prototype, "updateTest", null);
-_ts_decorate([
-    (0, _common.Patch)(':testId/activate'),
-    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
-    _ts_param(0, (0, _common.Param)('testId')),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        String
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], TestController.prototype, "activateTest", null);
-_ts_decorate([
-    (0, _common.Patch)(':testId/deactivate'),
-    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
-    _ts_param(0, (0, _common.Param)('testId')),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        String
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], TestController.prototype, "deactivateTest", null);
 _ts_decorate([
     (0, _common.Get)('eligibility/:jobId'),
     (0, _decorators.Roles)(_constants.UserRole.CANDIDATE),
@@ -269,6 +222,60 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], TestController.prototype, "logEvent", null);
+_ts_decorate([
+    (0, _common.Post)(':testId/questions'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_param(1, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        typeof _dto.AddQuestionDto === "undefined" ? Object : _dto.AddQuestionDto
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "addQuestion", null);
+_ts_decorate([
+    (0, _common.Get)(':testId'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "getTest", null);
+_ts_decorate([
+    (0, _common.Patch)(':testId'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_param(1, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        typeof _dto.UpdateTestDto === "undefined" ? Object : _dto.UpdateTestDto
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "updateTest", null);
+_ts_decorate([
+    (0, _common.Patch)(':testId/activate'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "activateTest", null);
+_ts_decorate([
+    (0, _common.Patch)(':testId/deactivate'),
+    (0, _decorators.Roles)(_constants.UserRole.ADMIN),
+    _ts_param(0, (0, _common.Param)('testId')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], TestController.prototype, "deactivateTest", null);
 TestController = _ts_decorate([
     (0, _common.Controller)('tests'),
     _ts_metadata("design:type", Function),

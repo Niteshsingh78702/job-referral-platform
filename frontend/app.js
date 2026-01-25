@@ -2575,6 +2575,9 @@ async function loadApplications() {
                 // Paid but not scheduled yet
                 actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #6366f1, #4f46e5);">✅ Paid - Waiting for HR to Schedule</button>`;
             }
+        } else if (app.status === 'TEST_PASSED_WAITING_HR' || app.status === 'TEST_PASSED') {
+            // Test passed, waiting for HR to shortlist
+            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Awaiting HR Decision</button>`;
         } else if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">Take Test</button>`;
         } else if (app.status === 'TEST_IN_PROGRESS') {
@@ -2601,7 +2604,7 @@ async function loadApplications() {
             const noShowLabel = app.status === 'CANDIDATE_NO_SHOW' ? 'Missed Interview' : 'HR No-Show';
             actionButton = `<button class="btn btn-danger btn-sm" disabled>⚠️ ${noShowLabel}</button>`;
         } else if (app.status === 'REJECTED') {
-            actionButton = `<button class="btn btn-outline btn-sm" disabled>Application Rejected</button>`;
+            actionButton = `<button class="btn btn-outline btn-sm" disabled>❌ Application Rejected</button>`;
         } else if (app.status === 'APPLIED' && testPassed) {
             // Test passed, waiting for HR to shortlist
             actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Awaiting HR Decision</button>`;
@@ -2660,6 +2663,7 @@ function getStatusLabel(status, app = null) {
         'TEST_REQUIRED': 'Test Required',
         'TEST_IN_PROGRESS': 'Test In Progress',
         'TEST_PASSED': 'Test Passed',
+        'TEST_PASSED_WAITING_HR': '✅ Test Passed - Waiting for HR',
         'TEST_FAILED': 'Test Failed',
         'REFERRAL_PENDING': 'Pending Referral',
         'REFERRED': 'Referred',
@@ -2672,7 +2676,7 @@ function getStatusLabel(status, app = null) {
         'INTERVIEW_REJECTED': '❌ Not Selected',
         'CANDIDATE_NO_SHOW': '⚠️ Missed Interview',
         'HR_NO_SHOW': '⚠️ HR No-Show',
-        'REJECTED': 'Rejected'
+        'REJECTED': '❌ Rejected'
     };
     return labels[status] || status;
 }
@@ -2683,6 +2687,7 @@ function getStatusClass(status) {
         'TEST_REQUIRED': 'status-pending',
         'TEST_IN_PROGRESS': 'status-pending',
         'TEST_PASSED': 'status-passed',
+        'TEST_PASSED_WAITING_HR': 'status-passed',
         'TEST_FAILED': 'status-rejected',
         'REFERRAL_PENDING': 'status-pending',
         'REFERRED': 'status-referred',
@@ -2790,7 +2795,10 @@ function renderApplicationRows(applications, tableBody) {
         );
 
         let actionButton = '';
-        if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
+        if (app.status === 'TEST_PASSED_WAITING_HR' || app.status === 'TEST_PASSED') {
+            // Test passed, waiting for HR to shortlist
+            actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Awaiting HR Decision</button>`;
+        } else if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">Take Test</button>`;
         } else if (app.status === 'TEST_IN_PROGRESS') {
             actionButton = `<button class="btn btn-warning btn-sm" onclick="startTest('${app.id}', '${app.company}', '${app.jobTitle}')">⏳ Resume Test</button>`;
@@ -2812,7 +2820,7 @@ function renderApplicationRows(applications, tableBody) {
         } else if (app.status === 'PAYMENT_SUCCESS') {
             actionButton = `<button class="btn btn-primary btn-sm" onclick="viewInterviewDetails('${app.id}')">📅 View Interview Details</button>`;
         } else if (app.status === 'REJECTED') {
-            actionButton = `<button class="btn btn-outline btn-sm" disabled>Application Rejected</button>`;
+            actionButton = `<button class="btn btn-outline btn-sm" disabled>❌ Application Rejected</button>`;
         } else if (app.status === 'APPLIED' && testPassed) {
             actionButton = `<button class="btn btn-info btn-sm" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">⏳ Waiting for Interview Schedule</button>`;
         } else if (app.status === 'APPLIED' && !testPassed) {

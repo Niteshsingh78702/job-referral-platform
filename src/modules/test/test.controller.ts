@@ -25,23 +25,9 @@ export class TestController {
         return this.testService.createTest(dto);
     }
 
-    @Post(':testId/questions')
-    @Roles(UserRole.ADMIN)
-    async addQuestion(
-        @Param('testId') testId: string,
-        @Body() dto: AddQuestionDto,
-    ) {
-        return this.testService.addQuestion(testId, dto);
-    }
-
-    @Get(':testId')
-    @Roles(UserRole.ADMIN)
-    async getTest(@Param('testId') testId: string) {
-        return this.testService.getTestById(testId);
-    }
-
     // ===========================================
     // ADMIN: Role-Based Test Management
+    // IMPORTANT: These specific routes MUST come before :testId param route
     // ===========================================
 
     @Post('role-tests')
@@ -62,29 +48,9 @@ export class TestController {
         return this.testService.getTestBySkillBucket(skillBucketId);
     }
 
-    @Patch(':testId')
-    @Roles(UserRole.ADMIN)
-    async updateTest(
-        @Param('testId') testId: string,
-        @Body() dto: UpdateTestDto,
-    ) {
-        return this.testService.updateTest(testId, dto);
-    }
-
-    @Patch(':testId/activate')
-    @Roles(UserRole.ADMIN)
-    async activateTest(@Param('testId') testId: string) {
-        return this.testService.activateTest(testId);
-    }
-
-    @Patch(':testId/deactivate')
-    @Roles(UserRole.ADMIN)
-    async deactivateTest(@Param('testId') testId: string) {
-        return this.testService.deactivateTest(testId);
-    }
-
     // ===========================================
     // CANDIDATE: Test Eligibility
+    // IMPORTANT: This must come before :testId param route
     // ===========================================
 
     @Get('eligibility/:jobId')
@@ -105,6 +71,7 @@ export class TestController {
 
     // ===========================================
     // CANDIDATE: Test Taking
+    // IMPORTANT: These specific routes must come before :testId param route
     // ===========================================
 
     @Post('application/:applicationId/start')
@@ -152,5 +119,46 @@ export class TestController {
         @Body() dto: TestEventDto,
     ) {
         return this.testService.logTestEvent(sessionId, userId, dto);
+    }
+
+    // ===========================================
+    // PARAMETERIZED ROUTES - Must be LAST
+    // These catch-all param routes must come after all specific routes
+    // ===========================================
+
+    @Post(':testId/questions')
+    @Roles(UserRole.ADMIN)
+    async addQuestion(
+        @Param('testId') testId: string,
+        @Body() dto: AddQuestionDto,
+    ) {
+        return this.testService.addQuestion(testId, dto);
+    }
+
+    @Get(':testId')
+    @Roles(UserRole.ADMIN)
+    async getTest(@Param('testId') testId: string) {
+        return this.testService.getTestById(testId);
+    }
+
+    @Patch(':testId')
+    @Roles(UserRole.ADMIN)
+    async updateTest(
+        @Param('testId') testId: string,
+        @Body() dto: UpdateTestDto,
+    ) {
+        return this.testService.updateTest(testId, dto);
+    }
+
+    @Patch(':testId/activate')
+    @Roles(UserRole.ADMIN)
+    async activateTest(@Param('testId') testId: string) {
+        return this.testService.activateTest(testId);
+    }
+
+    @Patch(':testId/deactivate')
+    @Roles(UserRole.ADMIN)
+    async deactivateTest(@Param('testId') testId: string) {
+        return this.testService.deactivateTest(testId);
     }
 }

@@ -107,6 +107,18 @@ let QuestionBankController = class QuestionBankController {
             message: 'Question deleted successfully'
         };
     }
+    /**
+     * Bulk delete all questions by role type
+     */ async deleteByRole(roleType) {
+        const count = await this.questionBankService.deleteByRole(roleType);
+        return {
+            success: true,
+            message: `Deleted ${count} questions for role ${roleType}`,
+            data: {
+                deletedCount: count
+            }
+        };
+    }
     constructor(questionBankService){
         this.questionBankService = questionBankService;
     }
@@ -183,6 +195,15 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], QuestionBankController.prototype, "deleteQuestion", null);
+_ts_decorate([
+    (0, _common.Delete)('bulk/role/:roleType'),
+    _ts_param(0, (0, _common.Param)('roleType')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], QuestionBankController.prototype, "deleteByRole", null);
 QuestionBankController = _ts_decorate([
     (0, _common.Controller)('admin/questions'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),

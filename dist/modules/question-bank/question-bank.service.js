@@ -364,6 +364,16 @@ let QuestionBankService = class QuestionBankService {
         }
         return shuffled;
     }
+    /**
+     * Bulk delete all questions by role type
+     */ async deleteByRole(roleType) {
+        const result = await this.prisma.questionBank.deleteMany({
+            where: {
+                roleType
+            }
+        });
+        return result.count;
+    }
     constructor(prisma){
         this.prisma = prisma;
     }

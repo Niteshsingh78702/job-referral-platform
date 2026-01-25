@@ -3177,3 +3177,34 @@ async function uploadCSV() {
     };
     reader.readAsText(file);
 }
+
+// Bulk delete all questions by role
+async function deleteByRole() {
+    const roleType = document.getElementById('questionRoleFilter')?.value;
+
+    if (!roleType) {
+        showToast('Please select a role from the dropdown first', 'error');
+        return;
+    }
+
+    const confirmed = confirm(`Are you sure you want to DELETE ALL questions for role "${roleType}"?\n\nThis action cannot be undone!`);
+    if (!confirmed) return;
+
+    try {
+        const response = await apiCall(`${API_BASE_URL}/admin/questions/bulk/role/${encodeURIComponent(roleType)}`, {
+            method: 'DELETE',
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast(`Deleted ${data.data?.deletedCount || 0} questions for ${roleType}`, 'success');
+            loadQuestions();
+        } else {
+            showToast(data.message || 'Failed to delete questions', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting by role:', error);
+        showToast('Failed to delete questions', 'error');
+    }
+}

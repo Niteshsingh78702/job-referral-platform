@@ -296,4 +296,14 @@ export class QuestionBankService {
         }
         return shuffled;
     }
+
+    /**
+     * Bulk delete all questions by role type
+     */
+    async deleteByRole(roleType: string): Promise<number> {
+        const result = await this.prisma.questionBank.deleteMany({
+            where: { roleType },
+        });
+        return result.count;
+    }
 }

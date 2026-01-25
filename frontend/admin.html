@@ -649,8 +649,9 @@
                             <div class="value" style="color: var(--danger);" id="statHardQuestions">0</div>
                         </div>
                     </div>
-                    <div class="search-filter">
-                        <input type="text" class="search-input" placeholder="Search questions..." id="questionSearch">
+                    <div class="search-filter" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <input type="text" class="search-input" placeholder="Search questions..." id="questionSearch"
+                            style="flex: 1;">
                         <select id="questionDifficultyFilter">
                             <option value="">All Difficulty</option>
                             <option value="EASY">Easy</option>
@@ -662,11 +663,14 @@
                             <option value="TECHNICAL">Technical</option>
                             <option value="BEHAVIORAL">Behavioral</option>
                             <option value="APTITUDE">Aptitude</option>
+                            <option value="LOGICAL">Logical</option>
                             <option value="DOMAIN_SPECIFIC">Domain Specific</option>
                         </select>
                         <select id="questionRoleFilter">
                             <option value="">All Roles</option>
                         </select>
+                        <button class="btn btn-danger" onclick="deleteByRole()"
+                            title="Delete all questions for selected role">🗑️ Delete by Role</button>
                     </div>
                     <div id="questionsTableContainer"></div>
                     <div class="pagination" id="questionsPagination"></div>

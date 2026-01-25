@@ -136,4 +136,17 @@ export class QuestionBankController {
             message: 'Question deleted successfully',
         };
     }
+
+    /**
+     * Bulk delete all questions by role type
+     */
+    @Delete('bulk/role/:roleType')
+    async deleteByRole(@Param('roleType') roleType: string) {
+        const count = await this.questionBankService.deleteByRole(roleType);
+        return {
+            success: true,
+            message: `Deleted ${count} questions for role ${roleType}`,
+            data: { deletedCount: count },
+        };
+    }
 }

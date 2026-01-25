@@ -2458,23 +2458,27 @@ async function showCreateRoleTestModal(skillBucketId = null, skillBucketName = n
     document.getElementById('roleTestModalTitle').textContent = 'Create Role Test';
     document.getElementById('roleTestForm').reset();
 
-    // Populate skill bucket dropdown with roles that don't have tests
+    // Populate skill bucket dropdown with ALL roles
     const select = document.getElementById('roleTestSkillBucket');
     select.innerHTML = '<option value="">Select Role</option>';
 
     adminState.roleTests
-        .filter(rt => !rt.test) // Only show roles without tests
+        // Removed filter - show all roles, even those with tests
         .forEach(rt => {
             const option = document.createElement('option');
             option.value = rt.skillBucketId;
             option.textContent = `${rt.skillBucketName} (${rt.skillBucketCode})`;
+            // Indicate if role already has a test
+            if (rt.test) {
+                option.textContent += ' [Has Test]';
+            }
             select.appendChild(option);
         });
 
     // If specific skill bucket was provided, select it
     if (skillBucketId) {
         select.value = skillBucketId;
-        // Add the option if it doesn't exist (in case this role already has a test)
+        // Add the option if it doesn't exist
         if (!select.value && skillBucketName) {
             const option = document.createElement('option');
             option.value = skillBucketId;

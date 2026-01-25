@@ -52,7 +52,7 @@ export class QuestionBankController {
         @Body() dto: BulkUploadDto,
         @CurrentUser() user: any,
     ) {
-        const result = await this.questionBankService.bulkUpload(dto.questions, user.sub);
+        const result = await this.questionBankService.bulkUpload(dto.QuestionBank, user.sub);
         return {
             success: true,
             message: `Uploaded ${result.success} questions, ${result.failed} failed`,

@@ -11,6 +11,7 @@ export enum QuestionCategory {
     TECHNICAL = 'TECHNICAL',
     BEHAVIORAL = 'BEHAVIORAL',
     APTITUDE = 'APTITUDE',
+    LOGICAL = 'LOGICAL',
     DOMAIN_SPECIFIC = 'DOMAIN_SPECIFIC',
 }
 

@@ -52,6 +52,7 @@ var QuestionCategory = /*#__PURE__*/ function(QuestionCategory) {
     QuestionCategory["TECHNICAL"] = "TECHNICAL";
     QuestionCategory["BEHAVIORAL"] = "BEHAVIORAL";
     QuestionCategory["APTITUDE"] = "APTITUDE";
+    QuestionCategory["LOGICAL"] = "LOGICAL";
     QuestionCategory["DOMAIN_SPECIFIC"] = "DOMAIN_SPECIFIC";
     return QuestionCategory;
 }({});

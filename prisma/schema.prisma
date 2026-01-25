@@ -805,6 +805,7 @@ enum QuestionCategory {
   TECHNICAL
   BEHAVIORAL
   APTITUDE
+  LOGICAL
   DOMAIN_SPECIFIC
 }
 

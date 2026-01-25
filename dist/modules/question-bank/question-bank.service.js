@@ -86,8 +86,8 @@ let QuestionBankService = class QuestionBankService {
     }
     /**
      * Bulk upload questions (for CSV import)
-     */ async bulkUpload(QuestionBank, createdById) {
-        const createdQuestionBank = [];
+     */ async bulkUpload(questions, createdById) {
+        const createdQuestions = [];
         const errors = [];
         for(let i = 0; i < questions.length; i++){
             const q = questions[i];
@@ -153,7 +153,7 @@ let QuestionBankService = class QuestionBankService {
                 hasSome: tags
             };
         }
-        const [questions1, total] = await Promise.all([
+        const [questions, total] = await Promise.all([
             this.prisma.questionBank.findMany({
                 where,
                 skip,
@@ -178,7 +178,7 @@ let QuestionBankService = class QuestionBankService {
             })
         ]);
         return {
-            questions: questions1,
+            questions,
             pagination: {
                 page,
                 limit,
@@ -253,7 +253,7 @@ let QuestionBankService = class QuestionBankService {
         // For small pools, fetch all and shuffle
         if (totalCount > count * 2) {
             // Random sampling for large pools
-            const QuestionBank = [];
+            const questions = [];
             const usedIds = new Set();
             while(questions.length < count && questions.length < totalCount){
                 const skip = Math.floor(Math.random() * totalCount);

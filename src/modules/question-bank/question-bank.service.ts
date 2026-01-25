@@ -40,8 +40,8 @@ export class QuestionBankService {
     /**
      * Bulk upload questions (for CSV import)
      */
-    async bulkUpload(QuestionBank: BulkQuestionDto[], createdById: string) {
-        const createdQuestionBank: any[] = [];
+    async bulkUpload(questions: BulkQuestionDto[], createdById: string) {
+        const createdQuestions: any[] = [];
         const errors: { row: number; error: string }[] = [];
 
         for (let i = 0; i < questions.length; i++) {
@@ -215,7 +215,7 @@ export class QuestionBankService {
         // For small pools, fetch all and shuffle
         if (totalCount > count * 2) {
             // Random sampling for large pools
-            const QuestionBank: any[] = [];
+            const questions: any[] = [];
             const usedIds = new Set<string>();
 
             while (questions.length < count && questions.length < totalCount) {

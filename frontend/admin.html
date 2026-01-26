@@ -991,6 +991,15 @@
                     <label>Referral Fee (₹)</label>
                     <input type="number" id="jobFee" value="499">
                 </div>
+                <div class="form-group">
+                    <label>Skill Cluster (for Test) *</label>
+                    <select id="jobSkillBucket"
+                        style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+                        <option value="">-- Select Skill Cluster --</option>
+                    </select>
+                    <small style="color:var(--text-dim);font-size:0.8em;">Links this job to a skill test. Candidates
+                        must pass this test.</small>
+                </div>
                 <div style="display:flex;gap:12px;margin-top:24px;">
                     <button type="submit" class="btn btn-primary" style="flex:1;">Save Job</button>
                     <button type="button" class="btn btn-danger" onclick="closeJobModal()">Cancel</button>

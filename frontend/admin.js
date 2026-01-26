@@ -453,6 +453,7 @@ function showCreateJobModal() {
     adminState.currentJobId = null;
     document.getElementById('jobModalTitle').textContent = 'Create New Job';
     document.getElementById('jobForm').reset();
+    populateJobSkillBucketDropdown();
     enableModalRequirements('jobModal'); // Enable required fields for this modal
     document.getElementById('jobModal').classList.add('active');
 }
@@ -460,6 +461,35 @@ function showCreateJobModal() {
 function closeJobModal() {
     disableModalRequirements('jobModal'); // Disable required fields when closing
     document.getElementById('jobModal').classList.remove('active');
+}
+
+// Populate skill bucket dropdown for job modal
+async function populateJobSkillBucketDropdown(selectedId = null) {
+    const select = document.getElementById('jobSkillBucket');
+    if (!select) return;
+
+    try {
+        // Use cached skill buckets if available, otherwise fetch
+        let buckets = adminState.skillBuckets;
+        if (!buckets || buckets.length === 0) {
+            const response = await fetch(`${API_BASE_URL}/admin/skill-buckets`, {
+                headers: { 'Authorization': `Bearer ${adminState.token}` }
+            });
+            const data = await response.json();
+            buckets = data.data || [];
+            adminState.skillBuckets = buckets;
+        }
+
+        select.innerHTML = '<option value="">-- Select Skill Cluster --</option>' +
+            buckets.map(b => `
+                <option value="${b.id}" ${selectedId === b.id ? 'selected' : ''}>
+                    ${b.name} (${b.code})
+                </option>
+            `).join('');
+    } catch (error) {
+        console.error('Failed to load skill buckets:', error);
+        select.innerHTML = '<option value="">Failed to load skill clusters</option>';
+    }
 }
 
 async function editJob(jobId) {
@@ -478,6 +508,9 @@ async function editJob(jobId) {
     document.getElementById('jobExpMin').value = job.experienceMin || '';
     document.getElementById('jobExpMax').value = job.experienceMax || '';
     document.getElementById('jobFee').value = job.referralFee || 499;
+
+    // Populate and select skill bucket
+    await populateJobSkillBucketDropdown(job.skillBucketId);
 
     enableModalRequirements('jobModal'); // Enable required fields for this modal
     document.getElementById('jobModal').classList.add('active');
@@ -503,6 +536,7 @@ document.getElementById('jobForm').addEventListener('submit', async (e) => {
         experienceMin: parseInt(document.getElementById('jobExpMin').value) || 0,
         experienceMax: parseInt(document.getElementById('jobExpMax').value) || null,
         referralFee: parseInt(document.getElementById('jobFee').value) || 499,
+        skillBucketId: document.getElementById('jobSkillBucket').value || null,
     };
 
     try {

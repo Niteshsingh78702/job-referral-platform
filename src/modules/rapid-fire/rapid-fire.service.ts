@@ -35,14 +35,14 @@ export class RapidFireTestService {
         // Get skill bucket with test template
         const skillBucket = await this.prisma.skillBucket.findUnique({
             where: { id: skillBucketId },
-            include: { testTemplate: true },
+            include: { TestTemplate: true },
         });
 
         if (!skillBucket) {
             throw new NotFoundException('Skill bucket not found');
         }
 
-        if (!skillBucket.testTemplateId) {
+        if (!skillBucket.TestTemplate) {
             throw new BadRequestException('No test configured for this skill');
         }
 
@@ -101,7 +101,7 @@ export class RapidFireTestService {
         return {
             canTake: true,
             status: 'AVAILABLE',
-            testTemplate: skillBucket.testTemplate,
+            testTemplate: skillBucket.TestTemplate,
             SkillBucket: {
                 id: skillBucket.id,
                 name: skillBucket.name,
@@ -123,10 +123,10 @@ export class RapidFireTestService {
 
         const skillBucket = await this.prisma.skillBucket.findUnique({
             where: { id: skillBucketId },
-            include: { testTemplate: true },
+            include: { TestTemplate: true },
         });
 
-        const template = skillBucket!.testTemplate!;
+        const template = skillBucket!.TestTemplate!;
 
         // Get random questions for this role
         const questions = await this.questionBankService.getRandomQuestions({
@@ -166,7 +166,7 @@ export class RapidFireTestService {
                 status: 'ACTIVE',
                 startedAt: new Date(now),
                 endsAt: new Date(now + this.TEST_DURATION_MS),
-                totalQuestionBank: questions.length,
+                totalQuestions: questions.length,
                 selectedQuestionIds: questions.map(q => q.id),
             },
         });

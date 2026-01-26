@@ -75,13 +75,13 @@ let RapidFireTestService = class RapidFireTestService {
                 id: skillBucketId
             },
             include: {
-                testTemplate: true
+                TestTemplate: true
             }
         });
         if (!skillBucket) {
             throw new _common.NotFoundException('Skill bucket not found');
         }
-        if (!skillBucket.testTemplateId) {
+        if (!skillBucket.TestTemplate) {
             throw new _common.BadRequestException('No test configured for this skill');
         }
         // Check for valid passed test (within 7 days)
@@ -142,7 +142,7 @@ let RapidFireTestService = class RapidFireTestService {
         return {
             canTake: true,
             status: 'AVAILABLE',
-            testTemplate: skillBucket.testTemplate,
+            testTemplate: skillBucket.TestTemplate,
             SkillBucket: {
                 id: skillBucket.id,
                 name: skillBucket.name,
@@ -163,10 +163,10 @@ let RapidFireTestService = class RapidFireTestService {
                 id: skillBucketId
             },
             include: {
-                testTemplate: true
+                TestTemplate: true
             }
         });
-        const template = skillBucket.testTemplate;
+        const template = skillBucket.TestTemplate;
         // Get random questions for this role
         const questions = await this.questionBankService.getRandomQuestions({
             count: template.questionPoolSize,
@@ -200,7 +200,7 @@ let RapidFireTestService = class RapidFireTestService {
                 status: 'ACTIVE',
                 startedAt: new Date(now),
                 endsAt: new Date(now + this.TEST_DURATION_MS),
-                totalQuestionBank: questions.length,
+                totalQuestions: questions.length,
                 selectedQuestionIds: questions.map((q)=>q.id)
             }
         });

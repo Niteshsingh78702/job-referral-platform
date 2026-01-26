@@ -1314,9 +1314,9 @@ let AdminService = class AdminService {
                 },
                 _count: {
                     select: {
-                        jobs: true,
-                        attempts: true,
-                        jobRequirements: true
+                        Job: true,
+                        SkillTestAttempt: true,
+                        JobRequiredSkillBucket: true
                     }
                 }
             },

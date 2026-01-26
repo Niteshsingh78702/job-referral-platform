@@ -590,7 +590,7 @@ let TestService = class TestService {
         if (application.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized to access this application');
         }
-        if (application.status !== _constants.ApplicationStatus.TEST_REQUIRED && application.status !== _constants.ApplicationStatus.TEST_PENDING) {
+        if (application.status !== _constants.ApplicationStatus.TEST_REQUIRED && application.status !== _constants.ApplicationStatus.TEST_PENDING && application.status !== _constants.ApplicationStatus.APPLIED) {
             throw new _common.BadRequestException('Test not available for this application');
         }
         if (!application.Job.Test) {

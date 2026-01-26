@@ -550,7 +550,8 @@ export class TestService {
         }
 
         if (application.status !== ApplicationStatus.TEST_REQUIRED &&
-            application.status !== ApplicationStatus.TEST_PENDING) {
+            application.status !== ApplicationStatus.TEST_PENDING &&
+            application.status !== ApplicationStatus.APPLIED) {
             throw new BadRequestException('Test not available for this application');
         }
 

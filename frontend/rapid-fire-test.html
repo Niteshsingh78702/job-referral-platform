@@ -570,7 +570,7 @@
                     throw new Error(data.message);
                 }
 
-                questions = data.data.questions;
+                questions = data.data.QuestionBank;
                 remainingSeconds = data.data.remainingTime;
 
                 document.getElementById('totalQuestions').textContent = questions.length;

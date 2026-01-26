@@ -3437,48 +3437,55 @@ async function startTest(applicationId, company, position) {
         return;
     }
 
-    testState.applicationId = applicationId;
-    testState.company = company;
-    testState.position = position;
-    testState.currentIndex = 0;
-    testState.answers = {};
-    testState.tabSwitchCount = 0;
+    showToast('info', 'Starting test...');
 
-    // Try to start test via API - NO demo mode for production
-    const result = await tryStartTestAPI(applicationId);
+    try {
+        // Find application from already-loaded state (state.applications is loaded by loadApplications)
+        const application = state.applications?.find(app => app.id === applicationId);
 
-    if (result.success) {
-        const sessionData = result.data;
-        // Use API data
-        testState.sessionId = sessionData.sessionId;
-        testState.questions = sessionData.questions;
-        testState.remainingTime = sessionData.remainingTime;
-        testState.totalTime = sessionData.duration * 60;
-        testState.maxTabSwitches = sessionData.maxTabSwitches;
-
-        // Restore any previous answers
-        if (sessionData.answers) {
-            sessionData.answers.forEach(a => {
-                testState.answers[a.questionId] = a.selectedAnswer;
-            });
+        if (!application) {
+            showToast('error', 'Application not found. Please refresh and try again.');
+            return;
         }
 
-        showTestPage();
-        startTimer();
-        setupTabSwitchDetection();
-        renderQuestion();
-    } else {
-        // Show error to user - no demo fallback
-        console.error('Failed to start test:', result.error);
-        showToast('error', result.error || 'Unable to start test. Please try again.');
+        const skillBucketId = application.skillBucketId || application.job?.skillBucketId || application.Job?.skillBucketId;
 
-        // Reload applications to get updated status
-        if (typeof loadApplications === 'function') {
-            loadApplications();
+        if (!skillBucketId) {
+            showToast('error', 'No skill test configured for this job. Please contact support.');
+            return;
         }
+
+        // Start rapid-fire test using the skill bucket
+        const response = await fetch(`${API_BASE_URL}/rapid-fire/start/${skillBucketId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data?.sessionId) {
+            // Redirect to rapid-fire test page
+            window.location.href = `rapid-fire-test.html?session=${data.data.sessionId}`;
+        } else {
+            // Show error message from API
+            const errorMsg = data.message || 'Failed to start test';
+            showToast('error', errorMsg);
+
+            // Reload applications to get updated status
+            if (typeof loadApplications === 'function') {
+                loadApplications();
+            }
+        }
+    } catch (error) {
+        console.error('Failed to start test:', error);
+        showToast('error', error.message || 'Unable to start test. Please try again.');
     }
 }
 
+// Legacy function - kept for backward compatibility
 async function tryStartTestAPI(applicationId) {
     try {
         const response = await fetch(`${API_BASE_URL}/tests/application/${applicationId}/start`, {

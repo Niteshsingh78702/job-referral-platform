@@ -326,7 +326,8 @@ let CandidateService = class CandidateService {
                         location: true,
                         salaryMin: true,
                         salaryMax: true,
-                        status: true
+                        status: true,
+                        skillBucketId: true
                     }
                 },
                 Referral: {

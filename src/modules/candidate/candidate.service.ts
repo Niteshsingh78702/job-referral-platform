@@ -324,6 +324,7 @@ export class CandidateService {
                         salaryMin: true,
                         salaryMax: true,
                         status: true,
+                        skillBucketId: true,
                     },
                 },
                 Referral: {

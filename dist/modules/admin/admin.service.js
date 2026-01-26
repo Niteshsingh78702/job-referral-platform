@@ -1302,7 +1302,7 @@ let AdminService = class AdminService {
                         totalQuestionBank: true
                     }
                 },
-                testTemplate: {
+                TestTemplate: {
                     select: {
                         id: true,
                         name: true,
@@ -1326,8 +1326,8 @@ let AdminService = class AdminService {
         });
         // For each bucket, count available questions from QuestionBank
         const bucketsWithQuestionCount = await Promise.all(buckets.map(async (bucket)=>{
-            // Use testTemplate.selectionRoleType if set, otherwise use bucket.code
-            const roleType = bucket.testTemplate?.selectionRoleType || bucket.code;
+            // Use TestTemplate.selectionRoleType if set, otherwise use bucket.code
+            const roleType = bucket.TestTemplate?.selectionRoleType || bucket.code;
             const availableQuestions = await this.prisma.questionBank.count({
                 where: {
                     roleType: roleType,

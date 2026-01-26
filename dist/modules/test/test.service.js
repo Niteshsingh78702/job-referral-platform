@@ -260,7 +260,7 @@ let TestService = class TestService {
                         }
                     }
                 },
-                testTemplate: {
+                TestTemplate: {
                     select: {
                         selectionRoleType: true
                     }
@@ -269,8 +269,8 @@ let TestService = class TestService {
         });
         // For each bucket, count available questions from QuestionBank
         const roleTestsWithQuestionCount = await Promise.all(skillBuckets.map(async (bucket)=>{
-            // Use testTemplate.selectionRoleType if set, otherwise use bucket.code
-            const roleType = bucket.testTemplate?.selectionRoleType || bucket.code;
+            // Use TestTemplate.selectionRoleType if set, otherwise use bucket.code
+            const roleType = bucket.TestTemplate?.selectionRoleType || bucket.code;
             const availableQuestions = await this.prisma.questionBank.count({
                 where: {
                     roleType: roleType,

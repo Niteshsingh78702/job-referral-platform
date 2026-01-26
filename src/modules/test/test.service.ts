@@ -345,15 +345,28 @@ export class TestService {
     async activateTest(testId: string) {
         const test = await this.prisma.test.findUnique({
             where: { id: testId },
-            include: { TestQuestion: true },
+            include: {
+                SkillBucket: true,
+            },
         });
 
         if (!test) {
             throw new NotFoundException('Test not found');
         }
 
-        if (test.TestQuestion.length === 0) {
-            throw new BadRequestException('Cannot activate test without questions. Add at least one question first.');
+        // Check if there are questions in QuestionBank matching the skill bucket code
+        const skillBucketCode = test.SkillBucket?.code;
+        const questionCount = await this.prisma.questionBank.count({
+            where: {
+                roleType: skillBucketCode || '',
+                isActive: true,
+            },
+        });
+
+        if (questionCount === 0) {
+            throw new BadRequestException(
+                `Cannot activate test without questions. No questions found in Question Bank for role type "${skillBucketCode}". Add questions first using CSV upload.`
+            );
         }
 
         return this.prisma.test.update({

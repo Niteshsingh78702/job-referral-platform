@@ -128,8 +128,13 @@ let RapidFireTestService = class RapidFireTestService {
                 message: 'Please wait 24 hours before retaking the test'
             };
         }
-        // Check for active session
+        // Check for active session (also clean up expired sessions)
         for (const [sessionId, data] of activeSessions.entries()){
+            // Skip sessions that have expired
+            if (Date.now() > data.endsAt) {
+                activeSessions.delete(sessionId);
+                continue;
+            }
             if (data.candidateId === candidateId && data.skillBucketId === skillBucketId && data.status === 'ACTIVE') {
                 return {
                     canTake: false,

@@ -297,7 +297,11 @@ let RapidFireTestService = class RapidFireTestService {
     /**
    * Submit the entire test
    */ async submitTest(sessionId, userId, isAutoSubmit = false) {
-        const session = activeSessions.get(sessionId);
+        let session = activeSessions.get(sessionId);
+        // Try to restore from DB if not in memory
+        if (!session) {
+            session = await this.restoreSessionFromDb(sessionId, userId);
+        }
         if (!session) {
             throw new _common.NotFoundException('Test session not found');
         }
@@ -392,7 +396,11 @@ let RapidFireTestService = class RapidFireTestService {
     /**
    * Exit test (marks as failed)
    */ async exitTest(sessionId, userId) {
-        const session = activeSessions.get(sessionId);
+        let session = activeSessions.get(sessionId);
+        // Try to restore from DB if not in memory
+        if (!session) {
+            session = await this.restoreSessionFromDb(sessionId, userId);
+        }
         if (!session) {
             throw new _common.NotFoundException('Test session not found');
         }

@@ -88,6 +88,35 @@ let PrismaService = class PrismaService extends _client.PrismaClient {
             ]
         }), this.logger = new _common.Logger(PrismaService.name);
         this.logger.log('PrismaService initialized');
+        // Add middleware to handle connection errors and auto-reconnect
+        this.$use(async (params, next)=>{
+            const maxRetries = 3;
+            let lastError;
+            for(let attempt = 1; attempt <= maxRetries; attempt++){
+                try {
+                    return await next(params);
+                } catch (error) {
+                    lastError = error;
+                    // Check if it's a connection error
+                    const isConnectionError = error.message?.includes('Connection') || error.message?.includes('Closed') || error.message?.includes('ECONNREFUSED') || error.message?.includes('ETIMEDOUT') || error.code === 'P1001' || error.code === 'P1002' || error.code === 'P1017';
+                    if (isConnectionError && attempt < maxRetries) {
+                        this.logger.warn(`Connection error on ${params.model}.${params.action} (attempt ${attempt}/${maxRetries}): ${error.message}`);
+                        // Reconnect
+                        try {
+                            await this.$disconnect();
+                            await new Promise((resolve)=>setTimeout(resolve, 500 * attempt));
+                            await this.$connect();
+                            this.logger.log('Reconnected to database');
+                        } catch (reconnectError) {
+                            this.logger.error('Failed to reconnect:', reconnectError);
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+            throw lastError;
+        });
     }
 };
 PrismaService = _ts_decorate([

@@ -19,166 +19,6 @@ let state = {
 // Confirmation modal state
 let confirmModalResolver = null;
 
-/**
- * Show a professional confirmation modal
- * @param {string} title - Modal title
- * @param {string} message - Confirmation message
- * @param {Function} onConfirm - Callback when confirmed
- * @param {Function} onCancel - Optional callback when cancelled
- */
-function showConfirmModal(title, message, onConfirm, onCancel = null) {
-    // Create modal if it doesn't exist
-    let modal = document.getElementById('confirmModal');
-    if (!modal) {
-        const modalHTML = `
-            <div class="confirm-modal-overlay" id="confirmModalOverlay"></div>
-            <div class="confirm-modal" id="confirmModal">
-                <div class="confirm-modal-icon">⚠️</div>
-                <h3 class="confirm-modal-title" id="confirmModalTitle">Confirm Action</h3>
-                <p class="confirm-modal-message" id="confirmModalMessage">Are you sure?</p>
-                <div class="confirm-modal-actions">
-                    <button class="confirm-modal-btn confirm-modal-btn-cancel" id="confirmModalCancel">Cancel</button>
-                    <button class="confirm-modal-btn confirm-modal-btn-confirm" id="confirmModalConfirm">Confirm</button>
-                </div>
-            </div>
-            <style>
-                .confirm-modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.7);
-                    backdrop-filter: blur(4px);
-                    z-index: 9998;
-                    opacity: 0;
-                    visibility: hidden;
-                    transition: all 0.3s ease;
-                }
-                .confirm-modal-overlay.active {
-                    opacity: 1;
-                    visibility: visible;
-                }
-                .confirm-modal {
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%) scale(0.9);
-                    background: linear-gradient(145deg, #1e1e2e, #2a2a3e);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 16px;
-                    padding: 32px;
-                    min-width: 360px;
-                    max-width: 90vw;
-                    z-index: 9999;
-                    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-                    opacity: 0;
-                    visibility: hidden;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-                .confirm-modal.active {
-                    opacity: 1;
-                    visibility: visible;
-                    transform: translate(-50%, -50%) scale(1);
-                }
-                .confirm-modal-icon {
-                    font-size: 48px;
-                    text-align: center;
-                    margin-bottom: 16px;
-                }
-                .confirm-modal-title {
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: #fff;
-                    text-align: center;
-                    margin: 0 0 12px 0;
-                }
-                .confirm-modal-message {
-                    font-size: 15px;
-                    color: rgba(255, 255, 255, 0.7);
-                    text-align: center;
-                    margin: 0 0 24px 0;
-                    line-height: 1.5;
-                }
-                .confirm-modal-actions {
-                    display: flex;
-                    gap: 12px;
-                    justify-content: center;
-                }
-                .confirm-modal-btn {
-                    padding: 12px 28px;
-                    border-radius: 10px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    border: none;
-                }
-                .confirm-modal-btn-cancel {
-                    background: rgba(255, 255, 255, 0.1);
-                    color: #fff;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                }
-                .confirm-modal-btn-cancel:hover {
-                    background: rgba(255, 255, 255, 0.15);
-                }
-                .confirm-modal-btn-confirm {
-                    background: linear-gradient(135deg, #ef4444, #dc2626);
-                    color: #fff;
-                }
-                .confirm-modal-btn-confirm:hover {
-                    background: linear-gradient(135deg, #dc2626, #b91c1c);
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-                }
-            </style>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        modal = document.getElementById('confirmModal');
-    }
-
-    // Update content
-    document.getElementById('confirmModalTitle').textContent = title;
-    document.getElementById('confirmModalMessage').textContent = message;
-
-    // Show modal
-    document.getElementById('confirmModalOverlay').classList.add('active');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-
-    // Setup event handlers
-    const closeModal = () => {
-        document.getElementById('confirmModalOverlay').classList.remove('active');
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    };
-
-    const confirmBtn = document.getElementById('confirmModalConfirm');
-    const cancelBtn = document.getElementById('confirmModalCancel');
-    const overlay = document.getElementById('confirmModalOverlay');
-
-    // Clone and replace to remove old event listeners
-    const newConfirmBtn = confirmBtn.cloneNode(true);
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-    newConfirmBtn.addEventListener('click', () => {
-        closeModal();
-        if (onConfirm) onConfirm();
-    });
-
-    newCancelBtn.addEventListener('click', () => {
-        closeModal();
-        if (onCancel) onCancel();
-    });
-
-    overlay.addEventListener('click', () => {
-        closeModal();
-        if (onCancel) onCancel();
-    });
-}
-
 // =============================================
 // Initialize App
 // =============================================
@@ -2868,43 +2708,48 @@ function getStatusClass(status) {
 }
 
 // Cancel/Withdraw an application
-function cancelApplication(appId) {
-    // Use professional confirmation modal instead of browser's confirm()
-    showConfirmModal(
-        'Cancel Application',
-        'Are you sure you want to cancel this application? This action cannot be undone.',
-        () => {
-            // User confirmed - proceed with cancellation
-            const appIndex = demoApplications.findIndex(a => a.id === appId);
-            if (appIndex === -1) {
-                showToast('error', 'Application not found.');
-                return;
-            }
+async function cancelApplication(appId) {
+    // Use existing professional confirmation modal (Promise-based)
+    const confirmed = await showConfirmModal({
+        icon: '🗑️',
+        title: 'Cancel Application',
+        message: 'Are you sure you want to cancel this application? This action cannot be undone.',
+        confirmText: 'Yes, Cancel',
+        cancelText: 'No, Keep It',
+        variant: 'danger'
+    });
 
-            const app = demoApplications[appIndex];
+    if (!confirmed) return;
 
-            // Remove from demoApplications
-            demoApplications.splice(appIndex, 1);
-            localStorage.setItem('demoApplications', JSON.stringify(demoApplications));
+    // User confirmed - proceed with cancellation
+    const appIndex = demoApplications.findIndex(a => a.id === appId);
+    if (appIndex === -1) {
+        showToast('error', 'Application not found.');
+        return;
+    }
 
-            // Update stats
-            const statsStr = localStorage.getItem('userStats');
-            let stats = statsStr ? JSON.parse(statsStr) : { applications: 0, tests: 0, passed: 0, referrals: 0 };
-            stats.applications = Math.max(0, demoApplications.length);
-            localStorage.setItem('userStats', JSON.stringify(stats));
+    const app = demoApplications[appIndex];
 
-            // Re-render jobs to enable Apply button again
-            renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
+    // Remove from demoApplications
+    demoApplications.splice(appIndex, 1);
+    localStorage.setItem('demoApplications', JSON.stringify(demoApplications));
 
-            // Reload applications list
-            loadApplications();
+    // Update stats
+    const statsStr = localStorage.getItem('userStats');
+    let stats = statsStr ? JSON.parse(statsStr) : { applications: 0, tests: 0, passed: 0, referrals: 0 };
+    stats.applications = Math.max(0, demoApplications.length);
+    localStorage.setItem('userStats', JSON.stringify(stats));
 
-            // Update dashboard stats
-            loadUserStats();
+    // Re-render jobs to enable Apply button again
+    renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
 
-            showToast('success', `Application for ${app.jobTitle} at ${app.company} has been cancelled.`);
-        }
-    );
+    // Reload applications list
+    loadApplications();
+
+    // Update dashboard stats
+    loadUserStats();
+
+    showToast('success', `Application for ${app.jobTitle} at ${app.company} has been cancelled.`);
 }
 
 function filterApplications(status) {

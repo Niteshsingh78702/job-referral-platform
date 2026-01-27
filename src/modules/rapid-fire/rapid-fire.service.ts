@@ -505,11 +505,13 @@ export class RapidFireTestService {
       });
 
       if (!dbSession) {
+        console.log(`Session ${sessionId} not found in database`);
         return null;
       }
 
       // Check if session is active and not expired
       if (dbSession.status !== 'ACTIVE' || !dbSession.endsAt || new Date() > dbSession.endsAt) {
+        console.log(`Session ${sessionId} is not active or expired`);
         return null;
       }
 
@@ -520,15 +522,21 @@ export class RapidFireTestService {
       });
 
       if (!user?.Candidate?.id) {
+        console.log(`User ${userId} has no candidate record`);
         return null;
       }
+
+      // Get skillBucketId from the first SkillBucket in the array
+      // TestTemplate has SkillBucket as an array relation
+      const skillBuckets = dbSession.TestTemplate?.SkillBucket || [];
+      const skillBucketId = skillBuckets.length > 0 ? skillBuckets[0].id : '';
 
       // Restore session data
       const sessionData: SessionData = {
         userId: userId,
         candidateId: user.Candidate.id,
-        skillBucketId: dbSession.TestTemplate?.skillBucketId || '',
-        testTemplateId: dbSession.testTemplateId,
+        skillBucketId: skillBucketId,
+        testTemplateId: dbSession.testTemplateId || '',
         questionIds: dbSession.selectedQuestionIds || [],
         answers: {}, // Answers are lost after restart - user needs to re-answer
         startedAt: dbSession.startedAt?.getTime() || Date.now(),
@@ -539,7 +547,7 @@ export class RapidFireTestService {
       // Store back in memory
       activeSessions.set(sessionId, sessionData);
 
-      console.log(`Session ${sessionId} restored from database for user ${userId}`);
+      console.log(`Session ${sessionId} restored from database for user ${userId}, candidateId: ${user.Candidate.id}`);
       return sessionData;
     } catch (error) {
       console.error('Error restoring session from DB:', error);

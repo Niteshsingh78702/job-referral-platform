@@ -209,7 +209,7 @@ export class RapidFireTestService {
    * Get test state with all questions
    */
   async getTestState(sessionId: string, userId: string) {
-    const session = this.validateSession(sessionId, userId);
+    const session = await this.validateSession(sessionId, userId);
 
     // Get all questions
     const questions = await this.prisma.questionBank.findMany({
@@ -270,7 +270,7 @@ export class RapidFireTestService {
     questionId: string,
     selectedAnswer: number,
   ) {
-    const session = this.validateSession(sessionId, userId);
+    const session = await this.validateSession(sessionId, userId);
 
     // Check if question belongs to this session
     if (!session.questionIds.includes(questionId)) {
@@ -463,9 +463,15 @@ export class RapidFireTestService {
 
   /**
    * Validate session and check authorization
+   * Returns session data or throws appropriate error
    */
-  private validateSession(sessionId: string, userId: string): SessionData {
-    const session = activeSessions.get(sessionId);
+  private async validateSession(sessionId: string, userId: string): Promise<SessionData> {
+    let session = activeSessions.get(sessionId);
+
+    // If not in memory, try to restore from database
+    if (!session) {
+      session = await this.restoreSessionFromDb(sessionId, userId);
+    }
 
     if (!session) {
       throw new NotFoundException('Test session not found or expired');
@@ -486,6 +492,59 @@ export class RapidFireTestService {
     }
 
     return session;
+  }
+
+  /**
+   * Restore session from database if server restarted
+   */
+  private async restoreSessionFromDb(sessionId: string, userId: string): Promise<SessionData | null> {
+    try {
+      const dbSession = await this.prisma.testSession.findUnique({
+        where: { id: sessionId },
+        include: { TestTemplate: { include: { SkillBucket: true } } },
+      });
+
+      if (!dbSession) {
+        return null;
+      }
+
+      // Check if session is active and not expired
+      if (dbSession.status !== 'ACTIVE' || !dbSession.endsAt || new Date() > dbSession.endsAt) {
+        return null;
+      }
+
+      // Get the user's candidate record
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, Candidate: { select: { id: true } } },
+      });
+
+      if (!user?.Candidate?.id) {
+        return null;
+      }
+
+      // Restore session data
+      const sessionData: SessionData = {
+        userId: userId,
+        candidateId: user.Candidate.id,
+        skillBucketId: dbSession.TestTemplate?.skillBucketId || '',
+        testTemplateId: dbSession.testTemplateId,
+        questionIds: dbSession.selectedQuestionIds || [],
+        answers: {}, // Answers are lost after restart - user needs to re-answer
+        startedAt: dbSession.startedAt?.getTime() || Date.now(),
+        endsAt: dbSession.endsAt.getTime(),
+        status: 'ACTIVE',
+      };
+
+      // Store back in memory
+      activeSessions.set(sessionId, sessionData);
+
+      console.log(`Session ${sessionId} restored from database for user ${userId}`);
+      return sessionData;
+    } catch (error) {
+      console.error('Error restoring session from DB:', error);
+      return null;
+    }
   }
 
   /**

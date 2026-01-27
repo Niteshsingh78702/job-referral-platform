@@ -550,12 +550,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         sessionId = urlParams.get('session');
 
-        // Token from localStorage
-        const token = localStorage.getItem('accessToken');
+        // Token from localStorage (must match key used by app.js)
+        const token = localStorage.getItem('token');
 
-        if (!sessionId || !token) {
-            alert('Invalid test session. Please start from the jobs page.');
-            window.location.href = 'index.html#jobs';
+        if (!sessionId) {
+            alert('No test session found in URL. Please start the test from your applications page.');
+            window.location.href = 'index.html#applications';
+        } else if (!token) {
+            alert('You are not logged in. Please login first.');
+            window.location.href = 'index.html';
         }
 
         // Load test state
@@ -567,15 +570,23 @@
 
                 // Handle auth errors
                 if (res.status === 401) {
-                    alert('Your session has expired. Please login again.');
-                    localStorage.removeItem('accessToken');
+                    alert('Your login session has expired. Please login again.');
+                    localStorage.removeItem('token');
                     window.location.href = 'index.html';
                     return;
                 }
 
                 // Handle session not found (404) or other errors
                 if (res.status === 404) {
-                    alert('Test session not found or expired. Redirecting to applications page.');
+                    alert('Test session not found or has expired. Please start a new test from your applications page.');
+                    window.location.href = 'index.html#applications';
+                    return;
+                }
+
+                // Handle 400 errors (test expired, already submitted, etc.)
+                if (res.status === 400) {
+                    const data = await res.json();
+                    alert(data.message || 'This test session is no longer active. Please start a new test.');
                     window.location.href = 'index.html#applications';
                     return;
                 }
@@ -599,7 +610,12 @@
                 updateProgress();
             } catch (error) {
                 console.error('Load test error:', error);
-                alert(error.message || 'Failed to load test. Please try starting the test again.');
+                // Check if it's a network error
+                if (error.message === 'Failed to fetch') {
+                    alert('Cannot connect to server. Please check your internet connection and try again.');
+                } else {
+                    alert(error.message || 'Failed to load test. Please try starting the test again from your applications page.');
+                }
                 window.location.href = 'index.html#applications';
             }
         }

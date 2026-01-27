@@ -230,7 +230,7 @@ let RapidFireTestService = class RapidFireTestService {
     /**
    * Get test state with all questions
    */ async getTestState(sessionId, userId) {
-        const session = this.validateSession(sessionId, userId);
+        const session = await this.validateSession(sessionId, userId);
         // Get all questions
         const questions = await this.prisma.questionBank.findMany({
             where: {
@@ -277,7 +277,7 @@ let RapidFireTestService = class RapidFireTestService {
     /**
    * Submit answer for a question
    */ async submitAnswer(sessionId, userId, questionId, selectedAnswer) {
-        const session = this.validateSession(sessionId, userId);
+        const session = await this.validateSession(sessionId, userId);
         // Check if question belongs to this session
         if (!session.questionIds.includes(questionId)) {
             throw new _common.BadRequestException('Question not part of this test');
@@ -442,8 +442,13 @@ let RapidFireTestService = class RapidFireTestService {
     }
     /**
    * Validate session and check authorization
-   */ validateSession(sessionId, userId) {
-        const session = activeSessions.get(sessionId);
+   * Returns session data or throws appropriate error
+   */ async validateSession(sessionId, userId) {
+        let session = activeSessions.get(sessionId);
+        // If not in memory, try to restore from database
+        if (!session) {
+            session = await this.restoreSessionFromDb(sessionId, userId);
+        }
         if (!session) {
             throw new _common.NotFoundException('Test session not found or expired');
         }
@@ -459,6 +464,67 @@ let RapidFireTestService = class RapidFireTestService {
             throw new _common.BadRequestException('Test time has expired');
         }
         return session;
+    }
+    /**
+   * Restore session from database if server restarted
+   */ async restoreSessionFromDb(sessionId, userId) {
+        try {
+            const dbSession = await this.prisma.testSession.findUnique({
+                where: {
+                    id: sessionId
+                },
+                include: {
+                    TestTemplate: {
+                        include: {
+                            SkillBucket: true
+                        }
+                    }
+                }
+            });
+            if (!dbSession) {
+                return null;
+            }
+            // Check if session is active and not expired
+            if (dbSession.status !== 'ACTIVE' || !dbSession.endsAt || new Date() > dbSession.endsAt) {
+                return null;
+            }
+            // Get the user's candidate record
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: userId
+                },
+                select: {
+                    id: true,
+                    Candidate: {
+                        select: {
+                            id: true
+                        }
+                    }
+                }
+            });
+            if (!user?.Candidate?.id) {
+                return null;
+            }
+            // Restore session data
+            const sessionData = {
+                userId: userId,
+                candidateId: user.Candidate.id,
+                skillBucketId: dbSession.TestTemplate?.skillBucketId || '',
+                testTemplateId: dbSession.testTemplateId,
+                questionIds: dbSession.selectedQuestionIds || [],
+                answers: {},
+                startedAt: dbSession.startedAt?.getTime() || Date.now(),
+                endsAt: dbSession.endsAt.getTime(),
+                status: 'ACTIVE'
+            };
+            // Store back in memory
+            activeSessions.set(sessionId, sessionData);
+            console.log(`Session ${sessionId} restored from database for user ${userId}`);
+            return sessionData;
+        } catch (error) {
+            console.error('Error restoring session from DB:', error);
+            return null;
+        }
     }
     /**
    * Get test history for a candidate

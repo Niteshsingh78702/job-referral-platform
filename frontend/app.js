@@ -2438,7 +2438,9 @@ async function loadApplications() {
                         interview: interview,
                         referral: referral,
                         payment: payment,
-                        testSession: testSession
+                        testSession: testSession,
+                        skillBucketId: job.skillBucketId,
+                        Job: job
                     };
                 });
                 console.log('✅ Loaded', applications.length, 'applications from API');
@@ -2463,7 +2465,9 @@ async function loadApplications() {
                         interview: interview,
                         referral: referral,
                         payment: payment,
-                        testSession: testSession
+                        testSession: testSession,
+                        skillBucketId: job.skillBucketId,
+                        Job: job
                     };
                 });
             }

@@ -31,8 +31,8 @@ function _ts_param(paramIndex, decorator) {
 }
 let RapidFireController = class RapidFireController {
     /**
-     * Check if candidate can take a test for a skill bucket
-     */ async checkEligibility(skillBucketId, user) {
+   * Check if candidate can take a test for a skill bucket
+   */ async checkEligibility(skillBucketId, user) {
         // Get candidate from user
         const eligibility = await this.rapidFireService.canTakeTest(user.candidateId, skillBucketId);
         return {
@@ -41,8 +41,8 @@ let RapidFireController = class RapidFireController {
         };
     }
     /**
-     * Start a rapid fire test
-     */ async startTest(skillBucketId, user) {
+   * Start a rapid fire test
+   */ async startTest(skillBucketId, user) {
         const result = await this.rapidFireService.startTest(user.sub, user.candidateId, skillBucketId);
         return {
             success: true,
@@ -51,8 +51,8 @@ let RapidFireController = class RapidFireController {
         };
     }
     /**
-     * Get current test state with all questions
-     */ async getTestState(sessionId, user) {
+   * Get current test state with all questions
+   */ async getTestState(sessionId, user) {
         const state = await this.rapidFireService.getTestState(sessionId, user.sub);
         return {
             success: true,
@@ -60,8 +60,8 @@ let RapidFireController = class RapidFireController {
         };
     }
     /**
-     * Submit answer for a question
-     */ async submitAnswer(sessionId, body, user) {
+   * Submit answer for a question
+   */ async submitAnswer(sessionId, body, user) {
         const result = await this.rapidFireService.submitAnswer(sessionId, user.sub, body.questionId, body.selectedAnswer);
         return {
             success: true,
@@ -69,8 +69,8 @@ let RapidFireController = class RapidFireController {
         };
     }
     /**
-     * Submit the entire test
-     */ async submitTest(sessionId, user) {
+   * Submit the entire test
+   */ async submitTest(sessionId, user) {
         const result = await this.rapidFireService.submitTest(sessionId, user.sub);
         return {
             success: true,
@@ -78,8 +78,8 @@ let RapidFireController = class RapidFireController {
         };
     }
     /**
-     * Exit test (marks as failed)
-     */ async exitTest(sessionId, user) {
+   * Exit test (marks as failed)
+   */ async exitTest(sessionId, user) {
         const result = await this.rapidFireService.exitTest(sessionId, user.sub);
         return {
             success: true,
@@ -87,8 +87,8 @@ let RapidFireController = class RapidFireController {
         };
     }
     /**
-     * Get test history for current candidate
-     */ async getTestHistory(user) {
+   * Get test history for current candidate
+   */ async getTestHistory(user) {
         const history = await this.rapidFireService.getTestHistory(user.candidateId);
         return {
             success: true,

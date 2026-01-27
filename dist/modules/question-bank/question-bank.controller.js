@@ -32,8 +32,8 @@ function _ts_param(paramIndex, decorator) {
 }
 let QuestionBankController = class QuestionBankController {
     /**
-     * Create a new question
-     */ async createQuestion(dto, user) {
+   * Create a new question
+   */ async createQuestion(dto, user) {
         const question = await this.questionBankService.createQuestion(dto, user.sub);
         return {
             success: true,
@@ -42,8 +42,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Bulk upload questions from CSV
-     */ async bulkUpload(dto, user) {
+   * Bulk upload questions from CSV
+   */ async bulkUpload(dto, user) {
         const result = await this.questionBankService.bulkUpload(dto.QuestionBank, user.sub);
         return {
             success: true,
@@ -52,8 +52,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Get questions with filters and pagination
-     */ async getQuestions(filters) {
+   * Get questions with filters and pagination
+   */ async getQuestions(filters) {
         const result = await this.questionBankService.getQuestions(filters);
         return {
             success: true,
@@ -62,8 +62,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Get question bank statistics
-     */ async getStats() {
+   * Get question bank statistics
+   */ async getStats() {
         const stats = await this.questionBankService.getStats();
         return {
             success: true,
@@ -71,8 +71,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Get unique role types for dropdown
-     */ async getRoleTypes() {
+   * Get unique role types for dropdown
+   */ async getRoleTypes() {
         const roleTypes = await this.questionBankService.getRoleTypes();
         return {
             success: true,
@@ -80,8 +80,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Get a single question by ID
-     */ async getQuestion(id) {
+   * Get a single question by ID
+   */ async getQuestion(id) {
         const question = await this.questionBankService.getQuestionById(id);
         return {
             success: true,
@@ -89,8 +89,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Update a question
-     */ async updateQuestion(id, dto) {
+   * Update a question
+   */ async updateQuestion(id, dto) {
         const question = await this.questionBankService.updateQuestion(id, dto);
         return {
             success: true,
@@ -99,9 +99,9 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Bulk delete all questions by role type
-     * NOTE: This route must be before :id routes to avoid conflict
-     */ async deleteByRole(roleType) {
+   * Bulk delete all questions by role type
+   * NOTE: This route must be before :id routes to avoid conflict
+   */ async deleteByRole(roleType) {
         const count = await this.questionBankService.deleteByRole(roleType);
         return {
             success: true,
@@ -112,8 +112,8 @@ let QuestionBankController = class QuestionBankController {
         };
     }
     /**
-     * Delete a question (soft delete)
-     */ async deleteQuestion(id) {
+   * Delete a question (soft delete)
+   */ async deleteQuestion(id) {
         await this.questionBankService.deleteQuestion(id);
         return {
             success: true,

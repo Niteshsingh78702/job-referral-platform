@@ -63,8 +63,8 @@ function _ts_metadata(k, v) {
 }
 let QuestionBankService = class QuestionBankService {
     /**
-     * Create a single question
-     */ async createQuestion(dto, createdById) {
+   * Create a single question
+   */ async createQuestion(dto, createdById) {
         // Validate options count
         if (dto.options.length !== 4) {
             throw new _common.BadRequestException('Questions must have exactly 4 options');
@@ -85,8 +85,8 @@ let QuestionBankService = class QuestionBankService {
         });
     }
     /**
-     * Bulk upload questions (for CSV import)
-     */ async bulkUpload(questions, createdById) {
+   * Bulk upload questions (for CSV import)
+   */ async bulkUpload(questions, createdById) {
         const createdQuestions = [];
         const errors = [];
         for(let i = 0; i < questions.length; i++){
@@ -129,9 +129,9 @@ let QuestionBankService = class QuestionBankService {
         };
     }
     /**
-     * Get questions with filters and pagination
-     * Uses efficient indexed queries for performance
-     */ async getQuestions(filters) {
+   * Get questions with filters and pagination
+   * Uses efficient indexed queries for performance
+   */ async getQuestions(filters) {
         const { page = 1, limit = 20, roleType, difficulty, category, search, tags } = filters;
         const skip = (page - 1) * limit;
         const where = {
@@ -189,8 +189,8 @@ let QuestionBankService = class QuestionBankService {
         };
     }
     /**
-     * Get a single question by ID
-     */ async getQuestionById(id) {
+   * Get a single question by ID
+   */ async getQuestionById(id) {
         const question = await this.prisma.questionBank.findUnique({
             where: {
                 id
@@ -202,8 +202,8 @@ let QuestionBankService = class QuestionBankService {
         return question;
     }
     /**
-     * Update a question
-     */ async updateQuestion(id, dto) {
+   * Update a question
+   */ async updateQuestion(id, dto) {
         await this.getQuestionById(id); // Verify exists
         if (dto.options && dto.options.length !== 4) {
             throw new _common.BadRequestException('Questions must have exactly 4 options');
@@ -216,8 +216,8 @@ let QuestionBankService = class QuestionBankService {
         });
     }
     /**
-     * Soft delete a question
-     */ async deleteQuestion(id) {
+   * Soft delete a question
+   */ async deleteQuestion(id) {
         await this.getQuestionById(id); // Verify exists
         return this.prisma.questionBank.update({
             where: {
@@ -229,9 +229,9 @@ let QuestionBankService = class QuestionBankService {
         });
     }
     /**
-     * Get random questions for rapid fire test
-     * Uses efficient query to avoid loading all questions
-     */ async getRandomQuestions(params) {
+   * Get random questions for rapid fire test
+   * Uses efficient query to avoid loading all questions
+   */ async getRandomQuestions(params) {
         const { count, roleType, tags, difficulty } = params;
         const where = {
             isActive: true
@@ -278,8 +278,8 @@ let QuestionBankService = class QuestionBankService {
         }
     }
     /**
-     * Get statistics for admin dashboard
-     */ async getStats() {
+   * Get statistics for admin dashboard
+   */ async getStats() {
         const [total, byRole, byDifficulty, byCategory] = await Promise.all([
             this.prisma.questionBank.count({
                 where: {
@@ -331,8 +331,8 @@ let QuestionBankService = class QuestionBankService {
         };
     }
     /**
-     * Get unique role types for dropdown
-     */ async getRoleTypes() {
+   * Get unique role types for dropdown
+   */ async getRoleTypes() {
         const roles = await this.prisma.questionBank.findMany({
             where: {
                 isActive: true,
@@ -350,8 +350,8 @@ let QuestionBankService = class QuestionBankService {
         return roles.map((r)=>r.roleType).filter(Boolean);
     }
     /**
-     * Fisher-Yates shuffle algorithm
-     */ shuffleArray(array) {
+   * Fisher-Yates shuffle algorithm
+   */ shuffleArray(array) {
         const shuffled = [
             ...array
         ];
@@ -365,8 +365,8 @@ let QuestionBankService = class QuestionBankService {
         return shuffled;
     }
     /**
-     * Bulk delete all questions by role type
-     */ async deleteByRole(roleType) {
+   * Bulk delete all questions by role type
+   */ async deleteByRole(roleType) {
         const result = await this.prisma.questionBank.deleteMany({
             where: {
                 roleType

@@ -33,20 +33,20 @@ let InterviewController = class InterviewController {
     // HR Endpoints
     // ===========================================
     /**
-     * HR confirms an interview with date/time/mode.
-     * NEW FLOW: HR provides all details upfront, candidate pays to unlock.
-     */ async confirmInterview(userId, applicationId, dto) {
+   * HR confirms an interview with date/time/mode.
+   * NEW FLOW: HR provides all details upfront, candidate pays to unlock.
+   */ async confirmInterview(userId, applicationId, dto) {
         return this.interviewService.confirmInterview(userId, applicationId, dto);
     }
     /**
-     * HR schedules interview after candidate has paid
-     * Sets date, time, meeting link, and additional details
-     */ async scheduleInterview(userId, interviewId, dto) {
+   * HR schedules interview after candidate has paid
+   * Sets date, time, meeting link, and additional details
+   */ async scheduleInterview(userId, interviewId, dto) {
         return this.interviewService.scheduleInterview(userId, interviewId, dto);
     }
     /**
-     * Get all interviews for HR's jobs
-     */ async getHRInterviews(userId, status, jobId) {
+   * Get all interviews for HR's jobs
+   */ async getHRInterviews(userId, status, jobId) {
         return this.interviewService.getHRInterviews(userId, {
             status,
             jobId
@@ -56,42 +56,42 @@ let InterviewController = class InterviewController {
     // Candidate Endpoints
     // ===========================================
     /**
-     * Get all interviews for candidate
-     */ async getCandidateInterviews(userId) {
+   * Get all interviews for candidate
+   */ async getCandidateInterviews(userId) {
         return this.interviewService.getCandidateInterviews(userId);
     }
     /**
-     * Get specific interview for candidate
-     * Returns filtered data based on interview status
-     */ async getInterviewForCandidate(userId, interviewId) {
+   * Get specific interview for candidate
+   * Returns filtered data based on interview status
+   */ async getInterviewForCandidate(userId, interviewId) {
         return this.interviewService.getInterviewForCandidate(userId, interviewId);
     }
     // ===========================================
     // Admin Endpoints
     // ===========================================
     /**
-     * Get interview statistics for admin dashboard
-     */ async getAdminStats() {
+   * Get interview statistics for admin dashboard
+   */ async getAdminStats() {
         return this.interviewService.getAdminInterviewStats();
     }
     /**
-     * Get all interviews for admin with pagination
-     */ async getAdminInterviews(page, limit, status) {
+   * Get all interviews for admin with pagination
+   */ async getAdminInterviews(page, limit, status) {
         return this.interviewService.getAdminInterviews(page || 1, limit || 20, status);
     }
     /**
-     * Admin marks interview as no-show (candidate or HR)
-     */ async markNoShow(adminUserId, interviewId, type) {
+   * Admin marks interview as no-show (candidate or HR)
+   */ async markNoShow(adminUserId, interviewId, type) {
         return this.interviewService.markNoShow(interviewId, type, adminUserId);
     }
     /**
-     * Admin marks interview as completed
-     */ async markCompleted(adminUserId, interviewId) {
+   * Admin marks interview as completed
+   */ async markCompleted(adminUserId, interviewId) {
         return this.interviewService.markCompleted(interviewId, adminUserId);
     }
     /**
-     * HR marks interview outcome (Selected/Not Selected/No Show)
-     */ async markInterviewOutcome(userId, interviewId, dto) {
+   * HR marks interview outcome (Selected/Not Selected/No Show)
+   */ async markInterviewOutcome(userId, interviewId, dto) {
         return this.interviewService.markInterviewOutcome(userId, interviewId, dto);
     }
     constructor(interviewService){

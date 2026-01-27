@@ -491,8 +491,8 @@ let PaymentService = class PaymentService {
     // INTERVIEW PAYMENT METHODS (₹99)
     // =============================================
     /**
-     * Create payment order for interview (₹99)
-     */ async createInterviewOrder(userId, applicationId) {
+   * Create payment order for interview (₹99)
+   */ async createInterviewOrder(userId, applicationId) {
         // Get application with interview
         const application = await this.prisma.jobApplication.findUnique({
             where: {
@@ -660,8 +660,8 @@ let PaymentService = class PaymentService {
         };
     }
     /**
-     * Verify interview payment and update interview status
-     */ async verifyInterviewPayment(userId, dto) {
+   * Verify interview payment and update interview status
+   */ async verifyInterviewPayment(userId, dto) {
         // Verify signature
         const isValid = this.verifySignature(dto.razorpayOrderId, dto.razorpayPaymentId, dto.razorpaySignature);
         if (!isValid) {

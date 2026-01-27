@@ -31,8 +31,8 @@ function _ts_param(paramIndex, decorator) {
 }
 let TestTemplateController = class TestTemplateController {
     /**
-     * Create a new test template
-     */ async createTemplate(dto) {
+   * Create a new test template
+   */ async createTemplate(dto) {
         const template = await this.testTemplateService.createTemplate(dto);
         return {
             success: true,
@@ -41,8 +41,8 @@ let TestTemplateController = class TestTemplateController {
         };
     }
     /**
-     * Get templates with filters and pagination
-     */ async getTemplates(filters) {
+   * Get templates with filters and pagination
+   */ async getTemplates(filters) {
         const result = await this.testTemplateService.getTemplates(filters);
         return {
             success: true,
@@ -51,8 +51,8 @@ let TestTemplateController = class TestTemplateController {
         };
     }
     /**
-     * Get a single template by ID
-     */ async getTemplate(id) {
+   * Get a single template by ID
+   */ async getTemplate(id) {
         const template = await this.testTemplateService.getTemplateById(id);
         return {
             success: true,
@@ -60,8 +60,8 @@ let TestTemplateController = class TestTemplateController {
         };
     }
     /**
-     * Preview questions for a template
-     */ async previewQuestions(id, count) {
+   * Preview questions for a template
+   */ async previewQuestions(id, count) {
         const questions = await this.testTemplateService.previewQuestions(id, count || 10);
         return {
             success: true,
@@ -69,8 +69,8 @@ let TestTemplateController = class TestTemplateController {
         };
     }
     /**
-     * Update a template
-     */ async updateTemplate(id, dto) {
+   * Update a template
+   */ async updateTemplate(id, dto) {
         const template = await this.testTemplateService.updateTemplate(id, dto);
         return {
             success: true,
@@ -79,20 +79,20 @@ let TestTemplateController = class TestTemplateController {
         };
     }
     /**
-     * Assign template to skill bucket
-     */ async assignToSkillBucket(id, dto) {
+   * Assign template to skill bucket
+   */ async assignToSkillBucket(id, dto) {
         const result = await this.testTemplateService.assignToSkillBucket(id, dto);
         return result;
     }
     /**
-     * Unassign template from skill bucket
-     */ async unassignFromSkillBucket(skillBucketId) {
+   * Unassign template from skill bucket
+   */ async unassignFromSkillBucket(skillBucketId) {
         const result = await this.testTemplateService.unassignFromSkillBucket(skillBucketId);
         return result;
     }
     /**
-     * Delete a template (soft delete)
-     */ async deleteTemplate(id) {
+   * Delete a template (soft delete)
+   */ async deleteTemplate(id) {
         await this.testTemplateService.deleteTemplate(id);
         return {
             success: true,

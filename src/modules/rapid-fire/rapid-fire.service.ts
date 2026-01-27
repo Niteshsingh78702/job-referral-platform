@@ -30,7 +30,7 @@ export class RapidFireTestService {
   constructor(
     private prisma: PrismaService,
     private questionBankService: QuestionBankService,
-  ) {}
+  ) { }
 
   /**
    * Check if candidate can take a test for a skill bucket
@@ -127,6 +127,14 @@ export class RapidFireTestService {
     const eligibility = await this.canTakeTest(candidateId, skillBucketId);
 
     if (!eligibility.canTake) {
+      // If there's an active session, include the sessionId in the error response
+      if (eligibility.sessionId) {
+        throw new BadRequestException({
+          message: eligibility.message,
+          sessionId: eligibility.sessionId,
+          status: eligibility.status,
+        });
+      }
       throw new BadRequestException(eligibility.message);
     }
 

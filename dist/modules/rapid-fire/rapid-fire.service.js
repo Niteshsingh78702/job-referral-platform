@@ -66,9 +66,9 @@ function _ts_metadata(k, v) {
 const activeSessions = new Map();
 let RapidFireTestService = class RapidFireTestService {
     /**
-     * Check if candidate can take a test for a skill bucket
-     * Returns status with cooldown info
-     */ async canTakeTest(candidateId, skillBucketId) {
+   * Check if candidate can take a test for a skill bucket
+   * Returns status with cooldown info
+   */ async canTakeTest(candidateId, skillBucketId) {
         // Get skill bucket with test template
         const skillBucket = await this.prisma.skillBucket.findUnique({
             where: {
@@ -151,11 +151,19 @@ let RapidFireTestService = class RapidFireTestService {
         };
     }
     /**
-     * Start a rapid fire test
-     */ async startTest(userId, candidateId, skillBucketId) {
+   * Start a rapid fire test
+   */ async startTest(userId, candidateId, skillBucketId) {
         // Check if can take test
         const eligibility = await this.canTakeTest(candidateId, skillBucketId);
         if (!eligibility.canTake) {
+            // If there's an active session, include the sessionId in the error response
+            if (eligibility.sessionId) {
+                throw new _common.BadRequestException({
+                    message: eligibility.message,
+                    sessionId: eligibility.sessionId,
+                    status: eligibility.status
+                });
+            }
             throw new _common.BadRequestException(eligibility.message);
         }
         const skillBucket = await this.prisma.skillBucket.findUnique({
@@ -215,8 +223,8 @@ let RapidFireTestService = class RapidFireTestService {
         };
     }
     /**
-     * Get test state with all questions
-     */ async getTestState(sessionId, userId) {
+   * Get test state with all questions
+   */ async getTestState(sessionId, userId) {
         const session = this.validateSession(sessionId, userId);
         // Get all questions
         const questions = await this.prisma.questionBank.findMany({
@@ -262,8 +270,8 @@ let RapidFireTestService = class RapidFireTestService {
         };
     }
     /**
-     * Submit answer for a question
-     */ async submitAnswer(sessionId, userId, questionId, selectedAnswer) {
+   * Submit answer for a question
+   */ async submitAnswer(sessionId, userId, questionId, selectedAnswer) {
         const session = this.validateSession(sessionId, userId);
         // Check if question belongs to this session
         if (!session.questionIds.includes(questionId)) {
@@ -282,8 +290,8 @@ let RapidFireTestService = class RapidFireTestService {
         };
     }
     /**
-     * Submit the entire test
-     */ async submitTest(sessionId, userId, isAutoSubmit = false) {
+   * Submit the entire test
+   */ async submitTest(sessionId, userId, isAutoSubmit = false) {
         const session = activeSessions.get(sessionId);
         if (!session) {
             throw new _common.NotFoundException('Test session not found');
@@ -377,8 +385,8 @@ let RapidFireTestService = class RapidFireTestService {
         };
     }
     /**
-     * Exit test (marks as failed)
-     */ async exitTest(sessionId, userId) {
+   * Exit test (marks as failed)
+   */ async exitTest(sessionId, userId) {
         const session = activeSessions.get(sessionId);
         if (!session) {
             throw new _common.NotFoundException('Test session not found');
@@ -428,8 +436,8 @@ let RapidFireTestService = class RapidFireTestService {
         };
     }
     /**
-     * Validate session and check authorization
-     */ validateSession(sessionId, userId) {
+   * Validate session and check authorization
+   */ validateSession(sessionId, userId) {
         const session = activeSessions.get(sessionId);
         if (!session) {
             throw new _common.NotFoundException('Test session not found or expired');
@@ -448,8 +456,8 @@ let RapidFireTestService = class RapidFireTestService {
         return session;
     }
     /**
-     * Get test history for a candidate
-     */ async getTestHistory(candidateId) {
+   * Get test history for a candidate
+   */ async getTestHistory(candidateId) {
         const attempts = await this.prisma.skillTestAttempt.findMany({
             where: {
                 candidateId

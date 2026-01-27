@@ -1848,9 +1848,9 @@ let AdminService = class AdminService {
     // TEST OVERRIDE CONTROLS (ADMIN POWER FEATURES)
     // ===========================================
     /**
-     * Admin manually marks a candidate as PASSED for a skill test
-     * Creates a SkillTestAttempt with isPassed: true
-     */ async manuallyPassTest(candidateId, skillBucketId, adminId, reason, validityDays = 7) {
+   * Admin manually marks a candidate as PASSED for a skill test
+   * Creates a SkillTestAttempt with isPassed: true
+   */ async manuallyPassTest(candidateId, skillBucketId, adminId, reason, validityDays = 7) {
         // Verify candidate exists
         const candidate = await this.prisma.candidate.findUnique({
             where: {
@@ -1903,9 +1903,9 @@ let AdminService = class AdminService {
         };
     }
     /**
-     * Admin manually marks a candidate as FAILED for a skill test
-     * Creates a SkillTestAttempt with isPassed: false and immediate retest allowed
-     */ async manuallyFailTest(candidateId, skillBucketId, adminId, reason) {
+   * Admin manually marks a candidate as FAILED for a skill test
+   * Creates a SkillTestAttempt with isPassed: false and immediate retest allowed
+   */ async manuallyFailTest(candidateId, skillBucketId, adminId, reason) {
         // Verify candidate exists
         const candidate = await this.prisma.candidate.findUnique({
             where: {
@@ -1955,8 +1955,8 @@ let AdminService = class AdminService {
         };
     }
     /**
-     * Admin extends the validity of an existing test attempt
-     */ async extendTestValidity(attemptId, newValidTill, adminId, reason) {
+   * Admin extends the validity of an existing test attempt
+   */ async extendTestValidity(attemptId, newValidTill, adminId, reason) {
         const attempt = await this.prisma.skillTestAttempt.findUnique({
             where: {
                 id: attemptId
@@ -2001,9 +2001,9 @@ let AdminService = class AdminService {
         };
     }
     /**
-     * Admin resets the retest cooldown for a failed test attempt
-     * Allows candidate to immediately retake the test
-     */ async resetRetestCooldown(attemptId, adminId, reason) {
+   * Admin resets the retest cooldown for a failed test attempt
+   * Allows candidate to immediately retake the test
+   */ async resetRetestCooldown(attemptId, adminId, reason) {
         const attempt = await this.prisma.skillTestAttempt.findUnique({
             where: {
                 id: attemptId

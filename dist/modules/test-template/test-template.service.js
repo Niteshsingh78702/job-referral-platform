@@ -63,8 +63,8 @@ function _ts_metadata(k, v) {
 }
 let TestTemplateService = class TestTemplateService {
     /**
-     * Create a new test template
-     */ async createTemplate(dto) {
+   * Create a new test template
+   */ async createTemplate(dto) {
         // Validate that question pool is available if auto-select
         if (dto.autoSelect) {
             const questionCount = await this.getAvailableQuestionCount(dto.selectionRoleType, dto.selectionTags);
@@ -91,8 +91,8 @@ let TestTemplateService = class TestTemplateService {
         });
     }
     /**
-     * Get templates with filters and pagination
-     */ async getTemplates(filters) {
+   * Get templates with filters and pagination
+   */ async getTemplates(filters) {
         const { page = 1, limit = 20, testType, isActive } = filters;
         const skip = (page - 1) * limit;
         const where = {};
@@ -136,8 +136,8 @@ let TestTemplateService = class TestTemplateService {
         };
     }
     /**
-     * Get a single template by ID
-     */ async getTemplateById(id) {
+   * Get a single template by ID
+   */ async getTemplateById(id) {
         const template = await this.prisma.testTemplate.findUnique({
             where: {
                 id
@@ -164,8 +164,8 @@ let TestTemplateService = class TestTemplateService {
         };
     }
     /**
-     * Update a template
-     */ async updateTemplate(id, dto) {
+   * Update a template
+   */ async updateTemplate(id, dto) {
         await this.getTemplateById(id); // Verify exists
         return this.prisma.testTemplate.update({
             where: {
@@ -175,8 +175,8 @@ let TestTemplateService = class TestTemplateService {
         });
     }
     /**
-     * Delete a template (soft delete)
-     */ async deleteTemplate(id) {
+   * Delete a template (soft delete)
+   */ async deleteTemplate(id) {
         const template = await this.getTemplateById(id);
         // Check if assigned to any skill bucket
         if (template.skillBuckets && template.skillBuckets.length > 0) {
@@ -192,8 +192,8 @@ let TestTemplateService = class TestTemplateService {
         });
     }
     /**
-     * Assign template to a skill bucket
-     */ async assignToSkillBucket(templateId, dto) {
+   * Assign template to a skill bucket
+   */ async assignToSkillBucket(templateId, dto) {
         const template = await this.getTemplateById(templateId);
         // Check if skill bucket exists
         const skillBucket = await this.prisma.skillBucket.findUnique({
@@ -219,8 +219,8 @@ let TestTemplateService = class TestTemplateService {
         };
     }
     /**
-     * Unassign template from a skill bucket
-     */ async unassignFromSkillBucket(skillBucketId) {
+   * Unassign template from a skill bucket
+   */ async unassignFromSkillBucket(skillBucketId) {
         const skillBucket = await this.prisma.skillBucket.findUnique({
             where: {
                 id: skillBucketId
@@ -243,8 +243,8 @@ let TestTemplateService = class TestTemplateService {
         };
     }
     /**
-     * Get available question count for a template's selection criteria
-     */ async getAvailableQuestionCount(roleType, tags) {
+   * Get available question count for a template's selection criteria
+   */ async getAvailableQuestionCount(roleType, tags) {
         const where = {
             isActive: true
         };
@@ -259,8 +259,8 @@ let TestTemplateService = class TestTemplateService {
         });
     }
     /**
-     * Preview questions that would be selected for a template
-     */ async previewQuestions(templateId, count = 10) {
+   * Preview questions that would be selected for a template
+   */ async previewQuestions(templateId, count = 10) {
         const template = await this.getTemplateById(templateId);
         const where = {
             isActive: true

@@ -180,14 +180,14 @@ let SkillBucketService = class SkillBucketService {
     // Candidate: Skill Test Status Check
     // ==========================================
     /**
-     * Check candidate's skill test status for a specific skill bucket
-     * This is the CORE logic for determining:
-     * - If candidate has a valid pass (can apply without test)
-     * - If candidate has an expired pass (needs retest)
-     * - If candidate failed and is in cooldown (cannot retest yet)
-     * - If candidate failed and can retest (cooldown expired)
-     * - If candidate never took the test
-     */ async checkCandidateSkillStatus(candidateId, skillBucketId) {
+   * Check candidate's skill test status for a specific skill bucket
+   * This is the CORE logic for determining:
+   * - If candidate has a valid pass (can apply without test)
+   * - If candidate has an expired pass (needs retest)
+   * - If candidate failed and is in cooldown (cannot retest yet)
+   * - If candidate failed and can retest (cooldown expired)
+   * - If candidate never took the test
+   */ async checkCandidateSkillStatus(candidateId, skillBucketId) {
         const skillBucket = await this.prisma.skillBucket.findUnique({
             where: {
                 id: skillBucketId
@@ -265,8 +265,8 @@ let SkillBucketService = class SkillBucketService {
         };
     }
     /**
-     * Check skill status by Job ID (for apply flow)
-     */ async checkCandidateSkillStatusByJobId(candidateId, jobId) {
+   * Check skill status by Job ID (for apply flow)
+   */ async checkCandidateSkillStatusByJobId(candidateId, jobId) {
         const job = await this.prisma.job.findUnique({
             where: {
                 id: jobId
@@ -288,9 +288,9 @@ let SkillBucketService = class SkillBucketService {
     // RECORD TEST ATTEMPTS
     // ==========================================
     /**
-     * Record a skill test attempt after test submission
-     * Called from TestService after test is graded
-     */ async recordSkillTestAttempt(candidateId, skillBucketId, isPassed, score, testSessionId) {
+   * Record a skill test attempt after test submission
+   * Called from TestService after test is graded
+   */ async recordSkillTestAttempt(candidateId, skillBucketId, isPassed, score, testSessionId) {
         const now = new Date();
         // Get configured validity/cooldown from TestTemplate (via SkillBucket)
         const skillBucket = await this.prisma.skillBucket.findUnique({
@@ -330,8 +330,8 @@ let SkillBucketService = class SkillBucketService {
         return attempt;
     }
     /**
-     * Get all valid skill passes for a candidate (for displaying badges)
-     */ async getCandidateValidPasses(candidateId) {
+   * Get all valid skill passes for a candidate (for displaying badges)
+   */ async getCandidateValidPasses(candidateId) {
         const now = new Date();
         const validAttempts = await this.prisma.skillTestAttempt.findMany({
             where: {
@@ -367,14 +367,14 @@ let SkillBucketService = class SkillBucketService {
     // COMPOSITE SKILL REQUIREMENTS (Full Stack etc.)
     // ==========================================
     /**
-     * Check ALL required skills for a job (supports composite skill requirements)
-     * For Full Stack jobs that require both Java Backend AND React Frontend
-     * 
-     * Returns:
-     * - canApply: true if ALL required skills are passed and valid
-     * - missingTests: array of skills that need to be taken/retaken
-     * - passedTests: array of skills already passed and valid
-     */ async checkAllRequiredSkillsForJob(candidateId, jobId) {
+   * Check ALL required skills for a job (supports composite skill requirements)
+   * For Full Stack jobs that require both Java Backend AND React Frontend
+   *
+   * Returns:
+   * - canApply: true if ALL required skills are passed and valid
+   * - missingTests: array of skills that need to be taken/retaken
+   * - passedTests: array of skills already passed and valid
+   */ async checkAllRequiredSkillsForJob(candidateId, jobId) {
         // Get job with both legacy single skill bucket and new composite requirements
         const job = await this.prisma.job.findUnique({
             where: {

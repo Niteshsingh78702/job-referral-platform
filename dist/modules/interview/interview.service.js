@@ -65,11 +65,11 @@ function _ts_metadata(k, v) {
 }
 let InterviewService = class InterviewService {
     /**
-     * HR confirms an interview with scheduling details.
-     * NEW FLOW: HR sets date/time/mode upfront, then candidate pays to unlock.
-     * Creates Interview record with INTERVIEW_CONFIRMED status.
-     * Updates application status to INTERVIEW_CONFIRMED.
-     */ async confirmInterview(userId, applicationId, dto) {
+   * HR confirms an interview with scheduling details.
+   * NEW FLOW: HR sets date/time/mode upfront, then candidate pays to unlock.
+   * Creates Interview record with INTERVIEW_CONFIRMED status.
+   * Updates application status to INTERVIEW_CONFIRMED.
+   */ async confirmInterview(userId, applicationId, dto) {
         // Verify HR owns the job for this application
         const application = await this.prisma.jobApplication.findUnique({
             where: {
@@ -173,9 +173,9 @@ let InterviewService = class InterviewService {
         };
     }
     /**
-     * HR schedules interview after candidate has paid.
-     * Updates interview with date, time, meeting link, and details.
-     */ async scheduleInterview(userId, interviewId, dto) {
+   * HR schedules interview after candidate has paid.
+   * Updates interview with date, time, meeting link, and details.
+   */ async scheduleInterview(userId, interviewId, dto) {
         // Get HR record
         const hr = await this.prisma.hR.findUnique({
             where: {
@@ -242,10 +242,10 @@ let InterviewService = class InterviewService {
         };
     }
     /**
-     * Process successful payment - called by payment service.
-     * Transitions interview from INTERVIEW_CONFIRMED to PAYMENT_SUCCESS.
-     * Now candidate can see interview details.
-     */ async processPaymentSuccess(applicationId, paymentId) {
+   * Process successful payment - called by payment service.
+   * Transitions interview from INTERVIEW_CONFIRMED to PAYMENT_SUCCESS.
+   * Now candidate can see interview details.
+   */ async processPaymentSuccess(applicationId, paymentId) {
         const interview = await this.prisma.interview.findUnique({
             where: {
                 applicationId
@@ -307,9 +307,9 @@ let InterviewService = class InterviewService {
         return updatedInterview;
     }
     /**
-     * Get interview details for candidate.
-     * CRITICAL: Only return interview details if payment is successful.
-     */ async getInterviewForCandidate(userId, interviewId) {
+   * Get interview details for candidate.
+   * CRITICAL: Only return interview details if payment is successful.
+   */ async getInterviewForCandidate(userId, interviewId) {
         const candidate = await this.prisma.candidate.findUnique({
             where: {
                 userId
@@ -392,8 +392,8 @@ let InterviewService = class InterviewService {
         }
     }
     /**
-     * Get all interviews for candidate
-     */ async getCandidateInterviews(userId) {
+   * Get all interviews for candidate
+   */ async getCandidateInterviews(userId) {
         const candidate = await this.prisma.candidate.findUnique({
             where: {
                 userId
@@ -452,8 +452,8 @@ let InterviewService = class InterviewService {
         });
     }
     /**
-     * Get interviews for HR's jobs (shows all details to HR)
-     */ async getHRInterviews(userId, filters) {
+   * Get interviews for HR's jobs (shows all details to HR)
+   */ async getHRInterviews(userId, filters) {
         const hr = await this.prisma.hR.findUnique({
             where: {
                 userId
@@ -514,8 +514,8 @@ let InterviewService = class InterviewService {
     // ADMIN METHODS
     // ===========================================
     /**
-     * Get interview statistics for admin
-     */ async getAdminInterviewStats() {
+   * Get interview statistics for admin
+   */ async getAdminInterviewStats() {
         const [total, confirmed, paymentSuccess, completed, candidateNoShow, hrNoShow] = await Promise.all([
             this.prisma.interview.count(),
             this.prisma.interview.count({
@@ -569,8 +569,8 @@ let InterviewService = class InterviewService {
         };
     }
     /**
-     * Get all interviews for admin with pagination
-     */ async getAdminInterviews(page = 1, limit = 20, status) {
+   * Get all interviews for admin with pagination
+   */ async getAdminInterviews(page = 1, limit = 20, status) {
         const skip = (page - 1) * limit;
         const where = {};
         if (status) {
@@ -623,8 +623,8 @@ let InterviewService = class InterviewService {
         };
     }
     /**
-     * Admin marks an interview as no-show
-     */ async markNoShow(interviewId, type, adminUserId) {
+   * Admin marks an interview as no-show
+   */ async markNoShow(interviewId, type, adminUserId) {
         const interview = await this.prisma.interview.findUnique({
             where: {
                 id: interviewId
@@ -678,8 +678,8 @@ let InterviewService = class InterviewService {
         };
     }
     /**
-     * Admin marks interview as completed
-     */ async markCompleted(interviewId, adminUserId) {
+   * Admin marks interview as completed
+   */ async markCompleted(interviewId, adminUserId) {
         const interview = await this.prisma.interview.findUnique({
             where: {
                 id: interviewId
@@ -765,15 +765,15 @@ let InterviewService = class InterviewService {
         // Map outcome to interview status (must be valid InterviewStatus enum values)
         // SELECTED and NOT_SELECTED both mean the interview is completed
         const statusMap = {
-            'SELECTED': 'INTERVIEW_COMPLETED',
-            'NOT_SELECTED': 'INTERVIEW_COMPLETED',
-            'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW'
+            SELECTED: 'INTERVIEW_COMPLETED',
+            NOT_SELECTED: 'INTERVIEW_COMPLETED',
+            CANDIDATE_NO_SHOW: 'CANDIDATE_NO_SHOW'
         };
         // Map outcome to application status
         const applicationStatusMap = {
-            'SELECTED': 'SELECTED',
-            'NOT_SELECTED': 'INTERVIEW_REJECTED',
-            'CANDIDATE_NO_SHOW': 'CANDIDATE_NO_SHOW'
+            SELECTED: 'SELECTED',
+            NOT_SELECTED: 'INTERVIEW_REJECTED',
+            CANDIDATE_NO_SHOW: 'CANDIDATE_NO_SHOW'
         };
         const newStatus = statusMap[dto.outcome] || 'INTERVIEW_COMPLETED';
         const newAppStatus = applicationStatusMap[dto.outcome] || 'INTERVIEW_COMPLETED';

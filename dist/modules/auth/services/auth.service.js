@@ -776,9 +776,9 @@ let AuthService = class AuthService {
         };
     }
     /**
-     * FRAUD DETECTION: Check for multi-account patterns
-     * Flags when same device ID or IP address is used to register multiple accounts
-     */ async checkMultiAccountFraud(tx, userId, deviceInfo) {
+   * FRAUD DETECTION: Check for multi-account patterns
+   * Flags when same device ID or IP address is used to register multiple accounts
+   */ async checkMultiAccountFraud(tx, userId, deviceInfo) {
         const deviceId = deviceInfo.deviceId || 'unknown';
         const ipAddress = deviceInfo.ip || 'unknown';
         // Skip checks for unknown values

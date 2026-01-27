@@ -20,7 +20,7 @@ const _classvalidator = require("class-validator");
     'gmil.com': 'gmail.com',
     'gmail.co': 'gmail.com',
     'gmail.cm': 'gmail.com',
-    'gmailcom': 'gmail.com',
+    gmailcom: 'gmail.com',
     'gmaill.com': 'gmail.com',
     'gmail.con': 'gmail.com',
     'gmail.om': 'gmail.com',

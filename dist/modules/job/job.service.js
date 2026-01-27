@@ -395,9 +395,9 @@ let JobService = class JobService {
         });
     }
     /**
-     * Check if a candidate can apply for a job (for frontend pre-check)
-     * This allows the frontend to show appropriate UI before the user clicks Apply
-     */ async getApplyEligibility(jobId, userId) {
+   * Check if a candidate can apply for a job (for frontend pre-check)
+   * This allows the frontend to show appropriate UI before the user clicks Apply
+   */ async getApplyEligibility(jobId, userId) {
         // Get candidate
         const candidate = await this.prisma.candidate.findUnique({
             where: {

@@ -21,9 +21,9 @@ function _ts_metadata(k, v) {
 }
 let GoogleAuthService = class GoogleAuthService {
     /**
-     * Verify Google ID token and extract user info
-     * Uses Google's tokeninfo endpoint for simplicity (no additional dependencies)
-     */ async verifyIdToken(idToken) {
+   * Verify Google ID token and extract user info
+   * Uses Google's tokeninfo endpoint for simplicity (no additional dependencies)
+   */ async verifyIdToken(idToken) {
         if (!this.clientId) {
             throw new _common.UnauthorizedException('Google Sign-In is not configured');
         }
@@ -62,8 +62,8 @@ let GoogleAuthService = class GoogleAuthService {
         }
     }
     /**
-     * Check if Google OAuth is configured
-     */ isConfigured() {
+   * Check if Google OAuth is configured
+   */ isConfigured() {
         return !!this.clientId;
     }
     constructor(configService){

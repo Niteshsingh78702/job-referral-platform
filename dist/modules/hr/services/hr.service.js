@@ -70,11 +70,11 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 let HRService = class HRService {
     /**
-     * Register a new HR account
-     * - Validates corporate email domain
-     * - Creates user with HR role
-     * - Creates HR profile with pending approval status (auto-approved for dev)
-     */ async register(dto, deviceInfo) {
+   * Register a new HR account
+   * - Validates corporate email domain
+   * - Creates user with HR role
+   * - Creates HR profile with pending approval status (auto-approved for dev)
+   */ async register(dto, deviceInfo) {
         // Check if email already exists
         const existingUser = await this.prisma.user.findUnique({
             where: {
@@ -188,10 +188,10 @@ let HRService = class HRService {
         };
     }
     /**
-     * Login for HR users
-     * - Implements rate limiting (5 attempts per 15 min)
-     * - Checks HR approval status
-     */ async login(dto, deviceInfo) {
+   * Login for HR users
+   * - Implements rate limiting (5 attempts per 15 min)
+   * - Checks HR approval status
+   */ async login(dto, deviceInfo) {
         const user = await this.prisma.user.findUnique({
             where: {
                 email: dto.email
@@ -283,8 +283,8 @@ let HRService = class HRService {
         };
     }
     /**
-     * Get HR profile with stats
-     */ async getProfile(userId) {
+   * Get HR profile with stats
+   */ async getProfile(userId) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -311,8 +311,8 @@ let HRService = class HRService {
         return userWithoutPassword;
     }
     /**
-     * Update HR profile
-     */ async updateProfile(userId, dto) {
+   * Update HR profile
+   */ async updateProfile(userId, dto) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -338,8 +338,8 @@ let HRService = class HRService {
         return updated;
     }
     /**
-     * Get dashboard statistics
-     */ async getDashboardStats(userId) {
+   * Get dashboard statistics
+   */ async getDashboardStats(userId) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -401,8 +401,8 @@ let HRService = class HRService {
         };
     }
     /**
-     * Get recent activity for dashboard
-     */ async getRecentActivity(userId, limit = 10) {
+   * Get recent activity for dashboard
+   */ async getRecentActivity(userId, limit = 10) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -450,8 +450,8 @@ let HRService = class HRService {
             }));
     }
     /**
-     * Get HR's jobs
-     */ async getJobs(userId, filters) {
+   * Get HR's jobs
+   */ async getJobs(userId, filters) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -504,8 +504,8 @@ let HRService = class HRService {
         };
     }
     /**
-     * Create a new job posting
-     */ async createJob(userId, dto) {
+   * Create a new job posting
+   */ async createJob(userId, dto) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -582,8 +582,8 @@ let HRService = class HRService {
         return job;
     }
     /**
-     * Update job status (publish, close, etc.)
-     */ async updateJobStatus(userId, jobId, dto) {
+   * Update job status (publish, close, etc.)
+   */ async updateJobStatus(userId, jobId, dto) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -663,8 +663,8 @@ let HRService = class HRService {
         return updatedJob;
     }
     /**
-     * Get a single job by ID
-     */ async getJobById(userId, jobId) {
+   * Get a single job by ID
+   */ async getJobById(userId, jobId) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -700,8 +700,8 @@ let HRService = class HRService {
         return job;
     }
     /**
-     * Update a job (full edit)
-     */ async updateJob(userId, jobId, dto) {
+   * Update a job (full edit)
+   */ async updateJob(userId, jobId, dto) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -794,8 +794,8 @@ let HRService = class HRService {
         return updatedJob;
     }
     /**
-     * Delete a job
-     */ async deleteJob(userId, jobId) {
+   * Delete a job
+   */ async deleteJob(userId, jobId) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId
@@ -870,8 +870,8 @@ let HRService = class HRService {
         };
     }
     /**
-     * Get applications for HR's jobs
-     */ async getApplications(userId, filters) {
+   * Get applications for HR's jobs
+   */ async getApplications(userId, filters) {
         const user = await this.prisma.user.findUnique({
             where: {
                 id: userId

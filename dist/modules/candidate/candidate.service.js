@@ -136,6 +136,7 @@ let CandidateService = class CandidateService {
         });
         // Auto-add parsed skills if they don't exist
         for (const skillName of parsedData.jobSkill.slice(0, 10)){
+            // Limit to 10 skills
             const existingSkill = await this.prisma.candidateSkill.findFirst({
                 where: {
                     candidateId: candidate.id,

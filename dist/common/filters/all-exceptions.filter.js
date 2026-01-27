@@ -32,6 +32,14 @@ let AllExceptionsFilter = class AllExceptionsFilter {
                 const responseObj = exceptionResponse;
                 message = responseObj.message || message;
                 errors = responseObj.errors || null;
+                // Preserve any additional data (like sessionId for active sessions)
+                if (responseObj.sessionId) {
+                    errors = {
+                        ...errors,
+                        sessionId: responseObj.sessionId,
+                        status: responseObj.status
+                    };
+                }
             }
         } else if (exception instanceof Error) {
             message = exception.message;

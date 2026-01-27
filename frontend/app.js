@@ -3475,15 +3475,18 @@ async function startTest(applicationId, company, position) {
             window.location.href = `rapid-fire-test.html?session=${data.data.sessionId}`;
         } else {
             // Check if error contains an active session - redirect to continue it
+            // The sessionId can be in data.message (object) or data.errors.sessionId
             const errorData = data.message;
-            if (typeof errorData === 'object' && errorData?.sessionId) {
+            const errorSessionId = data.errors?.sessionId || (typeof errorData === 'object' ? errorData?.sessionId : null);
+
+            if (errorSessionId) {
                 showToast('info', 'Resuming your active test session...');
-                window.location.href = `rapid-fire-test.html?session=${errorData.sessionId}`;
+                window.location.href = `rapid-fire-test.html?session=${errorSessionId}`;
                 return;
             }
 
             // Show error message from API
-            const errorMsg = typeof errorData === 'string' ? errorData : (errorData?.message || 'Failed to start test');
+            const errorMsg = typeof errorData === 'string' ? errorData : (errorData?.message || data.message || 'Failed to start test');
             showToast('error', errorMsg);
 
             // Reload applications to get updated status

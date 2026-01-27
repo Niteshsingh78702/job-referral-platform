@@ -5,9 +5,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { QuestionBankModule } from '../question-bank/question-bank.module';
 
 @Module({
-    imports: [PrismaModule, QuestionBankModule],
-    controllers: [RapidFireController],
-    providers: [RapidFireTestService],
-    exports: [RapidFireTestService],
+  imports: [PrismaModule, QuestionBankModule],
+  controllers: [RapidFireController],
+  providers: [RapidFireTestService],
+  exports: [RapidFireTestService],
 })
-export class RapidFireModule { }
+export class RapidFireModule {}

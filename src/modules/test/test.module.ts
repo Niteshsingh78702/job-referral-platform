@@ -4,9 +4,9 @@ import { TestService } from './test.service';
 import { SkillBucketModule } from '../skill-bucket/skill-bucket.module';
 
 @Module({
-    imports: [SkillBucketModule],
-    controllers: [TestController],
-    providers: [TestService],
-    exports: [TestService],
+  imports: [SkillBucketModule],
+  controllers: [TestController],
+  providers: [TestService],
+  exports: [TestService],
 })
-export class TestModule { }
+export class TestModule {}

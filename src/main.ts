@@ -27,7 +27,9 @@ async function bootstrap() {
   // Swagger API Documentation
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Job Referral Platform API')
-    .setDescription('API documentation for the Job Referral & Pre-Screening Platform')
+    .setDescription(
+      'API documentation for the Job Referral & Pre-Screening Platform',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -86,7 +88,12 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'x-razorpay-signature'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-device-id',
+      'x-razorpay-signature',
+    ],
   });
 
   // Start server
@@ -108,4 +115,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-

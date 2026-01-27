@@ -127,4 +127,4 @@ import { InterviewModule } from './modules/interview/interview.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

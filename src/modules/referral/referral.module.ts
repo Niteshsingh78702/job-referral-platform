@@ -3,8 +3,8 @@ import { ReferralController } from './referral.controller';
 import { ReferralService } from './referral.service';
 
 @Module({
-    controllers: [ReferralController],
-    providers: [ReferralService],
-    exports: [ReferralService],
+  controllers: [ReferralController],
+  providers: [ReferralService],
+  exports: [ReferralService],
 })
-export class ReferralModule { }
+export class ReferralModule {}

@@ -4,9 +4,9 @@ import { QuestionBankService } from './question-bank.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [QuestionBankController],
-    providers: [QuestionBankService],
-    exports: [QuestionBankService],
+  imports: [PrismaModule],
+  controllers: [QuestionBankController],
+  providers: [QuestionBankService],
+  exports: [QuestionBankService],
 })
-export class QuestionBankModule { }
+export class QuestionBankModule {}

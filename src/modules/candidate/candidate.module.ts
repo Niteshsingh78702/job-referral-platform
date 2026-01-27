@@ -5,9 +5,9 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { ResumeParserModule } from '../resume-parser/resume-parser.module';
 
 @Module({
-    imports: [CloudinaryModule, ResumeParserModule],
-    controllers: [CandidateController],
-    providers: [CandidateService],
-    exports: [CandidateService],
+  imports: [CloudinaryModule, ResumeParserModule],
+  controllers: [CandidateController],
+  providers: [CandidateService],
+  exports: [CandidateService],
 })
-export class CandidateModule { }
+export class CandidateModule {}

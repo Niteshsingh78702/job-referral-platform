@@ -4,9 +4,9 @@ import { InterviewService } from './interview.service';
 import { EmailModule } from '../email/email.module';
 
 @Module({
-    imports: [EmailModule],
-    controllers: [InterviewController],
-    providers: [InterviewService],
-    exports: [InterviewService],
+  imports: [EmailModule],
+  controllers: [InterviewController],
+  providers: [InterviewService],
+  exports: [InterviewService],
 })
-export class InterviewModule { }
+export class InterviewModule {}

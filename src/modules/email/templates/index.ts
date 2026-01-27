@@ -37,14 +37,16 @@ const getBaseTemplate = (content: string) => `
 `;
 
 export interface PasswordResetTemplateParams {
-    userName: string;
-    resetUrl: string;
-    expiryMinutes: number;
+  userName: string;
+  resetUrl: string;
+  expiryMinutes: number;
 }
 
-export function getPasswordResetTemplate(params: PasswordResetTemplateParams): string {
-    const { userName, resetUrl, expiryMinutes } = params;
-    return getBaseTemplate(`
+export function getPasswordResetTemplate(
+  params: PasswordResetTemplateParams,
+): string {
+  const { userName, resetUrl, expiryMinutes } = params;
+  return getBaseTemplate(`
         <div class="header">
             <div class="logo">🔐</div>
             <h1>Password Reset</h1>
@@ -72,14 +74,16 @@ export function getPasswordResetTemplate(params: PasswordResetTemplateParams): s
 }
 
 export interface EmailVerificationTemplateParams {
-    userName: string;
-    otp: string;
-    expiryMinutes: number;
+  userName: string;
+  otp: string;
+  expiryMinutes: number;
 }
 
-export function getEmailVerificationTemplate(params: EmailVerificationTemplateParams): string {
-    const { userName, otp, expiryMinutes } = params;
-    return getBaseTemplate(`
+export function getEmailVerificationTemplate(
+  params: EmailVerificationTemplateParams,
+): string {
+  const { userName, otp, expiryMinutes } = params;
+  return getBaseTemplate(`
         <div class="header">
             <div class="logo">✉️</div>
             <h1>Verify Your Email</h1>
@@ -103,13 +107,13 @@ export function getEmailVerificationTemplate(params: EmailVerificationTemplatePa
 }
 
 export interface WelcomeTemplateParams {
-    userName: string;
-    dashboardUrl: string;
+  userName: string;
+  dashboardUrl: string;
 }
 
 export function getWelcomeTemplate(params: WelcomeTemplateParams): string {
-    const { userName, dashboardUrl } = params;
-    return getBaseTemplate(`
+  const { userName, dashboardUrl } = params;
+  return getBaseTemplate(`
         <div class="header">
             <div class="logo">🎉</div>
             <h1>Welcome to JobRefer!</h1>

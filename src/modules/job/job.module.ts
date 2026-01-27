@@ -4,9 +4,9 @@ import { JobService } from './job.service';
 import { SkillBucketModule } from '../skill-bucket/skill-bucket.module';
 
 @Module({
-    imports: [SkillBucketModule],
-    controllers: [JobController],
-    providers: [JobService],
-    exports: [JobService],
+  imports: [SkillBucketModule],
+  controllers: [JobController],
+  providers: [JobService],
+  exports: [JobService],
 })
-export class JobModule { }
+export class JobModule {}

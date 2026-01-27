@@ -3459,6 +3459,31 @@ async function startTest(applicationId, company, position) {
             return;
         }
 
+        // First check eligibility - this will tell us if there's an active session
+        const eligibilityResponse = await fetch(`${API_BASE_URL}/rapid-fire/eligibility/${skillBucketId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            }
+        });
+
+        const eligibilityData = await eligibilityResponse.json();
+        console.log('Eligibility check:', eligibilityData);
+
+        // If there's an active session, redirect to it immediately
+        if (eligibilityData.success && eligibilityData.data?.status === 'IN_PROGRESS' && eligibilityData.data?.sessionId) {
+            showToast('info', 'Resuming your active test session...');
+            window.location.href = `rapid-fire-test.html?session=${eligibilityData.data.sessionId}`;
+            return;
+        }
+
+        // If candidate can't take test (already passed, cooldown, etc.)
+        if (eligibilityData.success && eligibilityData.data?.canTake === false) {
+            showToast('error', eligibilityData.data?.message || 'You cannot take this test right now.');
+            return;
+        }
+
         // Start rapid-fire test using the skill bucket
         const response = await fetch(`${API_BASE_URL}/rapid-fire/start/${skillBucketId}`, {
             method: 'POST',
@@ -3474,6 +3499,9 @@ async function startTest(applicationId, company, position) {
             // Redirect to rapid-fire test page
             window.location.href = `rapid-fire-test.html?session=${data.data.sessionId}`;
         } else {
+            // Debug: log the error response structure
+            console.log('Error response:', JSON.stringify(data, null, 2));
+
             // Check if error contains an active session - redirect to continue it
             // The sessionId can be in data.message (object) or data.errors.sessionId
             const errorData = data.message;

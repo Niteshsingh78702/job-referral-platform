@@ -128,9 +128,23 @@ export class RapidFireTestService {
   /**
    * Start a rapid fire test
    */
-  async startTest(userId: string, candidateId: string, skillBucketId: string) {
+  async startTest(userId: string, candidateId: string | undefined, skillBucketId: string) {
+    // Ensure candidateId is valid - look up from DB if not provided
+    let resolvedCandidateId = candidateId;
+    if (!resolvedCandidateId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { Candidate: { select: { id: true } } },
+      });
+      resolvedCandidateId = user?.Candidate?.id;
+      if (!resolvedCandidateId) {
+        throw new BadRequestException('Candidate profile not found. Please complete your profile first.');
+      }
+      console.log(`Resolved candidateId ${resolvedCandidateId} from database for user ${userId}`);
+    }
+
     // Check if can take test
-    const eligibility = await this.canTakeTest(candidateId, skillBucketId);
+    const eligibility = await this.canTakeTest(resolvedCandidateId, skillBucketId);
 
     if (!eligibility.canTake) {
       // If there's an active session, include the sessionId in the error response
@@ -169,7 +183,7 @@ export class RapidFireTestService {
     // Store session data
     const sessionData: SessionData = {
       userId,
-      candidateId,
+      candidateId: resolvedCandidateId,
       skillBucketId,
       testTemplateId: template.id,
       questionIds: questions.map((q) => q.id),

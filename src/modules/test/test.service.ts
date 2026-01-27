@@ -188,20 +188,20 @@ export class TestService {
 
     async createRoleTest(dto: CreateRoleTestDto) {
         // Check if test already exists for this skill bucket (role)
-        const existingTest = await this.prisma.skillBucket.findUnique({
+        const existingBucket = await this.prisma.skillBucket.findUnique({
             where: { id: dto.skillBucketId },
-            include: { Test: true },
+            include: { Test: true, TestTemplate: true },
         });
 
-        if (!existingTest) {
+        if (!existingBucket) {
             throw new NotFoundException('Skill bucket (role) not found');
         }
 
-        if (existingTest.testId) {
+        if (existingBucket.testId || existingBucket.testTemplateId) {
             throw new BadRequestException('Test already exists for this role. Each role can have only one test.');
         }
 
-        // Create the test
+        // Create the Test (for backward compatibility)
         const test = await this.prisma.test.create({
             data: {
                 id: crypto.randomUUID(),
@@ -216,13 +216,32 @@ export class TestService {
             },
         });
 
-        // Link test to skill bucket
-        await this.prisma.skillBucket.update({
-            where: { id: dto.skillBucketId },
-            data: { testId: test.id },
+        // Also create TestTemplate (for rapid-fire tests)
+        const testTemplate = await this.prisma.testTemplate.create({
+            data: {
+                id: crypto.randomUUID(),
+                name: dto.title,
+                description: dto.description,
+                duration: dto.duration || 20,
+                passingCriteria: dto.passingScore || 70,
+                testValidityDays: dto.validityDays || 7,
+                questionPoolSize: dto.totalQuestions || 20,
+                selectionRoleType: existingBucket.code, // Use skill bucket code to match questions
+                isActive: dto.isActive || true,
+                updatedAt: new Date(),
+            },
         });
 
-        return test;
+        // Link both Test and TestTemplate to skill bucket
+        await this.prisma.skillBucket.update({
+            where: { id: dto.skillBucketId },
+            data: {
+                testId: test.id,
+                testTemplateId: testTemplate.id,
+            },
+        });
+
+        return { ...test, testTemplate };
     }
 
     async getAllRoleTests() {

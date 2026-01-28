@@ -998,12 +998,50 @@ function toggleSavedJobsView() {
     }
 }
 
+// Generate skeleton loading cards for visual feedback
+function generateSkeletonCards(count = 6) {
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        html += `
+            <div class="skeleton-card">
+                <div class="skeleton-line title"></div>
+                <div class="skeleton-line company"></div>
+                <div class="skeleton-row" style="margin-top: 16px;">
+                    <div class="skeleton-line badge"></div>
+                    <div class="skeleton-line badge"></div>
+                    <div class="skeleton-line badge"></div>
+                </div>
+                <div class="skeleton-line description"></div>
+                <div class="skeleton-line description"></div>
+                <div class="skeleton-line description" style="width: 60%;"></div>
+            </div>
+        `;
+    }
+    return html;
+}
 // =============================================
 // Advanced Job Search
 // =============================================
 function searchJobs() {
     showingSavedOnly = false;
     document.getElementById('savedJobsBtn')?.classList.remove('active');
+
+    // Show skeleton loading effect for visual feedback
+    const jobsGrid = document.getElementById('jobsGrid');
+    if (jobsGrid) {
+        jobsGrid.classList.add('loading');
+        jobsGrid.innerHTML = generateSkeletonCards(6);
+    }
+
+    // Small delay to show the loading effect (like Naukri.com)
+    setTimeout(() => {
+        performJobSearch();
+    }, 200);
+}
+
+function performJobSearch() {
+    const jobsGrid = document.getElementById('jobsGrid');
+    if (jobsGrid) jobsGrid.classList.remove('loading');
 
     const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
     const location = document.getElementById('locationFilter').value.toLowerCase();

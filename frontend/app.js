@@ -20,6 +20,40 @@ let state = {
 let confirmModalResolver = null;
 
 // =============================================
+// Navigation Helper Functions
+// =============================================
+
+/**
+ * Navigate to a section on the main page
+ * Works from any page - redirects to main page if needed
+ */
+function goToSection(sectionId) {
+    // Check if we're on the main page (index.html or root)
+    const isMainPage = window.location.pathname === '/' ||
+        window.location.pathname.endsWith('index.html') ||
+        window.location.pathname === '';
+
+    if (isMainPage) {
+        // Already on main page, just scroll
+        goBack(); // First restore main view if in applications/settings page
+        setTimeout(() => scrollToSection(sectionId), 100);
+    } else {
+        // Redirect to main page with hash
+        window.location.href = '/' + sectionId;
+    }
+}
+
+/**
+ * Smooth scroll to a section
+ */
+function scrollToSection(sectionId) {
+    const element = document.querySelector(sectionId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// =============================================
 // Initialize App
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {

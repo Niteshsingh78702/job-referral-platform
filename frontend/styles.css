@@ -898,6 +898,13 @@ a:hover {
     opacity: 0;
     visibility: hidden;
     transition: var(--transition);
+    /* Enable scroll on the overlay itself for mobile */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px;
 }
 
 .modal-overlay.active {
@@ -906,30 +913,28 @@ a:hover {
 }
 
 .modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: scale(0.9);
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     padding: 40px;
-    width: 90%;
+    width: 100%;
     max-width: 440px;
-    max-height: 90vh;
-    max-height: 90dvh;
-    /* Dynamic viewport height for mobile browsers */
-    overflow-y: auto;
+    margin: auto;
     z-index: 2001;
     opacity: 0;
     visibility: hidden;
     transition: var(--transition);
+    flex-shrink: 0;
 }
 
 .modal.active {
     opacity: 1;
     visibility: visible;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
 }
 
 .modal-close {
@@ -1120,17 +1125,13 @@ a:hover {
         grid-template-columns: 1fr;
     }
 
-    /* Modal mobile fix - enable scrolling and adjust positioning */
-    .modal {
-        top: 5%;
-        transform: translate(-50%, 0) scale(0.9);
-        max-height: 90vh;
-        max-height: 90dvh;
-        padding: 24px;
+    /* Modal mobile fix */
+    .modal-overlay {
+        padding: 16px;
     }
 
-    .modal.active {
-        transform: translate(-50%, 0) scale(1);
+    .modal {
+        padding: 24px;
     }
 
     .modal-title {
@@ -1138,7 +1139,7 @@ a:hover {
     }
 
     .modal-subtitle {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         font-size: 14px;
     }
 }

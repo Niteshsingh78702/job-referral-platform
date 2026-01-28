@@ -1024,12 +1024,35 @@ function searchJobs() {
         );
     }
 
-    // Location filter
+    // Location filter with smart matching (handles aliases like Delhi/NCR, Gurgaon/Gurugram)
     if (location) {
-        filteredJobs = filteredJobs.filter(job =>
-            job.location.toLowerCase().includes(location) ||
-            (location === 'remote' && job.isRemote)
-        );
+        const locationAliases = {
+            'delhi': ['delhi', 'delhi ncr', 'new delhi', 'ncr', 'delhi-ncr'],
+            'gurgaon': ['gurgaon', 'gurugram'],
+            'noida': ['noida', 'greater noida'],
+            'bangalore': ['bangalore', 'bengaluru'],
+            'mumbai': ['mumbai', 'bombay', 'navi mumbai'],
+            'chennai': ['chennai', 'madras'],
+            'kolkata': ['kolkata', 'calcutta'],
+            'hyderabad': ['hyderabad', 'secunderabad'],
+            'pune': ['pune', 'pimpri', 'chinchwad'],
+            'ahmedabad': ['ahmedabad', 'gandhinagar'],
+            'kochi': ['kochi', 'cochin', 'ernakulam'],
+            'chandigarh': ['chandigarh', 'mohali', 'panchkula'],
+            'jaipur': ['jaipur'],
+            'indore': ['indore']
+        };
+
+        const aliases = locationAliases[location] || [location];
+
+        filteredJobs = filteredJobs.filter(job => {
+            const jobLoc = (job.location || '').toLowerCase();
+            // Check if job location matches any alias
+            const matchesLocation = aliases.some(alias => jobLoc.includes(alias));
+            // Also check for remote
+            const isRemoteMatch = location === 'remote' && job.isRemote;
+            return matchesLocation || isRemoteMatch;
+        });
     }
 
     // Experience filter

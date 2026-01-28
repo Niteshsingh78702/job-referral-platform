@@ -36,7 +36,7 @@ export class AuthService {
     private tokenService: TokenService,
     private googleAuthService: GoogleAuthService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   // Register new user
   async register(
@@ -195,7 +195,11 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
       include: {
-        Candidate: true,
+        Candidate: {
+          include: {
+            CandidateSkill: true,
+          },
+        },
         HR: true,
         Employee: true,
       },
@@ -854,7 +858,7 @@ export class AuthService {
           });
           this.logger.warn(
             `FRAUD ALERT: Multi-account detected on device ${deviceId}. ` +
-              `User ${userId} shares device with ${existingDeviceLogs.length} other accounts.`,
+            `User ${userId} shares device with ${existingDeviceLogs.length} other accounts.`,
           );
         }
       }
@@ -892,7 +896,7 @@ export class AuthService {
           });
           this.logger.warn(
             `FRAUD ALERT: Rapid registrations from IP ${ipAddress}. ` +
-              `${existingIpLogs.length + 1} accounts in 24h.`,
+            `${existingIpLogs.length + 1} accounts in 24h.`,
           );
         }
       }

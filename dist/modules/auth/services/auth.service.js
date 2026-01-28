@@ -212,7 +212,11 @@ let AuthService = class AuthService {
                 email: dto.email
             },
             include: {
-                Candidate: true,
+                Candidate: {
+                    include: {
+                        CandidateSkill: true
+                    }
+                },
                 HR: true,
                 Employee: true
             }

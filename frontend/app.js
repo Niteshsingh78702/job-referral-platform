@@ -394,6 +394,27 @@ async function handleLogin(event) {
             // Handle case where user object might not be in response
             state.user = data.data.user || { email: email };
 
+            // Flatten Candidate profile data into user object for frontend compatibility
+            if (state.user.Candidate) {
+                const candidate = state.user.Candidate;
+                state.user.firstName = candidate.firstName || state.user.firstName;
+                state.user.lastName = candidate.lastName || state.user.lastName;
+                state.user.phone = state.user.phone || candidate.phone;
+                state.user.linkedIn = candidate.linkedIn || state.user.linkedIn;
+                state.user.experience = candidate.totalExperience || candidate.experience || state.user.experience;
+                state.user.preferredLocation = candidate.preferredLocation || state.user.preferredLocation;
+                state.user.preferredLocations = candidate.preferredLocations || state.user.preferredLocations || [];
+                state.user.resumeUrl = candidate.resumeUrl || state.user.resumeUrl;
+                if (candidate.resumeUrl) {
+                    const parts = candidate.resumeUrl.split('/');
+                    state.user.resume = { filename: parts[parts.length - 1] || candidate.resumeUrl };
+                }
+                // Flatten skills from CandidateSkill array
+                if (Array.isArray(candidate.CandidateSkill) && candidate.CandidateSkill.length > 0) {
+                    state.user.skills = candidate.CandidateSkill.map(s => s?.name).filter(Boolean);
+                }
+            }
+
             localStorage.setItem('token', state.token);
             localStorage.setItem('user', JSON.stringify(state.user));
 
@@ -453,6 +474,27 @@ async function handleRegister(event) {
             // Backend now returns tokens and user data - auto-login!
             state.token = data.data.token.accessToken;
             state.user = data.data.user || { email, firstName, lastName, role };
+
+            // Flatten Candidate profile data into user object for frontend compatibility
+            if (state.user.Candidate) {
+                const candidate = state.user.Candidate;
+                state.user.firstName = candidate.firstName || state.user.firstName;
+                state.user.lastName = candidate.lastName || state.user.lastName;
+                state.user.phone = state.user.phone || candidate.phone;
+                state.user.linkedIn = candidate.linkedIn || state.user.linkedIn;
+                state.user.experience = candidate.totalExperience || candidate.experience || state.user.experience;
+                state.user.preferredLocation = candidate.preferredLocation || state.user.preferredLocation;
+                state.user.preferredLocations = candidate.preferredLocations || state.user.preferredLocations || [];
+                state.user.resumeUrl = candidate.resumeUrl || state.user.resumeUrl;
+                if (candidate.resumeUrl) {
+                    const parts = candidate.resumeUrl.split('/');
+                    state.user.resume = { filename: parts[parts.length - 1] || candidate.resumeUrl };
+                }
+                // Flatten skills from CandidateSkill array
+                if (Array.isArray(candidate.CandidateSkill) && candidate.CandidateSkill.length > 0) {
+                    state.user.skills = candidate.CandidateSkill.map(s => s?.name).filter(Boolean);
+                }
+            }
 
             localStorage.setItem('token', state.token);
             localStorage.setItem('user', JSON.stringify(state.user));

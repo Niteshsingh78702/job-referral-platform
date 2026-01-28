@@ -726,26 +726,26 @@ let TestService = class TestService {
                         }
                     }
                 },
-                answers: true
+                TestAnswer: true
             }
         });
         if (!session) {
             throw new _common.NotFoundException('Session not found');
         }
         // Standard test - check that test relation exists
-        if (!session.test) {
+        if (!session.Test) {
             throw new _common.BadRequestException('This is a rapid-fire test session. Use the rapid-fire endpoints.');
         }
         // Reorder questions based on shuffled order
-        const orderedQuestions = sessionData.questionOrder.map((i)=>session.test.questions[i]);
+        const orderedQuestions = sessionData.questionOrder.map((i)=>session.Test.TestQuestion[i]);
         return {
             sessionId: session.id,
-            testTitle: session.test.title,
-            duration: session.test.duration,
+            testTitle: session.Test.title,
+            duration: session.Test.duration,
             totalTestQuestion: session.totalQuestions,
             remainingTime: Math.max(0, Math.floor((sessionData.endsAt - Date.now()) / 1000)),
             TestQuestion: orderedQuestions,
-            answers: session.answers.map((a)=>({
+            answers: session.TestAnswer.map((a)=>({
                     questionId: a.questionId,
                     selectedAnswer: a.selectedAnswer
                 })),

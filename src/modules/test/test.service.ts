@@ -304,18 +304,18 @@ export class TestService {
           skillBucketCode: bucket.code,
           test: bucket.Test
             ? {
-                id: bucket.Test.id,
-                title: bucket.Test.title,
-                description: bucket.Test.description,
-                duration: bucket.Test.duration,
-                passingScore: bucket.Test.passingScore,
-                totalQuestions: bucket.Test.totalQuestions,
-                validityDays: bucket.Test.validityDays,
-                isActive: bucket.Test.isActive,
-                questionsCount: availableQuestions, // Now counts from QuestionBank
-                sessionsCount: bucket.Test._count.TestSession,
-                createdAt: bucket.Test.createdAt,
-              }
+              id: bucket.Test.id,
+              title: bucket.Test.title,
+              description: bucket.Test.description,
+              duration: bucket.Test.duration,
+              passingScore: bucket.Test.passingScore,
+              totalQuestions: bucket.Test.totalQuestions,
+              validityDays: bucket.Test.validityDays,
+              isActive: bucket.Test.isActive,
+              questionsCount: availableQuestions, // Now counts from QuestionBank
+              sessionsCount: bucket.Test._count.TestSession,
+              createdAt: bucket.Test.createdAt,
+            }
             : null,
         };
       }),
@@ -743,7 +743,7 @@ export class TestService {
             },
           },
         },
-        answers: true,
+        TestAnswer: true,
       },
     });
 
@@ -752,7 +752,7 @@ export class TestService {
     }
 
     // Standard test - check that test relation exists
-    if (!session.test) {
+    if (!session.Test) {
       throw new BadRequestException(
         'This is a rapid-fire test session. Use the rapid-fire endpoints.',
       );
@@ -760,20 +760,20 @@ export class TestService {
 
     // Reorder questions based on shuffled order
     const orderedQuestions = sessionData.questionOrder.map(
-      (i) => session.test!.questions[i],
+      (i) => session.Test!.TestQuestion[i],
     );
 
     return {
       sessionId: session.id,
-      testTitle: session.test!.title,
-      duration: session.test!.duration,
+      testTitle: session.Test!.title,
+      duration: session.Test!.duration,
       totalTestQuestion: session.totalQuestions,
       remainingTime: Math.max(
         0,
         Math.floor((sessionData.endsAt - Date.now()) / 1000),
       ),
       TestQuestion: orderedQuestions,
-      answers: session.answers.map((a) => ({
+      answers: session.TestAnswer.map((a) => ({
         questionId: a.questionId,
         selectedAnswer: a.selectedAnswer,
       })),
@@ -1025,7 +1025,7 @@ export class TestService {
         );
         this.logger.log(
           `Recorded skill test attempt for candidate ${application.Candidate.id} ` +
-            `on skill bucket ${application.Job.skillBucketId}: passed=${isPassed}`,
+          `on skill bucket ${application.Job.skillBucketId}: passed=${isPassed}`,
         );
       }
     } catch (error) {

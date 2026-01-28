@@ -11,11 +11,11 @@ import {
 import { JobService } from './job.service';
 import { CreateJobDto, UpdateJobDto, ApplyJobDto, JobQueryDto } from './dto';
 import { Public, CurrentUser, Roles } from '../../common/decorators';
-import { UserRole, JobStatus } from '../../common/constants';
+import { UserRole } from '../../common/constants';
 
 @Controller('jobs')
 export class JobController {
-  constructor(private readonly jobService: JobService) {}
+  constructor(private readonly jobService: JobService) { }
 
   @Public()
   @Get()

@@ -149,16 +149,33 @@ async function fetchCandidateProfile() {
             }
 
             // Merge profile data with existing user data (with safety checks)
+            // Map city field back to preferredLocation/preferredLocations
+            const cityValue = profile.city || '';
+            const preferredLocs = cityValue ? [cityValue] : (state.user?.preferredLocations || []);
+            const preferredLoc = cityValue || state.user?.preferredLocation || '';
+
+            // Map totalExperience (number) back to experience format for UI
+            // If totalExperience is 0, check for fresher range, else construct range string
+            let experienceStr = state.user?.experience || '';
+            if (profile.totalExperience !== undefined && profile.totalExperience !== null) {
+                const exp = profile.totalExperience;
+                if (exp === 0) experienceStr = '0-1';
+                else if (exp >= 1 && exp < 3) experienceStr = '1-3';
+                else if (exp >= 3 && exp < 5) experienceStr = '3-5';
+                else if (exp >= 5 && exp < 8) experienceStr = '5-8';
+                else if (exp >= 8) experienceStr = '8+';
+            }
+
             const profileData = {
                 ...state.user,
                 firstName: profile.firstName || state.user?.firstName,
                 lastName: profile.lastName || state.user?.lastName,
                 phone: profile.User?.phone || profile.phone || state.user?.phone,
                 linkedIn: profile.linkedIn || state.user?.linkedIn,
-                experience: profile.totalExperience || profile.experience || state.user?.experience,
+                experience: experienceStr,
                 skills: skills.length > 0 ? skills : (state.user?.skills || []),
-                preferredLocations: profile.preferredLocations || state.user?.preferredLocations || [],
-                preferredLocation: profile.preferredLocation || state.user?.preferredLocation,
+                preferredLocations: preferredLocs,
+                preferredLocation: preferredLoc,
                 resume: resumeData,
                 resumeUrl: profile.resumeUrl || state.user?.resumeUrl
             };
@@ -401,9 +418,23 @@ async function handleLogin(event) {
                 state.user.lastName = candidate.lastName || state.user.lastName;
                 state.user.phone = state.user.phone || candidate.phone;
                 state.user.linkedIn = candidate.linkedIn || state.user.linkedIn;
-                state.user.experience = candidate.totalExperience || candidate.experience || state.user.experience;
-                state.user.preferredLocation = candidate.preferredLocation || state.user.preferredLocation;
-                state.user.preferredLocations = candidate.preferredLocations || state.user.preferredLocations || [];
+
+                // Map totalExperience (number) to experience string for UI
+                if (candidate.totalExperience !== undefined && candidate.totalExperience !== null) {
+                    const exp = candidate.totalExperience;
+                    if (exp === 0) state.user.experience = '0-1';
+                    else if (exp >= 1 && exp < 3) state.user.experience = '1-3';
+                    else if (exp >= 3 && exp < 5) state.user.experience = '3-5';
+                    else if (exp >= 5 && exp < 8) state.user.experience = '5-8';
+                    else if (exp >= 8) state.user.experience = '8+';
+                }
+
+                // Map city field to preferredLocation
+                if (candidate.city) {
+                    state.user.preferredLocation = candidate.city;
+                    state.user.preferredLocations = [candidate.city];
+                }
+
                 state.user.resumeUrl = candidate.resumeUrl || state.user.resumeUrl;
                 if (candidate.resumeUrl) {
                     const parts = candidate.resumeUrl.split('/');
@@ -482,9 +513,23 @@ async function handleRegister(event) {
                 state.user.lastName = candidate.lastName || state.user.lastName;
                 state.user.phone = state.user.phone || candidate.phone;
                 state.user.linkedIn = candidate.linkedIn || state.user.linkedIn;
-                state.user.experience = candidate.totalExperience || candidate.experience || state.user.experience;
-                state.user.preferredLocation = candidate.preferredLocation || state.user.preferredLocation;
-                state.user.preferredLocations = candidate.preferredLocations || state.user.preferredLocations || [];
+
+                // Map totalExperience (number) to experience string for UI
+                if (candidate.totalExperience !== undefined && candidate.totalExperience !== null) {
+                    const exp = candidate.totalExperience;
+                    if (exp === 0) state.user.experience = '0-1';
+                    else if (exp >= 1 && exp < 3) state.user.experience = '1-3';
+                    else if (exp >= 3 && exp < 5) state.user.experience = '3-5';
+                    else if (exp >= 5 && exp < 8) state.user.experience = '5-8';
+                    else if (exp >= 8) state.user.experience = '8+';
+                }
+
+                // Map city field to preferredLocation
+                if (candidate.city) {
+                    state.user.preferredLocation = candidate.city;
+                    state.user.preferredLocations = [candidate.city];
+                }
+
                 state.user.resumeUrl = candidate.resumeUrl || state.user.resumeUrl;
                 if (candidate.resumeUrl) {
                     const parts = candidate.resumeUrl.split('/');
@@ -1870,7 +1915,16 @@ async function handleProfileUpdate(event) {
     const bio = document.getElementById('editBio')?.value || '';
 
     // Determine city based on selected locations (use first city or empty if pan-india)
-    const city = selectedLocations.includes('pan-india') ? '' : (selectedLocations[0] || '');
+    const city = selectedLocations.includes('pan-india') ? 'PAN India' : (selectedLocations[0] || '');
+
+    // Parse experience string (e.g., "3-5" → 3, "8+" → 8) to get numeric value
+    let experienceNum = 0;
+    if (experience) {
+        const match = experience.match(/^(\d+)/);
+        if (match) {
+            experienceNum = parseInt(match[1], 10);
+        }
+    }
 
     // Build profile data matching backend DTO (UpdateCandidateProfileDto)
     const profileData = {
@@ -1884,13 +1938,11 @@ async function handleProfileUpdate(event) {
         currentRole,
         city,
         state: '',
-        country: 'India'
+        country: 'India',
+        totalExperience: experienceNum  // Always send the parsed experience
     };
 
     // Add numeric fields only if provided
-    if (experience && parseInt(experience) > 0) {
-        profileData.totalExperience = parseInt(experience);
-    }
     if (expectedSalary && parseInt(expectedSalary) > 0) {
         profileData.expectedSalary = parseInt(expectedSalary);
     }
@@ -1898,14 +1950,14 @@ async function handleProfileUpdate(event) {
         profileData.noticePeriod = parseInt(noticePeriod);
     }
 
-    // Store additional fields locally for UI (phone, linkedIn saved locally until backend supports them)
+    // Store additional fields locally for UI (preferredLocations stored locally until DB supports them)
     const localExtras = {
         phone,
         linkedIn,
         skills: skillsValue.split(',').map(s => s.trim()).filter(s => s),
         preferredLocations: selectedLocations,
         preferredLocation: selectedLocations.join(', '),
-        experience
+        experience  // Store the original experience string for UI
     };
 
     try {

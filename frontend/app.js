@@ -2747,7 +2747,7 @@ async function cancelApplication(appId) {
     const confirmed = await showConfirmModal({
         icon: '🗑️',
         title: 'Cancel Application',
-        message: 'Are you sure you want to cancel this application? This action cannot be undone.',
+        message: 'Are you sure you want to cancel this application? This action cannot be undone. You will need to wait 24 hours before re-applying to this job.',
         confirmText: 'Yes, Cancel',
         cancelText: 'No, Keep It',
         variant: 'danger'
@@ -2755,35 +2755,68 @@ async function cancelApplication(appId) {
 
     if (!confirmed) return;
 
-    // User confirmed - proceed with cancellation
-    const appIndex = demoApplications.findIndex(a => a.id === appId);
-    if (appIndex === -1) {
-        showToast('error', 'Application not found.');
+    // Check if this is a demo application (localStorage) or real API application
+    const demoApps = JSON.parse(localStorage.getItem('demoApplications') || '[]');
+    const demoAppIndex = demoApps.findIndex(a => a.id === appId);
+
+    if (demoAppIndex !== -1) {
+        // It's a demo application - handle locally
+        const app = demoApps[demoAppIndex];
+        demoApps.splice(demoAppIndex, 1);
+        localStorage.setItem('demoApplications', JSON.stringify(demoApps));
+
+        showToast('success', `Application for ${app.jobTitle} at ${app.company} has been cancelled.`);
+        loadApplications();
+        loadUserStats();
+        renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
         return;
     }
 
-    const app = demoApplications[appIndex];
+    // It's a real API application - call backend
+    if (!state.token) {
+        showToast('error', 'Please login to cancel applications.');
+        return;
+    }
 
-    // Remove from demoApplications
-    demoApplications.splice(appIndex, 1);
-    localStorage.setItem('demoApplications', JSON.stringify(demoApplications));
+    try {
+        const response = await fetch(`${API_BASE_URL}/candidates/applications/${appId}/withdraw`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${state.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
-    // Update stats
-    const statsStr = localStorage.getItem('userStats');
-    let stats = statsStr ? JSON.parse(statsStr) : { applications: 0, tests: 0, passed: 0, referrals: 0 };
-    stats.applications = Math.max(0, demoApplications.length);
-    localStorage.setItem('userStats', JSON.stringify(stats));
+        if (response.status === 401) {
+            handleExpiredToken();
+            return;
+        }
 
-    // Re-render jobs to enable Apply button again
-    renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
+        const data = await response.json();
 
-    // Reload applications list
-    loadApplications();
+        if (!response.ok) {
+            // Handle specific error messages from backend
+            const errorMessage = data.message || 'Failed to cancel application';
+            showToast('error', errorMessage);
+            return;
+        }
 
-    // Update dashboard stats
-    loadUserStats();
+        // Success - show message and reload
+        showToast('success', data.message || 'Application cancelled successfully.');
 
-    showToast('success', `Application for ${app.jobTitle} at ${app.company} has been cancelled.`);
+        // Reload applications list
+        loadApplications();
+
+        // Update dashboard stats
+        loadUserStats();
+
+        // Re-render jobs to potentially enable Apply button again
+        renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
+
+    } catch (error) {
+        console.error('Error cancelling application:', error);
+        showToast('error', 'Network error. Please try again.');
+    }
 }
 
 function filterApplications(status) {

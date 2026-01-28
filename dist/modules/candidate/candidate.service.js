@@ -378,6 +378,91 @@ let CandidateService = class CandidateService {
             }
         });
     }
+    // Withdraw/Cancel an application
+    async withdrawApplication(userId, applicationId) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: {
+                userId
+            }
+        });
+        if (!candidate) {
+            throw new _common.NotFoundException('Candidate profile not found');
+        }
+        // Find the application and verify ownership
+        const application = await this.prisma.jobApplication.findUnique({
+            where: {
+                id: applicationId
+            },
+            include: {
+                Job: {
+                    select: {
+                        title: true,
+                        companyName: true
+                    }
+                },
+                Interview: {
+                    select: {
+                        status: true,
+                        paymentStatus: true
+                    }
+                },
+                Payment: {
+                    select: {
+                        status: true
+                    }
+                }
+            }
+        });
+        if (!application) {
+            throw new _common.NotFoundException('Application not found');
+        }
+        if (application.candidateId !== candidate.id) {
+            throw new _common.BadRequestException('You can only withdraw your own applications');
+        }
+        // Prevent withdrawal if already in advanced stages
+        const nonWithdrawableStatuses = [
+            'PAYMENT_SUCCESS',
+            'INTERVIEW_COMPLETED',
+            'SELECTED',
+            'INTERVIEW_REJECTED',
+            'WITHDRAWN'
+        ];
+        if (nonWithdrawableStatuses.includes(application.status)) {
+            throw new _common.BadRequestException(`Cannot withdraw application with status: ${application.status}. This application has progressed too far.`);
+        }
+        // Check if payment has been made (Payment is an array)
+        const payment = application.Payment?.[0];
+        if (payment?.status === 'SUCCESS' || application.Interview?.paymentStatus === 'SUCCESS') {
+            throw new _common.BadRequestException('Cannot withdraw after payment has been made. Please contact support for refund.');
+        }
+        // Update application status to WITHDRAWN
+        const updatedApplication = await this.prisma.jobApplication.update({
+            where: {
+                id: applicationId
+            },
+            data: {
+                status: 'WITHDRAWN',
+                updatedAt: new Date()
+            },
+            include: {
+                Job: {
+                    select: {
+                        title: true,
+                        companyName: true
+                    }
+                }
+            }
+        });
+        const jobTitle = updatedApplication.Job?.title;
+        const companyName = updatedApplication.Job?.companyName;
+        console.log(`Application withdrawn: ${applicationId} for job ${jobTitle} at ${companyName}`);
+        return {
+            message: `Application for ${jobTitle} at ${companyName} has been withdrawn.`,
+            applicationId,
+            jobId: application.jobId,
+            withdrawnAt: new Date().toISOString()
+        };
+    }
     // Get test history
     async getTestHistory(userId) {
         const candidate = await this.prisma.candidate.findUnique({

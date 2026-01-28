@@ -729,6 +729,7 @@ enum ApplicationStatus {
   CANDIDATE_NO_SHOW
   HR_NO_SHOW
   REJECTED
+  WITHDRAWN
 }
 
 enum AuditAction {

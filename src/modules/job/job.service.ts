@@ -15,7 +15,7 @@ export class JobService {
   constructor(
     private prisma: PrismaService,
     private skillBucketService: SkillBucketService,
-  ) {}
+  ) { }
 
   // Create job
   async createJob(hrId: string, dto: CreateJobDto) {
@@ -257,7 +257,7 @@ export class JobService {
       throw new BadRequestException('Job has reached maximum applications');
     }
 
-    // Check if already applied
+    // Check if already applied (including withdrawn applications for cooldown check)
     const existingApplication = await this.prisma.jobApplication.findUnique({
       where: {
         candidateId_jobId: {
@@ -268,7 +268,31 @@ export class JobService {
     });
 
     if (existingApplication) {
-      throw new BadRequestException('Already applied for this job');
+      // Check if application was withdrawn
+      if (existingApplication.status === 'WITHDRAWN') {
+        // Check 24-hour cooldown
+        const withdrawnAt = existingApplication.updatedAt;
+        const cooldownHours = 24;
+        const cooldownMs = cooldownHours * 60 * 60 * 1000;
+        const now = new Date();
+        const timeSinceWithdrawal = now.getTime() - withdrawnAt.getTime();
+
+        if (timeSinceWithdrawal < cooldownMs) {
+          const hoursRemaining = Math.ceil((cooldownMs - timeSinceWithdrawal) / (60 * 60 * 1000));
+          throw new BadRequestException(
+            `You withdrew this application recently. Please wait ${hoursRemaining} hour(s) before re-applying.`
+          );
+        }
+
+        // Cooldown has passed - delete the old withdrawn application to allow new one
+        await this.prisma.jobApplication.delete({
+          where: { id: existingApplication.id },
+        });
+        console.log(`Deleted withdrawn application ${existingApplication.id} to allow re-application after cooldown`);
+      } else {
+        // Active application exists
+        throw new BadRequestException('Already applied for this job');
+      }
     }
 
     // Skill-based test logic - now supports composite requirements (Full Stack etc.)
@@ -365,15 +389,15 @@ export class JobService {
       ...application,
       skillTestInfo: skillCheckResult?.hasRequirements
         ? {
-            passedJobSkill: skillCheckResult.passedTests.map((t) => ({
-              skillBucketName: t.skillBucketName,
-              displayName: t.displayName,
-              score: t.score,
-              validTill: t.validTill,
-              validDaysRemaining: t.validDaysRemaining,
-            })),
-            canApply: skillCheckResult.canApply,
-          }
+          passedJobSkill: skillCheckResult.passedTests.map((t) => ({
+            skillBucketName: t.skillBucketName,
+            displayName: t.displayName,
+            score: t.score,
+            validTill: t.validTill,
+            validDaysRemaining: t.validDaysRemaining,
+          })),
+          canApply: skillCheckResult.canApply,
+        }
         : null,
     };
   }
@@ -525,12 +549,12 @@ export class JobService {
       canApply: true,
       skillTestInfo: skillCheckResult.hasRequirements
         ? {
-            passedSkills: skillCheckResult.passedTests.map((t) => ({
-              skillName: t.skillBucketName,
-              displayName: t.displayName,
-              validDaysRemaining: t.validDaysRemaining,
-            })),
-          }
+          passedSkills: skillCheckResult.passedTests.map((t) => ({
+            skillName: t.skillBucketName,
+            displayName: t.displayName,
+            validDaysRemaining: t.validDaysRemaining,
+          })),
+        }
         : null,
     };
   }

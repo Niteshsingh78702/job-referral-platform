@@ -43,6 +43,7 @@ export enum ApplicationStatus {
   HR_NO_SHOW = 'HR_NO_SHOW',
   REJECTED = 'REJECTED',
   EXPIRED = 'EXPIRED', // Test expired
+  WITHDRAWN = 'WITHDRAWN', // Candidate withdrew/cancelled application
 }
 
 export enum CandidateTestAttemptStatus {

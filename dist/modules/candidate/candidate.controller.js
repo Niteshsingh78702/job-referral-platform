@@ -82,6 +82,9 @@ let CandidateController = class CandidateController {
     async getApplications(userId, status) {
         return this.candidateService.getApplications(userId, status);
     }
+    async withdrawApplication(userId, applicationId) {
+        return this.candidateService.withdrawApplication(userId, applicationId);
+    }
     async getTestHistory(userId) {
         return this.candidateService.getTestHistory(userId);
     }
@@ -228,6 +231,17 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CandidateController.prototype, "getApplications", null);
+_ts_decorate([
+    (0, _common.Patch)('applications/:id/withdraw'),
+    _ts_param(0, (0, _decorators.CurrentUser)('sub')),
+    _ts_param(1, (0, _common.Param)('id')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CandidateController.prototype, "withdrawApplication", null);
 _ts_decorate([
     (0, _common.Get)('tests'),
     _ts_param(0, (0, _decorators.CurrentUser)('sub')),

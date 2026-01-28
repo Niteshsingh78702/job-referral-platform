@@ -109,6 +109,7 @@ var ApplicationStatus = /*#__PURE__*/ function(ApplicationStatus) {
     ApplicationStatus["HR_NO_SHOW"] = "HR_NO_SHOW";
     ApplicationStatus["REJECTED"] = "REJECTED";
     ApplicationStatus["EXPIRED"] = "EXPIRED";
+    ApplicationStatus["WITHDRAWN"] = "WITHDRAWN";
     return ApplicationStatus;
 }({});
 var CandidateTestAttemptStatus = /*#__PURE__*/ function(CandidateTestAttemptStatus) {

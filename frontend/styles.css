@@ -4214,6 +4214,45 @@ a:hover {
         width: 100%;
         justify-content: center;
     }
+
+    /* Better button handling on mobile */
+    .table-body .table-row>span:last-child {
+        flex-direction: column !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+        width: 100%;
+        margin-top: 8px;
+    }
+
+    .table-body .table-row>span:last-child .btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        margin-left: 0 !important;
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    /* Status badge positioning */
+    .table-body .table-row .status-badge {
+        align-self: flex-start;
+        margin-top: 4px;
+    }
+
+    /* Company cell layout */
+    .table-body .table-row .company-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .table-body .table-row .company-logo-sm {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
 }
 
 /* Applications Page Responsive - Mobile */
@@ -4231,6 +4270,26 @@ a:hover {
         padding: 14px;
     }
 
+    /* Even tighter button layout on small screens */
+    .table-body .table-row>span:last-child .btn {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    /* Stack all content vertically */
+    .table-body .table-row>span {
+        display: block !important;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 6px;
+    }
+
+    .table-body .table-row>span:last-child {
+        display: flex !important;
+        flex-direction: column !important;
+        margin-bottom: 0;
+    }
+
     .empty-applications {
         padding: 40px 16px;
     }
@@ -4241,5 +4300,50 @@ a:hover {
 
     .empty-applications h3 {
         font-size: 20px;
+    }
+}
+
+/* =============================================
+   Application Card Mobile Enhancements
+   ============================================= */
+@media (max-width: 768px) {
+    .table-body .table-row {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-body .table-row:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Better visual hierarchy */
+    .table-body .table-row>span:nth-child(1) {
+        font-weight: 600;
+        font-size: 15px;
+        color: var(--text-primary);
+    }
+
+    .table-body .table-row>span:nth-child(2) {
+        font-size: 14px;
+        color: var(--primary);
+    }
+
+    .table-body .table-row>span:nth-child(3) {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    /* Make sure buttons don't overflow */
+    .table-body .table-row>span:last-child>div {
+        width: 100%;
+    }
+
+    .table-body .table-row>span:last-child>div .btn {
+        width: 100%;
+        margin-bottom: 8px;
     }
 }

@@ -31,7 +31,7 @@ export class CandidateController {
     private readonly candidateService: CandidateService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly resumeParserService: ResumeParserService,
-  ) {}
+  ) { }
 
   @Get('me')
   async getMe(@CurrentUser('sub') userId: string) {
@@ -160,6 +160,14 @@ export class CandidateController {
     @Query('status') status?: string,
   ) {
     return this.candidateService.getApplications(userId, status);
+  }
+
+  @Patch('applications/:id/withdraw')
+  async withdrawApplication(
+    @CurrentUser('sub') userId: string,
+    @Param('id') applicationId: string,
+  ) {
+    return this.candidateService.withdrawApplication(userId, applicationId);
   }
 
   @Get('tests')

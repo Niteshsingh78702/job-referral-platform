@@ -275,7 +275,7 @@ let JobService = class JobService {
         if (job.applicationCount >= job.maxApplications) {
             throw new _common.BadRequestException('Job has reached maximum applications');
         }
-        // Check if already applied
+        // Check if already applied (including withdrawn applications for cooldown check)
         const existingApplication = await this.prisma.jobApplication.findUnique({
             where: {
                 candidateId_jobId: {
@@ -285,7 +285,29 @@ let JobService = class JobService {
             }
         });
         if (existingApplication) {
-            throw new _common.BadRequestException('Already applied for this job');
+            // Check if application was withdrawn
+            if (existingApplication.status === 'WITHDRAWN') {
+                // Check 24-hour cooldown
+                const withdrawnAt = existingApplication.updatedAt;
+                const cooldownHours = 24;
+                const cooldownMs = cooldownHours * 60 * 60 * 1000;
+                const now = new Date();
+                const timeSinceWithdrawal = now.getTime() - withdrawnAt.getTime();
+                if (timeSinceWithdrawal < cooldownMs) {
+                    const hoursRemaining = Math.ceil((cooldownMs - timeSinceWithdrawal) / (60 * 60 * 1000));
+                    throw new _common.BadRequestException(`You withdrew this application recently. Please wait ${hoursRemaining} hour(s) before re-applying.`);
+                }
+                // Cooldown has passed - delete the old withdrawn application to allow new one
+                await this.prisma.jobApplication.delete({
+                    where: {
+                        id: existingApplication.id
+                    }
+                });
+                console.log(`Deleted withdrawn application ${existingApplication.id} to allow re-application after cooldown`);
+            } else {
+                // Active application exists
+                throw new _common.BadRequestException('Already applied for this job');
+            }
         }
         // Skill-based test logic - now supports composite requirements (Full Stack etc.)
         let applicationStatus = _constants.ApplicationStatus.APPLIED;

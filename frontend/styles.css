@@ -916,6 +916,10 @@ a:hover {
     padding: 40px;
     width: 90%;
     max-width: 440px;
+    max-height: 90vh;
+    max-height: 90dvh;
+    /* Dynamic viewport height for mobile browsers */
+    overflow-y: auto;
     z-index: 2001;
     opacity: 0;
     visibility: hidden;
@@ -1114,6 +1118,28 @@ a:hover {
 
     .form-row {
         grid-template-columns: 1fr;
+    }
+
+    /* Modal mobile fix - enable scrolling and adjust positioning */
+    .modal {
+        top: 5%;
+        transform: translate(-50%, 0) scale(0.9);
+        max-height: 90vh;
+        max-height: 90dvh;
+        padding: 24px;
+    }
+
+    .modal.active {
+        transform: translate(-50%, 0) scale(1);
+    }
+
+    .modal-title {
+        font-size: 22px;
+    }
+
+    .modal-subtitle {
+        margin-bottom: 20px;
+        font-size: 14px;
     }
 }
 

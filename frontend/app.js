@@ -1063,10 +1063,11 @@ function searchJobs() {
 
             switch (experience) {
                 case '0-1': return jobExpMin <= 1;
-                case '1-3': return jobExpMin <= 3 && jobExpMax >= 1;
-                case '3-5': return jobExpMin <= 5 && jobExpMax >= 3;
-                case '5-8': return jobExpMin <= 8 && jobExpMax >= 5;
-                case '8+': return jobExpMax >= 8;
+                case '1-2': return jobExpMin <= 2 && jobExpMax >= 1;
+                case '2-4': return jobExpMin <= 4 && jobExpMax >= 2;
+                case '4-6': return jobExpMin <= 6 && jobExpMax >= 4;
+                case '6-10': return jobExpMin <= 10 && jobExpMax >= 6;
+                case '10+': return jobExpMax >= 10;
                 default: return true;
             }
         });

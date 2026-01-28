@@ -898,13 +898,6 @@ a:hover {
     opacity: 0;
     visibility: hidden;
     transition: var(--transition);
-    /* Enable scroll on the overlay itself for mobile */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 20px;
 }
 
 .modal-overlay.active {
@@ -913,28 +906,29 @@ a:hover {
 }
 
 .modal {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: scale(0.9);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     padding: 40px;
-    width: 100%;
+    width: 90%;
     max-width: 440px;
-    margin: auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     z-index: 2001;
     opacity: 0;
     visibility: hidden;
     transition: var(--transition);
-    flex-shrink: 0;
 }
 
 .modal.active {
     opacity: 1;
     visibility: visible;
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .modal-close {
@@ -1127,11 +1121,22 @@ a:hover {
 
     /* Modal mobile fix */
     .modal-overlay {
-        padding: 16px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .modal {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.9);
+        max-height: none;
+        margin-bottom: 20px;
         padding: 24px;
+    }
+
+    .modal.active {
+        transform: translateX(-50%) scale(1);
     }
 
     .modal-title {

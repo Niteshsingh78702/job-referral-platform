@@ -986,7 +986,8 @@ function toggleSavedJobsView() {
                 <div class="empty-state" style="text-align: center; padding: 60px 20px; grid-column: 1 / -1;">
                     <p style="font-size: 48px; margin-bottom: 16px;">❤️</p>
                     <p style="font-size: 18px; margin-bottom: 8px; color: var(--text-primary);">No saved jobs yet</p>
-                    <p style="font-size: 14px; color: var(--text-secondary);">Click the heart icon on jobs to save them</p>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Click the heart icon on jobs to save them</p>
+                    <button class="btn btn-primary btn-sm" onclick="viewAllJobs()">View All Jobs →</button>
                 </div>
             `;
         } else {
@@ -996,6 +997,14 @@ function toggleSavedJobsView() {
         btn.classList.remove('active');
         renderJobs(state.jobs);
     }
+}
+
+// View all jobs (reset saved filter)
+function viewAllJobs() {
+    showingSavedOnly = false;
+    const btn = document.getElementById('savedJobsBtn');
+    if (btn) btn.classList.remove('active');
+    clearAllFilters();
 }
 
 // Generate skeleton loading cards for visual feedback

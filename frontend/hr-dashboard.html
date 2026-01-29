@@ -2325,62 +2325,48 @@
             document.body.appendChild(modal);
         }
 
-        // Resume download function - handles Cloudinary URLs properly
-        function downloadResume(url, candidateName) {
+        // Resume download function - uses fetch + blob to ensure proper filename
+        async function downloadResume(url, candidateName) {
             if (!url) {
                 showToast('No resume URL available', 'error');
                 return;
             }
 
-            // Force PDF extension for resumes (that's what candidates upload)
-            const extension = 'pdf';
-
             // Sanitize candidate name for use in filename
-            // Remove special chars, keep only alphanumeric and spaces, then replace spaces with underscores
             const safeName = (candidateName || 'resume')
                 .replace(/[^a-zA-Z0-9\s]/g, '')
                 .replace(/\s+/g, '_')
-                .substring(0, 50); // Limit length
-            const filename = `${safeName}_resume.${extension}`;
+                .substring(0, 50);
+            const filename = `${safeName}_resume.pdf`;
 
-            // For Cloudinary URLs, use fl_attachment to force download as attachment
-            let downloadUrl = url;
-            if (url.includes('cloudinary.com')) {
-                if (url.includes('/raw/upload/')) {
-                    // Raw upload - just use fl_attachment without filename (simpler, more reliable)
-                    downloadUrl = url.replace('/raw/upload/', '/raw/upload/fl_attachment/');
-                } else if (url.includes('/upload/')) {
-                    // Regular upload
-                    downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
-                }
-            }
+            showToast('Downloading resume...', 'info');
 
-            // Use an iframe approach to trigger download without CORS issues
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = downloadUrl;
-            document.body.appendChild(iframe);
+            try {
+                // Use fetch to get the file as blob
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Download failed');
 
-            // Also try the anchor approach as backup
-            setTimeout(() => {
+                const blob = await response.blob();
+
+                // Create blob URL and trigger download with proper filename
+                const blobUrl = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.href = downloadUrl;
+                link.href = blobUrl;
                 link.download = filename;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            }, 500);
 
-            // Clean up iframe after download starts
-            setTimeout(() => {
-                if (iframe.parentNode) {
-                    document.body.removeChild(iframe);
-                }
-            }, 5000);
+                // Clean up blob URL
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
 
-            showToast('Downloading resume...', 'info');
+                showToast('Resume downloaded!', 'success');
+            } catch (error) {
+                console.error('Download error:', error);
+                // Fallback: open in new tab
+                window.open(url, '_blank');
+                showToast('Opening resume in new tab...', 'info');
+            }
         }
 
         // Initialize

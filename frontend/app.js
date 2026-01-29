@@ -87,6 +87,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Cross-device: Prevent scroll on overlay while allowing scroll inside modal
+    const setupModalTouchPrevention = () => {
+        const overlays = document.querySelectorAll('.modal-overlay');
+        overlays.forEach(overlay => {
+            overlay.addEventListener('touchmove', (e) => {
+                // Only prevent if not inside a scrollable modal
+                const modal = overlay.querySelector('.modal');
+                if (modal && !modal.contains(e.target)) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        });
+    };
+
+    // Setup after initial load
+    setupModalTouchPrevention();
+
+    // Also setup after any dynamic modal creation (MutationObserver fallback)
+    const observer = new MutationObserver(() => {
+        setupModalTouchPrevention();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 });
 
 // =============================================
@@ -982,7 +1005,12 @@ function showJobDetails(jobId) {
 
     document.getElementById('jobModalOverlay').classList.add('active');
     modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+
+    // Cross-device compatible scroll lock (works on iOS, Android, Desktop)
+    scrollPositionBeforeModal = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollPositionBeforeModal}px`;
 }
 
 function getSimilarJobs(currentJob) {
@@ -1025,7 +1053,12 @@ function getSimilarJobs(currentJob) {
 function closeJobModal() {
     document.getElementById('jobModalOverlay')?.classList.remove('active');
     document.getElementById('jobDetailModal')?.classList.remove('active');
-    document.body.style.overflow = '';
+
+    // Restore scroll position (works on all devices)
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPositionBeforeModal);
 }
 
 // =============================================
@@ -1486,6 +1519,10 @@ function handleExpiredToken() {
 // =============================================
 // Modal Functions
 // =============================================
+
+// Store scroll position for mobile modal scroll lock (works on all devices)
+let scrollPositionBeforeModal = 0;
+
 function showModal(type) {
     const overlay = document.getElementById('modalOverlay');
     const modal = document.getElementById('authModal');
@@ -1524,7 +1561,11 @@ function showModal(type) {
         return;
     }
 
-    document.body.style.overflow = 'hidden';
+    // Cross-device compatible scroll lock (works on iOS, Android, Desktop)
+    scrollPositionBeforeModal = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollPositionBeforeModal}px`;
 }
 
 function closeModal() {
@@ -1533,7 +1574,12 @@ function closeModal() {
 
     overlay.classList.remove('active');
     modal.classList.remove('active');
-    document.body.style.overflow = '';
+
+    // Restore scroll position (works on all devices)
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPositionBeforeModal);
 }
 
 // =============================================
@@ -1837,7 +1883,12 @@ function showProfileModal() {
 
     overlay.classList.add('active');
     modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+
+    // Cross-device compatible scroll lock (works on iOS, Android, Desktop)
+    scrollPositionBeforeModal = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollPositionBeforeModal}px`;
 
     // Pre-fill form with current user data
     if (state.user) {
@@ -1893,7 +1944,12 @@ function closeProfileModal() {
         modal.classList.remove('active');
         modal.style.display = 'none';
     }
-    document.body.style.overflow = '';
+
+    // Restore scroll position (works on all devices)
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPositionBeforeModal);
 }
 
 async function handleProfileUpdate(event) {
@@ -3204,7 +3260,12 @@ function showApplicationDetails(appId) {
     // Show modal
     document.getElementById('applicationModalOverlay').classList.add('active');
     modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+
+    // Cross-device compatible scroll lock (works on iOS, Android, Desktop)
+    scrollPositionBeforeModal = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollPositionBeforeModal}px`;
 }
 
 function getTimelineSteps(status) {
@@ -3295,7 +3356,12 @@ function getInterviewSchedule(appId, status, interview) {
 function closeApplicationModal() {
     document.getElementById('applicationModalOverlay')?.classList.remove('active');
     document.getElementById('applicationDetailModal')?.classList.remove('active');
-    document.body.style.overflow = '';
+
+    // Restore scroll position (works on all devices)
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPositionBeforeModal);
     currentApplicationId = null;
 }
 
@@ -3529,13 +3595,23 @@ function showConfirmModal(title, message, onConfirm, onCancel) {
     // Show modal
     document.getElementById('confirmModalOverlay').style.display = 'flex';
     modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
+
+    // Cross-device compatible scroll lock (works on iOS, Android, Desktop)
+    scrollPositionBeforeModal = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollPositionBeforeModal}px`;
 
     // Setup handlers
     const closeModal = () => {
         document.getElementById('confirmModalOverlay').style.display = 'none';
         modal.style.display = 'none';
-        document.body.style.overflow = '';
+
+        // Restore scroll position (works on all devices)
+        document.documentElement.classList.remove('modal-open');
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollPositionBeforeModal);
     };
 
     document.getElementById('confirmModalCancel').onclick = () => {

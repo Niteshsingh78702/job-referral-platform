@@ -887,17 +887,61 @@ a:hover {
 }
 
 /* =============================================
-   Modal
+   Modal - Cross-Device Compatible
+   Works on: iOS Safari, Chrome Android, Firefox, 
+   Edge, Desktop browsers (Windows, Mac, Linux)
    ============================================= */
+
+/* Body lock state for modal - prevents background scroll on ALL devices */
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    /* Mobile browsers (Android, iOS) */
+    -webkit-overflow-scrolling: none;
+    /* Standard - Chrome, Firefox, Edge */
+    overscroll-behavior: none;
+    touch-action: none;
+}
+
+/* Ensures complete scroll lock on all mobile browsers */
+html.modal-open,
+html.modal-open body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
 .modal-overlay {
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    /* Safari (iOS & Mac) */
+    -webkit-backdrop-filter: blur(8px);
+    /* Chrome, Firefox, Edge, Opera */
+    backdrop-filter: blur(8px);
     z-index: 2000;
     opacity: 0;
     visibility: hidden;
-    transition: var(--transition);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    /* Safe area padding for devices with notch (iPhone, some Android) */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    /* Flexbox centering - works on all modern browsers */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Prevent scroll chaining on all mobile browsers */
+    overscroll-behavior: contain;
+    -ms-scroll-chaining: none;
+    /* Older Edge */
 }
 
 .modal-overlay.active {
@@ -906,29 +950,37 @@ a:hover {
 }
 
 .modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
+    position: relative;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
-    padding: 40px;
-    width: 90%;
+    padding: 32px;
+    width: 92%;
     max-width: 440px;
+    /* Standard viewport height */
     max-height: 85vh;
+    /* Dynamic viewport height for mobile browsers (iOS, Android) */
+    max-height: 85dvh;
     overflow-y: auto;
+    /* Smooth scrolling on mobile */
     -webkit-overflow-scrolling: touch;
+    /* Prevent scroll chaining */
+    overscroll-behavior: contain;
+    -ms-scroll-chaining: none;
     z-index: 2001;
     opacity: 0;
     visibility: hidden;
-    transition: var(--transition);
+    transform: scale(0.95) translateY(20px);
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    /* Allow touch scrolling inside modal */
+    touch-action: pan-y;
 }
 
 .modal.active {
     opacity: 1;
     visibility: visible;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1) translateY(0);
 }
 
 .modal-close {
@@ -1119,24 +1171,27 @@ a:hover {
         grid-template-columns: 1fr;
     }
 
-    /* Modal mobile fix */
+    /* Modal mobile fix - All mobile browsers (iOS Safari, Chrome Android, Firefox Mobile, etc.) */
     .modal-overlay {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+        align-items: flex-start;
+        padding-top: env(safe-area-inset-top, 20px);
+        padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 
     .modal {
-        position: absolute;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%) scale(0.9);
-        max-height: none;
-        margin-bottom: 20px;
+        margin: 20px auto;
+        max-height: calc(100vh - 80px);
+        max-height: calc(100dvh - 80px);
         padding: 24px;
+        width: 94%;
+        flex-shrink: 0;
     }
 
     .modal.active {
-        transform: translateX(-50%) scale(1);
+        transform: scale(1) translateY(0);
     }
 
     .modal-title {
@@ -1480,7 +1535,11 @@ a:hover {
 .modal-lg {
     max-width: 600px;
     max-height: 90vh;
+    max-height: 90dvh;
+    /* Dynamic viewport height for iOS */
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .profile-edit-header {

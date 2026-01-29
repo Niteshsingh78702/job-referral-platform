@@ -399,6 +399,48 @@ export class RapidFireTestService {
       },
     });
 
+    // Update applications for this candidate with the same skillBucketId
+    // This ensures the application status reflects the test result
+    const applicationsToUpdate = await this.prisma.jobApplication.findMany({
+      where: {
+        candidateId: session.candidateId,
+        Job: {
+          skillBucketId: session.skillBucketId,
+        },
+        status: {
+          in: ['APPLIED', 'TEST_PENDING', 'TEST_REQUIRED', 'TEST_IN_PROGRESS'],
+        },
+      },
+      select: { id: true },
+    });
+
+    if (applicationsToUpdate.length > 0) {
+      const applicationIds = applicationsToUpdate.map(a => a.id);
+
+      if (isPassed) {
+        // Update applications to TEST_PASSED_WAITING_HR
+        await this.prisma.jobApplication.updateMany({
+          where: { id: { in: applicationIds } },
+          data: {
+            status: 'TEST_PASSED_WAITING_HR',
+            testPassedAt: new Date(),
+            testScore: score,
+          },
+        });
+        console.log(`Updated ${applicationIds.length} applications to TEST_PASSED_WAITING_HR for candidate ${session.candidateId}`);
+      } else {
+        // Update applications to TEST_FAILED
+        await this.prisma.jobApplication.updateMany({
+          where: { id: { in: applicationIds } },
+          data: {
+            status: 'TEST_FAILED',
+            testScore: score,
+          },
+        });
+        console.log(`Updated ${applicationIds.length} applications to TEST_FAILED for candidate ${session.candidateId}`);
+      }
+    }
+
     // Clean up session from memory
     activeSessions.delete(sessionId);
 

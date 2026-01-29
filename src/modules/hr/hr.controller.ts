@@ -27,7 +27,7 @@ import { UserRole } from '../../common/constants';
 
 @Controller('hr')
 export class HRController {
-  constructor(private readonly hrService: HRService) {}
+  constructor(private readonly hrService: HRService) { }
 
   // ==========================================
   // Public Routes (No Auth Required)
@@ -201,5 +201,16 @@ export class HRController {
     @Body() dto: { reason?: string },
   ) {
     return this.hrService.rejectApplication(userId, applicationId, dto.reason);
+  }
+
+  @Post('applications/:applicationId/shortlist')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.HR)
+  @HttpCode(HttpStatus.OK)
+  async shortlistApplication(
+    @CurrentUser('sub') userId: string,
+    @Param('applicationId') applicationId: string,
+  ) {
+    return this.hrService.shortlistApplication(userId, applicationId);
   }
 }

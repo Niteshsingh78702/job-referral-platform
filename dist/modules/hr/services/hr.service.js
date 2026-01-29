@@ -1038,6 +1038,94 @@ let HRService = class HRService {
             status: 'REJECTED'
         };
     }
+    /**
+   * Shortlist an application - moves candidate from TEST_PASSED_WAITING_HR to INTERVIEW_CONFIRMED
+   * Creates an Interview record for the candidate
+   */ async shortlistApplication(userId, applicationId) {
+        // First verify the HR has access to this application
+        const hr = await this.prisma.hR.findUnique({
+            where: {
+                userId
+            }
+        });
+        if (!hr) {
+            throw new _common.NotFoundException('HR profile not found');
+        }
+        // Find the application and verify it belongs to one of HR's jobs
+        const application = await this.prisma.jobApplication.findUnique({
+            where: {
+                id: applicationId
+            },
+            include: {
+                Job: true,
+                Candidate: true
+            }
+        });
+        if (!application) {
+            throw new _common.NotFoundException('Application not found');
+        }
+        if (application.Job.hrId !== hr.id) {
+            throw new _common.ForbiddenException('You do not have access to this application');
+        }
+        // Only allow shortlisting if status is TEST_PASSED_WAITING_HR
+        if (application.status !== 'TEST_PASSED_WAITING_HR') {
+            throw new _common.BadRequestException(`Cannot shortlist application with status: ${application.status}. Only applications with TEST_PASSED_WAITING_HR status can be shortlisted.`);
+        }
+        // Update application status and create interview in a transaction
+        const result = await this.prisma.$transaction(async (tx)=>{
+            // Update the application status to INTERVIEW_CONFIRMED
+            const updatedApplication = await tx.jobApplication.update({
+                where: {
+                    id: applicationId
+                },
+                data: {
+                    status: 'INTERVIEW_CONFIRMED',
+                    updatedAt: new Date()
+                }
+            });
+            // Create an Interview record for this application
+            const interview = await tx.interview.create({
+                data: {
+                    id: _crypto.randomUUID(),
+                    applicationId: applicationId,
+                    hrId: hr.id,
+                    status: 'INTERVIEW_CONFIRMED',
+                    paymentStatus: 'PENDING',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            });
+            // Audit log
+            await tx.auditLog.create({
+                data: {
+                    id: _crypto.randomUUID(),
+                    userId: userId,
+                    action: _constants.AuditAction.UPDATE,
+                    entityType: 'JobApplication',
+                    entityId: applicationId,
+                    oldValue: {
+                        status: application.status
+                    },
+                    newValue: {
+                        status: 'INTERVIEW_CONFIRMED'
+                    },
+                    metadata: {
+                        action: 'shortlist'
+                    }
+                }
+            });
+            return {
+                updatedApplication,
+                interview
+            };
+        });
+        return {
+            message: 'Candidate shortlisted successfully! They will be notified to pay ₹99 to proceed with the interview.',
+            applicationId: result.updatedApplication.id,
+            interviewId: result.interview.id,
+            status: 'INTERVIEW_CONFIRMED'
+        };
+    }
     constructor(prisma, tokenService){
         this.prisma = prisma;
         this.tokenService = tokenService;

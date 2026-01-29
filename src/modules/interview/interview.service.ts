@@ -850,10 +850,10 @@ export class InterviewService {
     application: any,
     dto: ConfirmInterviewDto,
   ) {
-    const candidateEmail = application.candidate.user.email;
-    const candidateName = `${application.candidate.firstName} ${application.candidate.lastName}`;
-    const companyName = application.job.companyName;
-    const jobTitle = application.job.title;
+    const candidateEmail = application.Candidate.User.email;
+    const candidateName = `${application.Candidate.firstName} ${application.Candidate.lastName}`;
+    const companyName = application.Job.companyName;
+    const jobTitle = application.Job.title;
 
     const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

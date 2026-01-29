@@ -932,16 +932,9 @@ html.modal-open body {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
-    /* Safe area padding for devices with notch (iPhone, some Android) */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    /* Flexbox centering - works on all modern browsers */
-    display: flex;
-    align-items: center;
-    justify-content: center;
     /* Prevent scroll chaining on all mobile browsers */
     overscroll-behavior: contain;
     -ms-scroll-chaining: none;
-    /* Older Edge */
 }
 
 .modal-overlay.active {
@@ -950,7 +943,11 @@ html.modal-open body {
 }
 
 .modal {
-    position: relative;
+    /* IMPORTANT: Modal is sibling to overlay, not child - must use fixed positioning */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
@@ -970,7 +967,6 @@ html.modal-open body {
     z-index: 2001;
     opacity: 0;
     visibility: hidden;
-    transform: scale(0.95) translateY(20px);
     transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     /* Allow touch scrolling inside modal */
@@ -980,7 +976,7 @@ html.modal-open body {
 .modal.active {
     opacity: 1;
     visibility: visible;
-    transform: scale(1) translateY(0);
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .modal-close {
@@ -1176,22 +1172,21 @@ html.modal-open body {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
-        align-items: flex-start;
-        padding-top: env(safe-area-inset-top, 20px);
-        padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 
     .modal {
-        margin: 20px auto;
-        max-height: calc(100vh - 80px);
-        max-height: calc(100dvh - 80px);
+        /* On mobile, position from top instead of center to handle virtual keyboard */
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.95);
+        max-height: calc(100vh - 40px);
+        max-height: calc(100dvh - 40px);
         padding: 24px;
         width: 94%;
-        flex-shrink: 0;
     }
 
     .modal.active {
-        transform: scale(1) translateY(0);
+        transform: translateX(-50%) scale(1);
     }
 
     .modal-title {

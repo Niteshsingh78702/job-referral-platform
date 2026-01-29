@@ -1985,9 +1985,7 @@
         // Interview Confirmation Modal Functions (Confirmation-First Flow)
         function openInterviewRequestModal(applicationId) {
             document.getElementById('interviewApplicationId').value = applicationId;
-            // Set minimum date to today
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('confirmInterviewDate').min = today;
+            // Note: Date/time is set after payment, so no date field needed here
             document.getElementById('interviewRequestModal').classList.add('show');
         }
 

@@ -1488,9 +1488,9 @@
                     );
 
                     // Determine if HR can confirm interview
-                    // Candidates with APPLIED/TEST_PASSED status and no interview yet can be confirmed
+                    // Candidates with APPLIED/TEST_PASSED/TEST_PASSED_WAITING_HR status and no interview yet can be confirmed
                     const canConfirmInterview =
-                        (app.status === 'APPLIED' || app.status === 'TEST_PASSED' || app.status === 'REFERRAL_CONFIRMED') &&
+                        (app.status === 'APPLIED' || app.status === 'TEST_PASSED' || app.status === 'TEST_PASSED_WAITING_HR' || app.status === 'REFERRAL_CONFIRMED') &&
                         !interview;
 
                     const hasInterview = !!interview;
@@ -1622,6 +1622,9 @@
                     return '<span class="badge badge-pending">⏳ Testing</span>';
                 case 'TEST_FAILED':
                     return '<span class="badge badge-closed">❌ Failed</span>';
+                case 'TEST_PASSED':
+                case 'TEST_PASSED_WAITING_HR':
+                    return '<span class="badge badge-active">✅ TEST_PASSED_WAITING_HR</span>';
                 case 'APPLIED':
                     // Status APPLIED means test was passed (backend logic)
                     return '<span class="badge badge-active">✅ Test Passed</span>';

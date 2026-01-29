@@ -21,7 +21,7 @@ export class InterviewService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   /**
    * HR confirms an interview with scheduling details.
@@ -47,10 +47,13 @@ export class InterviewService {
       throw new NotFoundException('Application not found');
     }
 
-    // Verify application is in APPLIED status (test passed)
-    if (application.status !== ApplicationStatus.APPLIED) {
+    // Verify application is in APPLIED or TEST_PASSED_WAITING_HR status (test passed)
+    if (
+      application.status !== ApplicationStatus.APPLIED &&
+      application.status !== ApplicationStatus.TEST_PASSED_WAITING_HR
+    ) {
       throw new BadRequestException(
-        `Cannot confirm interview. Application status is ${application.status}. Expected APPLIED (test passed).`,
+        `Cannot confirm interview. Application status is ${application.status}. Expected APPLIED or TEST_PASSED_WAITING_HR (test passed).`,
       );
     }
 

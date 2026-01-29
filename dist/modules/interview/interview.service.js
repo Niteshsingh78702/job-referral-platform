@@ -91,9 +91,9 @@ let InterviewService = class InterviewService {
         if (!application) {
             throw new _common.NotFoundException('Application not found');
         }
-        // Verify application is in APPLIED status (test passed)
-        if (application.status !== _constants.ApplicationStatus.APPLIED) {
-            throw new _common.BadRequestException(`Cannot confirm interview. Application status is ${application.status}. Expected APPLIED (test passed).`);
+        // Verify application is in APPLIED or TEST_PASSED_WAITING_HR status (test passed)
+        if (application.status !== _constants.ApplicationStatus.APPLIED && application.status !== _constants.ApplicationStatus.TEST_PASSED_WAITING_HR) {
+            throw new _common.BadRequestException(`Cannot confirm interview. Application status is ${application.status}. Expected APPLIED or TEST_PASSED_WAITING_HR (test passed).`);
         }
         // Check if HR owns this job
         const hr = await this.prisma.hR.findUnique({

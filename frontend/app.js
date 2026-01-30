@@ -1495,7 +1495,20 @@ async function applyForJob(jobId) {
                 }
                 showToast('info', 'You have already applied for this job. Go to Applications to take the test.');
             } else {
-                showToast('error', data.message || 'Failed to apply. Please try again.');
+                // Check if this is a skill test requirement error
+                const message = data.message || '';
+                if (message.includes('skill tests before applying') || message.includes('Skill tests required')) {
+                    // Parse skill name from message like "You need to pass the following skill tests before applying: Java Backend Test"
+                    const skillMatch = message.match(/:\s*(.+)$/);
+                    const skillName = skillMatch ? skillMatch[1].trim() : 'Required Skill';
+                    showSkillTestRequiredModal(jobId, skillName);
+                } else if (message.includes('cooldown') || message.includes('wait before')) {
+                    showToast('warning', message);
+                } else if (message.includes('expired')) {
+                    showToast('warning', message);
+                } else {
+                    showToast('error', message || 'Failed to apply. Please try again.');
+                }
             }
         }
     } catch (error) {
@@ -1515,6 +1528,191 @@ function handleExpiredToken() {
     showToast('warning', 'Your session has expired. Please login again.');
     showModal('login');
 }
+
+// =============================================
+// Skill Test Required Modal
+// =============================================
+
+// Track current job needing skill test
+let pendingSkillTestJobId = null;
+
+// Show modal when skill test is required
+function showSkillTestRequiredModal(jobId, skillName) {
+    pendingSkillTestJobId = jobId;
+
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('skillTestRequiredModal');
+    if (!modal) {
+        const modalHTML = `
+            <div class="modal-overlay" id="skillTestModalOverlay" onclick="closeSkillTestModal()"></div>
+            <div class="modal" id="skillTestRequiredModal" style="max-width: 500px;">
+                <button class="modal-close" onclick="closeSkillTestModal()">×</button>
+                <div class="modal-content" style="text-align: center; padding: 32px;">
+                    <div style="font-size: 64px; margin-bottom: 24px;">🧪</div>
+                    <h2 style="margin-bottom: 16px; color: var(--text-primary);">Skill Test Required</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 15px;">
+                        To apply for this job, you need to pass the following skill test:
+                    </p>
+                    <div id="skillTestName" style="font-size: 18px; font-weight: 600; color: var(--primary); padding: 16px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; margin-bottom: 24px;">
+                        Java Backend Test
+                    </div>
+                    <p style="color: var(--text-dim); margin-bottom: 24px; font-size: 13px;">
+                        📋 Quick assessment • ⏱️ ~20 minutes • ✅ Valid for 7 days
+                    </p>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-outline" onclick="closeSkillTestModal()" style="min-width: 120px;">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" id="takeSkillTestBtn" onclick="startSkillTestFromJob()" style="min-width: 140px; background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                            🎯 Take Test Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('skillTestRequiredModal');
+    }
+
+    // Update skill name
+    document.getElementById('skillTestName').textContent = skillName;
+
+    // Show modal
+    document.getElementById('skillTestModalOverlay').classList.add('active');
+    modal.classList.add('active');
+}
+
+// Close skill test modal
+function closeSkillTestModal() {
+    const overlay = document.getElementById('skillTestModalOverlay');
+    const modal = document.getElementById('skillTestRequiredModal');
+    if (overlay) overlay.classList.remove('active');
+    if (modal) modal.classList.remove('active');
+    pendingSkillTestJobId = null;
+}
+
+// Start skill test for the pending job
+async function startSkillTestFromJob() {
+    if (!pendingSkillTestJobId) {
+        showToast('error', 'No job selected. Please try again.');
+        closeSkillTestModal();
+        return;
+    }
+
+    const jobId = pendingSkillTestJobId;
+    const btn = document.getElementById('takeSkillTestBtn');
+
+    try {
+        // Show loading state
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Loading...';
+        }
+
+        // First, get the job's eligibility info to find the skill bucket ID
+        const eligibilityResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}/apply-eligibility`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`,
+            },
+        });
+
+        if (eligibilityResponse.status === 401) {
+            handleExpiredToken();
+            return;
+        }
+
+        const eligibilityData = await eligibilityResponse.json();
+        console.log('Eligibility response:', eligibilityData);
+
+        // Extract skill bucket ID from missing tests
+        let skillBucketId = null;
+        if (eligibilityData.data?.missingTests && eligibilityData.data.missingTests.length > 0) {
+            skillBucketId = eligibilityData.data.missingTests[0].skillBucketId;
+        }
+
+        if (!skillBucketId) {
+            // If no skill bucket ID found, try to get it from the job details
+            const jobResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            const jobData = await jobResponse.json();
+
+            if (jobData.data?.skillBucketId || jobData.skillBucketId) {
+                skillBucketId = jobData.data?.skillBucketId || jobData.skillBucketId;
+            } else {
+                showToast('error', 'Could not find skill test for this job. Please contact support.');
+                closeSkillTestModal();
+                return;
+            }
+        }
+
+        // Start the rapid-fire test
+        const startResponse = await fetch(`${API_BASE_URL}/rapid-fire/start/${skillBucketId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`,
+            },
+        });
+
+        if (startResponse.status === 401) {
+            handleExpiredToken();
+            return;
+        }
+
+        const startData = await startResponse.json();
+        console.log('Start test response:', startData);
+
+        if (startData.success && startData.data?.sessionId) {
+            closeSkillTestModal();
+            showToast('success', 'Test started! Redirecting...');
+
+            // Redirect to the test page
+            window.location.href = `rapid-fire-test.html?session=${startData.data.sessionId}`;
+        } else if (startData.data?.existingSessionId) {
+            // Resume existing session
+            closeSkillTestModal();
+            showToast('info', 'Resuming your existing test session...');
+            window.location.href = `rapid-fire-test.html?session=${startData.data.existingSessionId}`;
+        } else {
+            // Handle specific errors
+            const errorMessage = startData.message || 'Failed to start test.';
+            if (errorMessage.includes('cooldown') || errorMessage.includes('wait')) {
+                showToast('warning', errorMessage);
+            } else if (errorMessage.includes('active test session') || errorMessage.includes('IN_PROGRESS')) {
+                // Try to extract session ID from error response (in errors object for exceptions)
+                const activeSessionId = startData.errors?.sessionId || startData.data?.sessionId;
+                if (activeSessionId) {
+                    closeSkillTestModal();
+                    showToast('info', 'Resuming your active test session...');
+                    window.location.href = `rapid-fire-test.html?session=${activeSessionId}`;
+                    return;
+                } else {
+                    showToast('info', 'You have an active test session. Check your applications.');
+                }
+            } else {
+                showToast('error', errorMessage);
+            }
+            closeSkillTestModal();
+        }
+    } catch (error) {
+        console.error('Error starting skill test:', error);
+        showToast('error', 'Failed to start test. Please try again.');
+        closeSkillTestModal();
+    } finally {
+        // Reset button state
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🎯 Take Test Now';
+        }
+    }
+}
+
 
 // =============================================
 // Modal Functions

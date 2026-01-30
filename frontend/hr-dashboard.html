@@ -1478,19 +1478,21 @@
 
                     console.log('👤 Processing application:', app.id, 'Candidate:', candidate.firstName, 'Status:', app.status);
 
-                    // Check if test passed - status 'APPLIED' means test was passed (backend sets this on pass)
-                    // Also check testScore and testPassedAt as additional indicators
+                    // Check if test passed - use reliable indicators only
+                    // Do NOT assume APPLIED = test passed (APPLIED is initial status when candidate applies)
                     const testPassed = !!(
-                        app.status === 'APPLIED' ||  // Backend sets APPLIED when test passes
                         app.status === 'TEST_PASSED' ||
+                        app.status === 'TEST_PASSED_WAITING_HR' ||
                         app.testPassedAt ||
                         (app.testScore && app.testScore >= 70)
                     );
 
                     // Determine if HR can confirm interview
-                    // Candidates with APPLIED/TEST_PASSED/TEST_PASSED_WAITING_HR status and no interview yet can be confirmed
+                    // Only candidates who PASSED the test (verified by testPassed flag) can be shortlisted
+                    // Remove APPLIED from this check - APPLIED is the initial status before test
                     const canConfirmInterview =
-                        (app.status === 'APPLIED' || app.status === 'TEST_PASSED' || app.status === 'TEST_PASSED_WAITING_HR' || app.status === 'REFERRAL_CONFIRMED') &&
+                        testPassed &&
+                        (app.status === 'TEST_PASSED' || app.status === 'TEST_PASSED_WAITING_HR' || app.status === 'REFERRAL_CONFIRMED') &&
                         !interview;
 
                     const hasInterview = !!interview;
@@ -1505,6 +1507,9 @@
                                 <button class="btn btn-danger btn-sm" onclick="rejectApplication('${app.id}')" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🚫 Not Shortlisted</button>
                             </div>
                         `;
+                    } else if (app.status === 'APPLIED') {
+                        // APPLIED = candidate applied but hasn't taken test yet
+                        actionBtn = `<span class="badge badge-pending">⏳ Awaiting Test</span>`;
                     } else if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
                         actionBtn = `<span class="badge badge-pending">📝 Test Pending</span>`;
                     } else if (app.status === 'TEST_IN_PROGRESS') {
@@ -1626,8 +1631,8 @@
                 case 'TEST_PASSED_WAITING_HR':
                     return '<span class="badge badge-active">✅ TEST_PASSED_WAITING_HR</span>';
                 case 'APPLIED':
-                    // Status APPLIED means test was passed (backend logic)
-                    return '<span class="badge badge-active">✅ Test Passed</span>';
+                    // APPLIED is the initial status - candidate needs to take test
+                    return '<span class="badge badge-draft">📝 Test Pending</span>';
                 case 'INTERVIEW_CONFIRMED':
                     return '<span class="badge badge-pending">📅 Interview Set</span>';
                 case 'PAYMENT_PENDING':

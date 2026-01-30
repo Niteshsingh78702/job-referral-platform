@@ -1488,12 +1488,15 @@
                     );
 
                     // Determine if HR can confirm interview
-                    // Only candidates who PASSED the test (verified by testPassed flag) can be shortlisted
-                    // Remove APPLIED from this check - APPLIED is the initial status before test
+                    // Allow shortlisting when:
+                    // 1. Test is passed (testPassed is true) - regardless of status field
+                    // 2. No interview exists yet
                     const canConfirmInterview =
                         testPassed &&
-                        (app.status === 'TEST_PASSED' || app.status === 'TEST_PASSED_WAITING_HR' || app.status === 'REFERRAL_CONFIRMED') &&
-                        !interview;
+                        !interview &&
+                        app.status !== 'WITHDRAWN' &&
+                        app.status !== 'REJECTED' &&
+                        app.status !== 'TEST_FAILED';
 
                     const hasInterview = !!interview;
 
@@ -1507,11 +1510,9 @@
                                 <button class="btn btn-danger btn-sm" onclick="rejectApplication('${app.id}')" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🚫 Not Shortlisted</button>
                             </div>
                         `;
-                    } else if (app.status === 'APPLIED') {
-                        // APPLIED = candidate applied but hasn't taken test yet
+                    } else if ((app.status === 'APPLIED' || app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') && !testPassed) {
+                        // Only show Awaiting Test when test hasn't been passed yet
                         actionBtn = `<span class="badge badge-pending">⏳ Awaiting Test</span>`;
-                    } else if (app.status === 'TEST_PENDING' || app.status === 'TEST_REQUIRED') {
-                        actionBtn = `<span class="badge badge-pending">📝 Test Pending</span>`;
                     } else if (app.status === 'TEST_IN_PROGRESS') {
                         actionBtn = `<span class="badge badge-pending">⏳ Test In Progress</span>`;
                     } else if (app.status === 'TEST_FAILED') {
@@ -1619,6 +1620,14 @@
 
         // Helper function to display status nicely for HR
         function getStatusDisplayForHR(status, testPassed) {
+            // Check testPassed first - if test is passed, show that regardless of status field
+            if (testPassed && status !== 'INTERVIEW_CONFIRMED' && status !== 'PAYMENT_PENDING' &&
+                status !== 'PAYMENT_SUCCESS' && status !== 'INTERVIEW_COMPLETED' &&
+                status !== 'SELECTED' && status !== 'INTERVIEW_REJECTED' &&
+                status !== 'CANDIDATE_NO_SHOW' && status !== 'WITHDRAWN' && status !== 'REJECTED') {
+                return '<span class="badge badge-active">✅ Test Passed</span>';
+            }
+
             switch (status) {
                 case 'TEST_PENDING':
                 case 'TEST_REQUIRED':
@@ -1629,18 +1638,26 @@
                     return '<span class="badge badge-closed">❌ Failed</span>';
                 case 'TEST_PASSED':
                 case 'TEST_PASSED_WAITING_HR':
-                    return '<span class="badge badge-active">✅ TEST_PASSED_WAITING_HR</span>';
+                    return '<span class="badge badge-active">✅ Test Passed</span>';
                 case 'APPLIED':
-                    // APPLIED is the initial status - candidate needs to take test
+                    // APPLIED without testPassed means candidate needs to take test
                     return '<span class="badge badge-draft">📝 Test Pending</span>';
                 case 'INTERVIEW_CONFIRMED':
-                    return '<span class="badge badge-pending">📅 Interview Set</span>';
+                    return '<span class="badge badge-pending">📅 Shortlisted</span>';
                 case 'PAYMENT_PENDING':
                     return '<span class="badge badge-pending">💳 Payment Pending</span>';
                 case 'PAYMENT_SUCCESS':
                     return '<span class="badge badge-active">✅ Paid</span>';
                 case 'INTERVIEW_COMPLETED':
                     return '<span class="badge badge-active">✅ Completed</span>';
+                case 'SELECTED':
+                    return '<span class="badge badge-active">🎉 Selected</span>';
+                case 'INTERVIEW_REJECTED':
+                    return '<span class="badge badge-closed">❌ Not Selected</span>';
+                case 'WITHDRAWN':
+                    return '<span class="badge badge-closed">↩️ Withdrawn</span>';
+                case 'REJECTED':
+                    return '<span class="badge badge-closed">❌ Rejected</span>';
                 default:
                     return `<span class="badge">${status}</span>`;
             }

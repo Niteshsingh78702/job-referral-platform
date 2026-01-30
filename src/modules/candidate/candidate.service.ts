@@ -134,7 +134,8 @@ export class CandidateService {
     });
 
     // Auto-add parsed skills if they don't exist
-    for (const skillName of parsedData.jobSkill.slice(0, 10)) {
+    const skills = parsedData.JobSkill || [];
+    for (const skillName of skills.slice(0, 10)) {
       // Limit to 10 skills
       const existingSkill = await this.prisma.candidateSkill.findFirst({
         where: {
@@ -146,6 +147,7 @@ export class CandidateService {
       if (!existingSkill) {
         await this.prisma.candidateSkill.create({
           data: {
+            id: uuidv4(),
             candidateId: candidate.id,
             name: skillName,
             level: 3, // Default mid-level
@@ -233,6 +235,7 @@ export class CandidateService {
 
     return this.prisma.experience.create({
       data: {
+        id: uuidv4(),
         candidateId: candidate.id,
         company: dto.company,
         role: dto.role,
@@ -275,6 +278,7 @@ export class CandidateService {
 
     return this.prisma.education.create({
       data: {
+        id: uuidv4(),
         candidateId: candidate.id,
         institution: dto.institution,
         degree: dto.degree,

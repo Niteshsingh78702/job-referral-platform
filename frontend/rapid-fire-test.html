@@ -561,6 +561,14 @@
             window.location.href = 'index.html';
         }
 
+
+        // Helper function to clean question text - removes trailing numbers in parentheses
+        function cleanQuestionText(text) {
+            if (!text) return '';
+            // Remove trailing patterns like "(52)", " (123)", etc.
+            return text.replace(/\s*\(\d+\)\s*$/, '').trim();
+        }
+
         // Load test state
         async function loadTest() {
             try {
@@ -597,7 +605,17 @@
                     throw new Error(data.message);
                 }
 
-                questions = data.data.QuestionBank;
+                // De-duplicate questions by their text content and clean up any extra numbers
+                const seenTexts = new Set();
+                questions = data.data.QuestionBank.filter(q => {
+                    // Clean the question text - remove trailing numbers in parentheses like "(52)"
+                    const cleanedText = cleanQuestionText(q.question);
+                    if (seenTexts.has(cleanedText)) {
+                        return false; // Skip duplicate
+                    }
+                    seenTexts.add(cleanedText);
+                    return true;
+                });
                 remainingSeconds = data.data.remainingTime;
 
                 document.getElementById('totalQuestions').textContent = questions.length;
@@ -638,7 +656,7 @@
 
             document.getElementById('questionLabel').textContent = `Question ${index + 1} of ${questions.length}`;
             document.getElementById('currentQuestion').textContent = `Question ${index + 1}`;
-            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('questionText').textContent = cleanQuestionText(q.question);
             document.getElementById('difficultyBadge').textContent = q.difficulty;
             document.getElementById('difficultyBadge').className = `difficulty ${q.difficulty}`;
 

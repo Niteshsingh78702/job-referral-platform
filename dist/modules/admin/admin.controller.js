@@ -33,7 +33,10 @@ let AdminController = class AdminController {
     }
     // Users
     async getUsers(page, limit, role, status) {
-        return this.adminService.getAllUsers(page, limit, role, status);
+        // Cast string params to enum types for proper Prisma filtering
+        const roleEnum = role ? role : undefined;
+        const statusEnum = status ? status : undefined;
+        return this.adminService.getAllUsers(page, limit, roleEnum, statusEnum);
     }
     async blockUser(userId, adminId) {
         return this.adminService.blockUser(userId, adminId);
@@ -53,7 +56,9 @@ let AdminController = class AdminController {
     }
     // Jobs
     async getJobs(page, limit, status) {
-        return this.adminService.getAllJobs(page, limit, status);
+        // Cast string param to enum type for proper Prisma filtering
+        const statusEnum = status ? status : undefined;
+        return this.adminService.getAllJobs(page, limit, statusEnum);
     }
     async approveJob(jobId, adminId) {
         return this.adminService.approveJob(jobId, adminId);
@@ -86,7 +91,9 @@ let AdminController = class AdminController {
     }
     // Payments
     async getPayments(page, limit, status) {
-        return this.adminService.getAllPayments(page, limit, status);
+        // Cast string param to enum type for proper Prisma filtering
+        const statusEnum = status ? status : undefined;
+        return this.adminService.getAllPayments(page, limit, statusEnum);
     }
     // Refunds
     async getPendingRefunds() {
@@ -100,7 +107,9 @@ let AdminController = class AdminController {
     }
     // Audit Logs
     async getAuditLogs(page, limit, action) {
-        return this.adminService.getAuditLogs(page, limit, action);
+        // Cast string param to enum type for proper Prisma filtering
+        const actionEnum = action ? action : undefined;
+        return this.adminService.getAuditLogs(page, limit, actionEnum);
     }
     // ===========================================
     // INTERVIEW MANAGEMENT

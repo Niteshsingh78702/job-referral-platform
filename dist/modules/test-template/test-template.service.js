@@ -179,7 +179,7 @@ let TestTemplateService = class TestTemplateService {
    */ async deleteTemplate(id) {
         const template = await this.getTemplateById(id);
         // Check if assigned to any skill bucket
-        if (template.skillBuckets && template.skillBuckets.length > 0) {
+        if (template.SkillBucket && template.SkillBucket.length > 0) {
             throw new _common.BadRequestException('Cannot delete template that is assigned to skill buckets. Unassign first.');
         }
         return this.prisma.testTemplate.update({

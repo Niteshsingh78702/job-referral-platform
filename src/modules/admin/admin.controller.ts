@@ -21,7 +21,7 @@ import {
 @Controller('admin')
 @Roles(UserRole.ADMIN)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) { }
 
   // Dashboard
   @Get('dashboard')
@@ -37,7 +37,10 @@ export class AdminController {
     @Query('role') role?: string,
     @Query('status') status?: string,
   ) {
-    return this.adminService.getAllUsers(page, limit, role, status);
+    // Cast string params to enum types for proper Prisma filtering
+    const roleEnum = role ? (role as UserRole) : undefined;
+    const statusEnum = status ? (status as UserStatus) : undefined;
+    return this.adminService.getAllUsers(page, limit, roleEnum, statusEnum);
   }
 
   @Patch('users/:id/block')
@@ -86,7 +89,9 @@ export class AdminController {
     @Query('limit') limit?: number,
     @Query('status') status?: string,
   ) {
-    return this.adminService.getAllJobs(page, limit, status);
+    // Cast string param to enum type for proper Prisma filtering
+    const statusEnum = status ? (status as JobStatus) : undefined;
+    return this.adminService.getAllJobs(page, limit, statusEnum);
   }
 
   @Post('jobs/:id/approve')
@@ -185,7 +190,9 @@ export class AdminController {
     @Query('limit') limit?: number,
     @Query('status') status?: string,
   ) {
-    return this.adminService.getAllPayments(page, limit, status);
+    // Cast string param to enum type for proper Prisma filtering
+    const statusEnum = status ? (status as PaymentStatus) : undefined;
+    return this.adminService.getAllPayments(page, limit, statusEnum);
   }
 
   // Refunds
@@ -219,7 +226,9 @@ export class AdminController {
     @Query('limit') limit?: number,
     @Query('action') action?: string,
   ) {
-    return this.adminService.getAuditLogs(page, limit, action);
+    // Cast string param to enum type for proper Prisma filtering
+    const actionEnum = action ? (action as AuditAction) : undefined;
+    return this.adminService.getAuditLogs(page, limit, actionEnum);
   }
 
   // ===========================================

@@ -14,7 +14,7 @@ import {
 
 @Injectable()
 export class TestTemplateService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Create a new test template
@@ -143,7 +143,7 @@ export class TestTemplateService {
     const template = await this.getTemplateById(id);
 
     // Check if assigned to any skill bucket
-    if (template.skillBuckets && template.skillBuckets.length > 0) {
+    if (template.SkillBucket && template.SkillBucket.length > 0) {
       throw new BadRequestException(
         'Cannot delete template that is assigned to skill buckets. Unassign first.',
       );

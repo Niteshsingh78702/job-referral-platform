@@ -157,6 +157,13 @@ async function fetchCandidateProfile() {
             headers: { 'Authorization': `Bearer ${state.token}` }
         });
 
+        // Handle deleted/invalid user - log them out
+        if (response.status === 401 || response.status === 404) {
+            console.log('User session invalid or account deleted, logging out');
+            handleInvalidSession('Your session has expired or your account is no longer active. Please log in again.');
+            return;
+        }
+
         if (response.ok) {
             const result = await response.json();
             const profile = result.data || result;
@@ -213,6 +220,25 @@ async function fetchCandidateProfile() {
     } catch (error) {
         console.log('Could not fetch profile from backend, using cached data');
     }
+}
+
+// Handle invalid session (deleted account, expired token, etc.)
+function handleInvalidSession(message) {
+    // Clear all auth data
+    state.token = null;
+    state.user = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('refreshToken');
+
+    // Update UI to logged out state
+    updateUIForLoggedOutUser();
+
+    // Show appropriate message
+    showToast('warning', message || 'Your session has ended. Please log in again.');
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 
@@ -356,6 +382,13 @@ async function loadUserStats() {
                     'Authorization': `Bearer ${state.token}`
                 }
             });
+
+            // Handle deleted/invalid user - log them out
+            if (response.status === 401 || response.status === 404) {
+                handleInvalidSession('Your session has expired or your account is no longer active. Please log in again.');
+                return;
+            }
+
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.data) {

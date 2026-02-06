@@ -17,7 +17,7 @@ import {
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // ===========================================
   // DASHBOARD
@@ -473,10 +473,28 @@ export class AdminService {
       where: { id: userId },
       include: {
         Candidate: {
-          include: { _count: { select: { JobApplication: true } } },
+          include: {
+            _count: {
+              select: {
+                JobApplication: true,
+                SkillTestAttempt: true
+              }
+            }
+          },
         },
-        HR: true,
-        Employee: true,
+        HR: {
+          include: { _count: { select: { Job: true } } },
+        },
+        Employee: {
+          include: {
+            _count: {
+              select: {
+                Referral: true,
+                EmployeeEarning: true
+              }
+            }
+          },
+        },
       },
     });
 
@@ -485,16 +503,54 @@ export class AdminService {
       throw new BadRequestException('Cannot delete admin users');
     }
 
-    // Check for active applications
+    // Check for active applications (candidates)
     if (user.Candidate && user.Candidate._count.JobApplication > 0) {
       throw new BadRequestException(
         'Cannot delete user with active applications. Please block the user instead.',
       );
     }
 
+    // Check for jobs (HR)
+    if (user.HR && user.HR._count.Job > 0) {
+      throw new BadRequestException(
+        'Cannot delete HR with posted jobs. Please block the user instead.',
+      );
+    }
+
+    // Check for referrals or earnings (Employee)
+    if (user.Employee && (user.Employee._count.Referral > 0 || user.Employee._count.EmployeeEarning > 0)) {
+      throw new BadRequestException(
+        'Cannot delete employee with referrals or earnings. Please block the user instead.',
+      );
+    }
+
     await this.prisma.$transaction(async (tx) => {
-      // Delete related data based on role
+      // Delete related authentication and session records first
+      await tx.oTPToken.deleteMany({ where: { userId } });
+      await tx.refreshToken.deleteMany({ where: { userId } });
+      await tx.passwordResetToken.deleteMany({ where: { userId } });
+      await tx.deviceLog.deleteMany({ where: { userId } });
+      await tx.notification.deleteMany({ where: { userId } });
+
+      // Delete audit logs where user is the actor (set userId to null instead since FK allows null)
+      await tx.auditLog.updateMany({
+        where: { userId },
+        data: { userId: null }
+      });
+
+      // Handle suspicious activities (set userId to null)
+      await tx.suspiciousActivity.updateMany({
+        where: { userId },
+        data: { userId: null }
+      });
+
+      // Delete role-specific records
       if (user.Candidate) {
+        // Delete skill test attempts (no cascade delete on this table)
+        await tx.skillTestAttempt.deleteMany({ where: { candidateId: user.Candidate.id } });
+        // CandidateSkill, Education, Experience have onDelete: Cascade, they auto-delete
+        // CandidateTestAttempt has onDelete: Cascade, auto-deletes
+        // Now delete the candidate
         await tx.candidate.delete({ where: { userId } });
       }
       if (user.HR) {
@@ -504,8 +560,10 @@ export class AdminService {
         await tx.employee.delete({ where: { userId } });
       }
 
+      // Finally delete the user
       await tx.user.delete({ where: { id: userId } });
 
+      // Log the action (with adminId as the actor)
       await tx.auditLog.create({
         data: {
           id: crypto.randomUUID(),

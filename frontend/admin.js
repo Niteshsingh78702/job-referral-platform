@@ -765,8 +765,8 @@ function renderUsersTable() {
                         <td><span class="badge badge-${user.status === 'ACTIVE' ? 'success' : 'danger'}">${user.status}</span></td>
                         <td>${formatDate(user.createdAt)}</td>
                         <td>
-                            ${user.status === 'ACTIVE' && user.role !== 'ADMIN' ?
-            `<button class="btn btn-sm btn-danger" onclick="blockUser('${user.id}')">Block</button>` : ''}
+                            ${user.status !== 'BLOCKED' && user.role !== 'ADMIN' ?
+            `<button class="btn btn-sm btn-warning" onclick="blockUser('${user.id}')">Block</button>` : ''}
                             ${user.status === 'BLOCKED' ?
             `<button class="btn btn-sm btn-success" onclick="unblockUser('${user.id}')">Unblock</button>` : ''}
                             ${user.role !== 'ADMIN' ?

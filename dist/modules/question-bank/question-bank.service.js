@@ -245,11 +245,30 @@ let QuestionBankService = class QuestionBankService {
                 hasSome: tags
             };
         }
-        // Fetch all questions and de-duplicate by question text
-        // This ensures no duplicate questions are served even if they exist in DB
+        // Log the query parameters for debugging
+        console.log(`[QuestionBank] Fetching random questions: roleType=${roleType}, count=${count}`);
+        // Fetch all questions - use a random orderBy to ensure different starting order each time
+        // This helps with randomization and avoids database-level caching effects
+        const orderOptions = [
+            {
+                createdAt: 'asc'
+            },
+            {
+                createdAt: 'desc'
+            },
+            {
+                id: 'asc'
+            },
+            {
+                id: 'desc'
+            }
+        ];
+        const randomOrderBy = orderOptions[_crypto.randomInt(0, orderOptions.length)];
         const allQuestions = await this.prisma.questionBank.findMany({
-            where
+            where,
+            orderBy: randomOrderBy
         });
+        console.log(`[QuestionBank] Found ${allQuestions.length} total questions for roleType=${roleType}`);
         // De-duplicate by question text (normalized: trimmed and lowercased)
         const seenTexts = new Set();
         const uniqueQuestions = allQuestions.filter((q)=>{
@@ -261,11 +280,16 @@ let QuestionBankService = class QuestionBankService {
             seenTexts.add(normalizedText);
             return true;
         });
+        console.log(`[QuestionBank] After de-duplication: ${uniqueQuestions.length} unique questions`);
         if (uniqueQuestions.length === 0) {
+            console.warn(`[QuestionBank] No questions available for roleType=${roleType}`);
             return [];
         }
         // Shuffle and return the requested count
-        return this.shuffleArray(uniqueQuestions).slice(0, count);
+        const shuffled = this.shuffleArray(uniqueQuestions);
+        const selected = shuffled.slice(0, count);
+        console.log(`[QuestionBank] Returning ${selected.length} randomly selected questions. First 3 IDs: ${selected.slice(0, 3).map((q)=>q.id).join(', ')}`);
+        return selected;
     }
     /**
    * Get statistics for admin dashboard
@@ -340,13 +364,14 @@ let QuestionBankService = class QuestionBankService {
         return roles.map((r)=>r.roleType).filter(Boolean);
     }
     /**
-   * Fisher-Yates shuffle algorithm
+   * Fisher-Yates shuffle algorithm using crypto for better randomness
    */ shuffleArray(array) {
         const shuffled = [
             ...array
         ];
         for(let i = shuffled.length - 1; i > 0; i--){
-            const j = Math.floor(Math.random() * (i + 1));
+            // Use crypto.randomInt for cryptographically secure randomness
+            const j = _crypto.randomInt(0, i + 1);
             [shuffled[i], shuffled[j]] = [
                 shuffled[j],
                 shuffled[i]

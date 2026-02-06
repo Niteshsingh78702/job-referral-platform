@@ -110,7 +110,58 @@ document.addEventListener('DOMContentLoaded', () => {
         setupModalTouchPrevention();
     });
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // Handle hash-based routing on page load and hash changes
+    handleHashRoute();
+    window.addEventListener('hashchange', handleHashRoute);
 });
+
+/**
+ * Handle hash-based routing to restore page state on refresh
+ * Supports: #applications, #settings, #dashboard, #jobs, #profile
+ */
+function handleHashRoute() {
+    const hash = window.location.hash.toLowerCase();
+
+    // Only process routes if user is logged in (except for some public routes)
+    const token = localStorage.getItem('token');
+
+    if (hash === '#applications') {
+        if (token) {
+            // Wait for auth status to be checked first
+            setTimeout(() => {
+                showApplications();
+            }, 100);
+        }
+    } else if (hash === '#settings') {
+        if (token) {
+            setTimeout(() => {
+                showSettings();
+            }, 100);
+        }
+    } else if (hash === '#dashboard') {
+        if (token) {
+            setTimeout(() => {
+                scrollToSection('#dashboard');
+            }, 100);
+        }
+    } else if (hash === '#jobs') {
+        setTimeout(() => {
+            scrollToSection('#jobs');
+        }, 100);
+    } else if (hash === '#profile') {
+        if (token) {
+            setTimeout(() => {
+                showProfileModal();
+            }, 100);
+        }
+    } else if (hash === '#how-it-works' || hash === '#pricing') {
+        setTimeout(() => {
+            scrollToSection(hash);
+        }, 100);
+    }
+    // For empty hash or unknown routes, show default home page view
+}
 
 // =============================================
 // Authentication
@@ -2842,6 +2893,11 @@ function goBack() {
     document.getElementById('applicationsPage')?.style.setProperty('display', 'none');
     document.getElementById('settingsPage')?.style.setProperty('display', 'none');
 
+    // Clear hash without triggering hashchange (use history.replaceState)
+    if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname);
+    }
+
     // Scroll to dashboard if logged in
     if (state.token) {
         setTimeout(() => scrollToSection('#dashboard'), 100);
@@ -2853,12 +2909,20 @@ function goBack() {
 function showApplications() {
     showPage('applicationsPage');
     document.getElementById('profileMenu')?.classList.remove('active');
+    // Update URL hash for bookmarkable URLs (use replaceState to avoid duplicate history entries)
+    if (window.location.hash !== '#applications') {
+        history.replaceState(null, '', '#applications');
+    }
     loadApplications();
 }
 
 function showSettings() {
     showPage('settingsPage');
     document.getElementById('profileMenu')?.classList.remove('active');
+    // Update URL hash for bookmarkable URLs
+    if (window.location.hash !== '#settings') {
+        history.replaceState(null, '', '#settings');
+    }
 }
 
 // Applications Page

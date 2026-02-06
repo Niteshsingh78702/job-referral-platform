@@ -80,7 +80,8 @@ let QuestionBankService = class QuestionBankService {
                 category: dto.category,
                 tags: dto.tags,
                 roleType: dto.roleType,
-                createdById
+                createdById,
+                updatedAt: new Date()
             }
         });
     }
@@ -231,6 +232,7 @@ let QuestionBankService = class QuestionBankService {
     /**
    * Get random questions for rapid fire test
    * Uses efficient query to avoid loading all questions
+   * De-duplicates questions by their text content to ensure unique questions
    */ async getRandomQuestions(params) {
         const { count, roleType, tags, difficulty } = params;
         const where = {
@@ -243,39 +245,27 @@ let QuestionBankService = class QuestionBankService {
                 hasSome: tags
             };
         }
-        // Get total count
-        const totalCount = await this.prisma.questionBank.count({
+        // Fetch all questions and de-duplicate by question text
+        // This ensures no duplicate questions are served even if they exist in DB
+        const allQuestions = await this.prisma.questionBank.findMany({
             where
         });
-        if (totalCount === 0) {
+        // De-duplicate by question text (normalized: trimmed and lowercased)
+        const seenTexts = new Set();
+        const uniqueQuestions = allQuestions.filter((q)=>{
+            // Normalize the question text - remove trailing numbers in parentheses like "(52)"
+            const normalizedText = q.question.replace(/\s*\(\d+\)\s*$/, '').trim().toLowerCase();
+            if (seenTexts.has(normalizedText)) {
+                return false; // Skip duplicate
+            }
+            seenTexts.add(normalizedText);
+            return true;
+        });
+        if (uniqueQuestions.length === 0) {
             return [];
         }
-        // For large pools, use random skip strategy
-        // For small pools, fetch all and shuffle
-        if (totalCount > count * 2) {
-            // Random sampling for large pools
-            const questions = [];
-            const usedIds = new Set();
-            while(questions.length < count && questions.length < totalCount){
-                const skip = Math.floor(Math.random() * totalCount);
-                const [question] = await this.prisma.questionBank.findMany({
-                    where,
-                    skip,
-                    take: 1
-                });
-                if (question && !usedIds.has(question.id)) {
-                    usedIds.add(question.id);
-                    questions.push(question);
-                }
-            }
-            return questions;
-        } else {
-            // Fetch all and shuffle for small pools
-            const allQuestions = await this.prisma.questionBank.findMany({
-                where
-            });
-            return this.shuffleArray(allQuestions).slice(0, count);
-        }
+        // Shuffle and return the requested count
+        return this.shuffleArray(uniqueQuestions).slice(0, count);
     }
     /**
    * Get statistics for admin dashboard

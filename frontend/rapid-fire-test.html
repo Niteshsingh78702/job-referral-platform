@@ -605,17 +605,8 @@
                     throw new Error(data.message);
                 }
 
-                // De-duplicate questions by their text content and clean up any extra numbers
-                const seenTexts = new Set();
-                questions = data.data.QuestionBank.filter(q => {
-                    // Clean the question text - remove trailing numbers in parentheses like "(52)"
-                    const cleanedText = cleanQuestionText(q.question);
-                    if (seenTexts.has(cleanedText)) {
-                        return false; // Skip duplicate
-                    }
-                    seenTexts.add(cleanedText);
-                    return true;
-                });
+                // Use questions directly from backend - de-duplication is now handled server-side
+                questions = data.data.QuestionBank;
                 remainingSeconds = data.data.remainingTime;
 
                 document.getElementById('totalQuestions').textContent = questions.length;

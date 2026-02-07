@@ -544,6 +544,61 @@
         </div>
     </section>
 
+    <!-- Testimonial Section - Real Interviews -->
+    <section class="section section-dark" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Real Interviews</span>
+                <h2 class="section-title">Real Interviews Happening on Our Platform</h2>
+                <p class="section-subtitle">Verified candidates. Real HR interviews. Transparent process.</p>
+            </div>
+
+            <!-- Trust Counters -->
+            <div class="trust-counters"
+                style="display: flex; justify-content: center; gap: 40px; margin-bottom: 40px; flex-wrap: wrap;">
+                <div class="trust-counter"
+                    style="display: flex; align-items: center; gap: 10px; background: rgba(34, 197, 94, 0.1); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                    <span style="color: #22c55e; font-size: 20px;">✓</span>
+                    <span style="color: #22c55e; font-weight: 700; font-size: 24px;" id="interviewCounter">127</span>
+                    <span style="color: #94a3b8; font-size: 14px;">interviews scheduled this month</span>
+                </div>
+                <div class="trust-counter"
+                    style="display: flex; align-items: center; gap: 10px; background: rgba(59, 130, 246, 0.1); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <span style="color: #3b82f6; font-size: 20px;">✓</span>
+                    <span style="color: #3b82f6; font-weight: 700; font-size: 24px;" id="selectionCounter">38</span>
+                    <span style="color: #94a3b8; font-size: 14px;">candidates selected</span>
+                </div>
+            </div>
+
+            <div class="testimonials-grid" id="testimonialsGrid">
+                <!-- Testimonials loaded dynamically from API -->
+                <p class="loading-text" style="text-align: center; color: #64748b; grid-column: 1 / -1;">Loading
+                    testimonials...</p>
+            </div>
+
+            <div class="text-center mt-8">
+                <button class="btn btn-outline btn-lg">View All Interviews →</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial Proof Modal -->
+    <div class="modal-overlay" id="testimonialModalOverlay" onclick="closeTestimonialModal()"></div>
+    <div class="modal testimonial-modal" id="testimonialModal">
+        <button class="modal-close" onclick="closeTestimonialModal()">×</button>
+        <div class="modal-content" id="testimonialModalContent">
+            <div class="testimonial-proof-image">
+                <img id="proofImage" src="" alt="Interview Proof" loading="lazy">
+            </div>
+            <div class="testimonial-quote">
+                <p id="testimonialQuote"></p>
+            </div>
+            <div class="testimonial-meta">
+                <span id="testimonialName"></span>
+                <span id="testimonialRole"></span>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

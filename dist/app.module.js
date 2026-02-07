@@ -34,6 +34,8 @@ const _rapidfiremodule = require("./modules/rapid-fire/rapid-fire.module");
 const _cloudinarymodule = require("./modules/cloudinary/cloudinary.module");
 const _resumeparsermodule = require("./modules/resume-parser/resume-parser.module");
 const _interviewmodule = require("./modules/interview/interview.module");
+const _appcontroller = require("./app.controller");
+const _appservice = require("./app.service");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -107,7 +109,11 @@ AppModule = _ts_decorate([
             // Interview System
             _interviewmodule.InterviewModule
         ],
+        controllers: [
+            _appcontroller.AppController
+        ],
         providers: [
+            _appservice.AppService,
             // Global Exception Filter
             {
                 provide: _core.APP_FILTER,

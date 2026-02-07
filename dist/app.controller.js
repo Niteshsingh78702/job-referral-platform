@@ -20,6 +20,11 @@ function _ts_decorate(decorators, target, key, desc) {
 function _ts_metadata(k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 }
+function _ts_param(paramIndex, decorator) {
+    return function(target, key) {
+        decorator(target, key, paramIndex);
+    };
+}
 let AppController = class AppController {
     getHello() {
         return this.appService.getHello();
@@ -30,6 +35,12 @@ let AppController = class AppController {
             timestamp: new Date().toISOString(),
             uptime: process.uptime()
         };
+    }
+    async getPublicTestimonials(limit) {
+        return this.appService.getPublicTestimonials(limit || 6);
+    }
+    async getPublicSettings() {
+        return this.appService.getPublicSettings();
     }
     constructor(appService){
         this.appService = appService;
@@ -48,6 +59,23 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", void 0)
 ], AppController.prototype, "getHealth", null);
+_ts_decorate([
+    (0, _decorators.Public)(),
+    (0, _common.Get)('testimonials'),
+    _ts_param(0, (0, _common.Query)('limit')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        Number
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AppController.prototype, "getPublicTestimonials", null);
+_ts_decorate([
+    (0, _decorators.Public)(),
+    (0, _common.Get)('settings/public'),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], AppController.prototype, "getPublicSettings", null);
 AppController = _ts_decorate([
     (0, _common.Controller)(),
     _ts_metadata("design:type", Function),

@@ -30,6 +30,8 @@ import { RapidFireModule } from './modules/rapid-fire/rapid-fire.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { ResumeParserModule } from './modules/resume-parser/resume-parser.module';
 import { InterviewModule } from './modules/interview/interview.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -95,7 +97,11 @@ import { InterviewModule } from './modules/interview/interview.module';
     InterviewModule,
   ],
 
+  controllers: [AppController],
+
   providers: [
+    AppService,
+
     // Global Exception Filter
     {
       provide: APP_FILTER,
@@ -127,4 +133,4 @@ import { InterviewModule } from './modules/interview/interview.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

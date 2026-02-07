@@ -1,10 +1,10 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Public } from './common/decorators';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   @Get()
   getHello(): string {
@@ -20,4 +20,17 @@ export class AppController {
       uptime: process.uptime(),
     };
   }
+
+  @Public()
+  @Get('testimonials')
+  async getPublicTestimonials(@Query('limit') limit?: number) {
+    return this.appService.getPublicTestimonials(limit || 6);
+  }
+
+  @Public()
+  @Get('settings/public')
+  async getPublicSettings() {
+    return this.appService.getPublicSettings();
+  }
 }
+

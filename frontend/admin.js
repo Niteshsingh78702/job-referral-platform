@@ -29,6 +29,8 @@ const adminState = {
     currentSkillBucketId: null,
     currentRoleTestId: null,
     currentInterviewId: null,
+    testimonials: [],
+    currentTestimonialId: null,
 };
 
 // ==========================================
@@ -257,6 +259,7 @@ function navigateToPage(page) {
         'refunds': 'refundsPage',
         'analytics': 'analyticsPage',
         'audit': 'auditPage',
+        'testimonials': 'testimonialsPage',
     };
 
     const pageTitles = {
@@ -273,6 +276,7 @@ function navigateToPage(page) {
         'refunds': 'Refunds',
         'analytics': 'Analytics',
         'audit': 'Audit Logs',
+        'testimonials': 'Testimonials',
     };
 
     const pageId = pageMap[page];
@@ -327,6 +331,9 @@ async function loadPageData(page) {
             break;
         case 'audit':
             await loadAuditLogs();
+            break;
+        case 'testimonials':
+            await loadTestimonials();
             break;
     }
 }
@@ -3252,5 +3259,323 @@ async function deleteByRole() {
     } catch (error) {
         console.error('Error deleting by role:', error);
         showToast('Failed to delete questions', 'error');
+    }
+}
+
+// ==========================================
+// TESTIMONIALS MANAGEMENT
+// ==========================================
+
+async function loadTestimonials(page = 1) {
+    // Also load trust counters when loading testimonials page
+    loadTrustCounters();
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/testimonials?page=${page}&limit=20`, {
+            headers: { 'Authorization': `Bearer ${adminState.token}` },
+        });
+
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            adminState.testimonials = data.data.data || data.data;
+            renderTestimonialsTable();
+            if (data.data.meta) {
+                renderPagination('testimonialsPagination', data.data.meta, (p) => loadTestimonials(p));
+            }
+        } else {
+            console.error('Failed to load testimonials:', data);
+            showToast('Failed to load testimonials', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading testimonials:', error);
+        showToast('Failed to load testimonials', 'error');
+    }
+}
+
+function renderTestimonialsTable() {
+    const container = document.getElementById('testimonialsTableContainer');
+
+    if (!adminState.testimonials || adminState.testimonials.length === 0) {
+        container.innerHTML = '<p class="loading">No testimonials found. Add your first testimonial!</p>';
+        return;
+    }
+
+    const table = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Candidate</th>
+                    <th>Role</th>
+                    <th>Company</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${adminState.testimonials.map(t => `
+                    <tr>
+                        <td>${t.displayOrder}</td>
+                        <td>${t.candidateName}</td>
+                        <td>${t.role}</td>
+                        <td>${t.company}</td>
+                        <td>${'⭐'.repeat(t.rating)}</td>
+                        <td>
+                            <span class="badge badge-${t.isActive ? 'success' : 'warning'}">
+                                ${t.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td>${formatDate(t.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="editTestimonial('${t.id}')">Edit</button>
+                            <button class="btn btn-sm btn-${t.isActive ? 'warning' : 'success'}" onclick="toggleTestimonial('${t.id}')">
+                                ${t.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteTestimonial('${t.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = table;
+}
+
+function showCreateTestimonialModal() {
+    adminState.currentTestimonialId = null;
+    document.getElementById('testimonialModalTitle').textContent = 'Add Testimonial';
+    document.getElementById('testimonialForm').reset();
+    document.getElementById('testimonialId').value = '';
+    enableModalRequirements('testimonialModal');
+    document.getElementById('testimonialModal').classList.add('active');
+}
+
+function closeTestimonialModal() {
+    disableModalRequirements('testimonialModal');
+    document.getElementById('testimonialModal').classList.remove('active');
+}
+
+function editTestimonial(id) {
+    const testimonial = adminState.testimonials.find(t => t.id === id);
+    if (!testimonial) return;
+
+    adminState.currentTestimonialId = id;
+    document.getElementById('testimonialModalTitle').textContent = 'Edit Testimonial';
+    document.getElementById('testimonialId').value = id;
+    document.getElementById('testimonialName').value = testimonial.candidateName;
+    document.getElementById('testimonialRole').value = testimonial.role;
+    document.getElementById('testimonialCompany').value = testimonial.company;
+    document.getElementById('testimonialDate').value = testimonial.interviewDate?.split('T')[0] || '';
+    document.getElementById('testimonialQuoteInput').value = testimonial.quote;
+    document.getElementById('testimonialImageUrl').value = testimonial.imageUrl || '';
+    document.getElementById('testimonialRating').value = testimonial.rating || 5;
+    document.getElementById('testimonialOrder').value = testimonial.displayOrder || 0;
+
+    enableModalRequirements('testimonialModal');
+    document.getElementById('testimonialModal').classList.add('active');
+}
+
+document.getElementById('testimonialForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!adminState.token) {
+        showToast('Session expired. Please login again.', 'error');
+        logout();
+        return;
+    }
+
+    const testimonialData = {
+        candidateName: document.getElementById('testimonialName').value,
+        role: document.getElementById('testimonialRole').value,
+        company: document.getElementById('testimonialCompany').value,
+        interviewDate: document.getElementById('testimonialDate').value,
+        quote: document.getElementById('testimonialQuoteInput').value,
+        imageUrl: document.getElementById('testimonialImageUrl').value || null,
+        rating: parseInt(document.getElementById('testimonialRating').value) || 5,
+        displayOrder: parseInt(document.getElementById('testimonialOrder').value) || 0,
+    };
+
+    try {
+        let url = `${API_BASE_URL}/admin/testimonials`;
+        let method = 'POST';
+
+        if (adminState.currentTestimonialId) {
+            url = `${API_BASE_URL}/admin/testimonials/${adminState.currentTestimonialId}`;
+            method = 'PATCH';
+        }
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminState.token}`,
+            },
+            body: JSON.stringify(testimonialData),
+        });
+
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message || 'Testimonial saved successfully!', 'success');
+            closeTestimonialModal();
+            loadTestimonials();
+        } else {
+            showToast(data.message || 'Operation failed', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving testimonial:', error);
+        showToast('Failed to save testimonial. Please try again.', 'error');
+    }
+});
+
+async function toggleTestimonial(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/testimonials/${id}/toggle`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${adminState.token}` },
+        });
+
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message || 'Status toggled', 'success');
+            loadTestimonials();
+        } else {
+            showToast(data.message || 'Failed to toggle status', 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling testimonial:', error);
+        showToast('Failed to toggle testimonial status', 'error');
+    }
+}
+
+async function deleteTestimonial(id) {
+    const confirmed = await showConfirmModal({
+        icon: '🗑️',
+        title: 'Delete Testimonial',
+        message: 'This action cannot be undone. Are you sure?',
+        confirmText: 'Yes, Delete',
+        confirmClass: 'btn-danger'
+    });
+
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/testimonials/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${adminState.token}` },
+        });
+
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Testimonial deleted successfully', 'success');
+            loadTestimonials();
+        } else {
+            showToast(data.message || 'Failed to delete testimonial', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting testimonial:', error);
+        showToast('Failed to delete testimonial', 'error');
+    }
+}
+
+// ==========================================
+// TRUST COUNTERS (SITE SETTINGS)
+// ==========================================
+
+async function loadTrustCounters() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/settings`, {
+            headers: { 'Authorization': `Bearer ${adminState.token}` },
+        });
+
+        if (response.status === 401) return;
+
+        const result = await response.json();
+        const data = result.data?.data || result.data || [];
+
+        data.forEach(setting => {
+            if (setting.key === 'interviews_scheduled') {
+                document.getElementById('settingInterviewsScheduled').value = setting.value;
+            }
+            if (setting.key === 'candidates_selected') {
+                document.getElementById('settingCandidatesSelected').value = setting.value;
+            }
+        });
+    } catch (error) {
+        console.error('Error loading trust counters:', error);
+    }
+}
+
+async function saveTrustCounters() {
+    const interviewsScheduled = document.getElementById('settingInterviewsScheduled').value;
+    const candidatesSelected = document.getElementById('settingCandidatesSelected').value;
+
+    try {
+        // Save interviews scheduled
+        const response1 = await fetch(`${API_BASE_URL}/admin/settings/interviews_scheduled`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminState.token}`,
+            },
+            body: JSON.stringify({ value: String(interviewsScheduled), label: 'Interviews Scheduled This Month' }),
+        });
+
+        if (!response1.ok) {
+            const err1 = await response1.json();
+            console.error('Failed to save interviews_scheduled:', err1);
+            throw new Error('Failed to save interviews scheduled');
+        }
+
+        // Save candidates selected
+        const response2 = await fetch(`${API_BASE_URL}/admin/settings/candidates_selected`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminState.token}`,
+            },
+            body: JSON.stringify({ value: String(candidatesSelected), label: 'Candidates Selected' }),
+        });
+
+        if (!response2.ok) {
+            const err2 = await response2.json();
+            console.error('Failed to save candidates_selected:', err2);
+            throw new Error('Failed to save candidates selected');
+        }
+
+        showToast('Trust counters saved successfully!', 'success');
+    } catch (error) {
+        console.error('Error saving trust counters:', error);
+        showToast('Failed to save trust counters: ' + error.message, 'error');
     }
 }

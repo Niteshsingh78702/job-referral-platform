@@ -912,3 +912,33 @@ model CandidateTestAttempt {
   @@index([status])
   @@index([expiresAt])
 }
+
+model Testimonial {
+  id            String   @id @default(uuid())
+  candidateName String
+  role          String
+  company       String
+  interviewDate DateTime
+  quote         String
+  imageUrl      String?
+  rating        Int      @default(5)
+  isActive      Boolean  @default(true)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+// Site settings for admin-managed values like trust counters
+model SiteSettings {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+  label String // Human-readable label for admin UI
+  type  String @default("text") // text, number, boolean, json
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

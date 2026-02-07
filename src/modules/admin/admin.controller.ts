@@ -517,4 +517,83 @@ export class AdminController {
   async getHRFraudMetrics() {
     return this.adminService.getHRFraudMetrics();
   }
+
+  // ===========================================
+  // TESTIMONIAL MANAGEMENT
+  // ===========================================
+
+  @Get('testimonials')
+  async getTestimonials(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.adminService.getAllTestimonials(page, limit);
+  }
+
+  @Post('testimonials')
+  async createTestimonial(
+    @Body()
+    data: {
+      candidateName: string;
+      role: string;
+      company: string;
+      interviewDate: string;
+      quote: string;
+      imageUrl?: string;
+      rating?: number;
+      displayOrder?: number;
+    },
+    @CurrentUser('sub') adminId: string,
+  ) {
+    return this.adminService.createTestimonial(data, adminId);
+  }
+
+  @Patch('testimonials/:id')
+  async updateTestimonial(
+    @Param('id') id: string,
+    @Body() data: any,
+    @CurrentUser('sub') adminId: string,
+  ) {
+    return this.adminService.updateTestimonial(id, data, adminId);
+  }
+
+  @Delete('testimonials/:id')
+  async deleteTestimonial(
+    @Param('id') id: string,
+    @CurrentUser('sub') adminId: string,
+  ) {
+    return this.adminService.deleteTestimonial(id, adminId);
+  }
+
+  @Patch('testimonials/:id/toggle')
+  async toggleTestimonialStatus(
+    @Param('id') id: string,
+    @CurrentUser('sub') adminId: string,
+  ) {
+    return this.adminService.toggleTestimonialStatus(id, adminId);
+  }
+
+  // ==========================================
+  // SITE SETTINGS
+  // ==========================================
+
+  @Get('settings')
+  async getSettings() {
+    return this.adminService.getAllSettings();
+  }
+
+  @Patch('settings/:key')
+  async updateSetting(
+    @Param('key') key: string,
+    @Body() data: { value: string; label?: string },
+    @CurrentUser('sub') adminId: string,
+  ) {
+    return this.adminService.updateSetting(key, data.value, data.label, adminId);
+  }
+
+  @Post('settings/initialize')
+  async initializeSettings() {
+    return this.adminService.initializeDefaultSettings();
+  }
 }
+

@@ -562,6 +562,9 @@
                         Analytics</a></li>
                 <li><a href="#audit" class="nav-link" data-page="audit"><span class="sidebar-icon">📝</span> Audit
                         Logs</a></li>
+                <li><a href="#testimonials" class="nav-link" data-page="testimonials"><span
+                            class="sidebar-icon">💬</span>
+                        Testimonials</a></li>
             </ul>
         </aside>
 
@@ -942,7 +945,99 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Testimonials Page -->
+            <div id="testimonialsPage" class="page-content hidden">
+                <!-- Trust Counters Settings -->
+                <div class="data-section" style="margin-bottom: 24px;">
+                    <div class="section-header">
+                        <h3>Trust Counters (Homepage)</h3>
+                        <button class="btn btn-primary" onclick="saveTrustCounters()">Save Counters</button>
+                    </div>
+                    <p style="color: var(--text-dim); margin-bottom: 20px;">
+                        These numbers appear on the homepage to build trust with visitors.
+                    </p>
+                    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Interviews Scheduled This Month</label>
+                            <input type="number" id="settingInterviewsScheduled" value="127" min="0"
+                                style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Candidates Selected</label>
+                            <input type="number" id="settingCandidatesSelected" value="38" min="0" style="width: 100%;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonials Management -->
+                <div class="data-section">
+                    <div class="section-header">
+                        <h3>Manage Testimonials</h3>
+                        <button class="btn btn-primary" onclick="showCreateTestimonialModal()">+ Add
+                            Testimonial</button>
+                    </div>
+                    <p style="color: var(--text-dim); margin-bottom: 20px;">
+                        Add real testimonials from candidates who got interviewed through the platform.
+                    </p>
+                    <div id="testimonialsTableContainer"></div>
+                    <div class="pagination" id="testimonialsPagination"></div>
+                </div>
+            </div>
         </main>
+    </div>
+
+    <!-- Testimonial Create/Edit Modal -->
+    <div id="testimonialModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="testimonialModalTitle">Add Testimonial</h3>
+                <button class="close-modal" onclick="closeTestimonialModal()">×</button>
+            </div>
+            <form id="testimonialForm">
+                <input type="hidden" id="testimonialId">
+                <div class="form-group">
+                    <label>Candidate Name *</label>
+                    <input type="text" id="testimonialName" placeholder="e.g., Rahul S." required>
+                </div>
+                <div class="form-group">
+                    <label>Role *</label>
+                    <input type="text" id="testimonialRole" placeholder="e.g., Java Developer Candidate" required>
+                </div>
+                <div class="form-group">
+                    <label>Company *</label>
+                    <input type="text" id="testimonialCompany" placeholder="e.g., ABC Tech" required>
+                </div>
+                <div class="form-group">
+                    <label>Interview Date *</label>
+                    <input type="date" id="testimonialDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Testimonial Quote *</label>
+                    <textarea id="testimonialQuoteInput" rows="3" placeholder="Their experience with the platform..."
+                        style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text);"
+                        required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Image URL (optional)</label>
+                    <input type="text" id="testimonialImageUrl" placeholder="https://example.com/image.webp">
+                </div>
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Rating (1-5)</label>
+                        <input type="number" id="testimonialRating" min="1" max="5" value="5">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Display Order</label>
+                        <input type="number" id="testimonialOrder" min="0" value="0">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="button" class="btn" onclick="closeTestimonialModal()" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Testimonial</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Job Create/Edit Modal -->

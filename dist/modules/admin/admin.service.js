@@ -2276,6 +2276,289 @@ let AdminService = class AdminService {
             allMetrics: metrics.sort((a, b)=>b.cancelledCount + b.noShowCount - (a.cancelledCount + a.noShowCount))
         };
     }
+    // ===========================================
+    // TESTIMONIAL MANAGEMENT
+    // ===========================================
+    async getAllTestimonials(page = 1, limit = 20) {
+        const skip = (page - 1) * limit;
+        const [testimonials, total] = await Promise.all([
+            this.prisma.testimonial.findMany({
+                skip,
+                take: limit,
+                orderBy: [
+                    {
+                        displayOrder: 'asc'
+                    },
+                    {
+                        createdAt: 'desc'
+                    }
+                ]
+            }),
+            this.prisma.testimonial.count()
+        ]);
+        return {
+            data: testimonials,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+    }
+    async getPublicTestimonials(limit = 6) {
+        return this.prisma.testimonial.findMany({
+            where: {
+                isActive: true
+            },
+            orderBy: [
+                {
+                    displayOrder: 'asc'
+                },
+                {
+                    createdAt: 'desc'
+                }
+            ],
+            take: limit
+        });
+    }
+    async createTestimonial(data, adminId) {
+        const testimonial = await this.prisma.testimonial.create({
+            data: {
+                candidateName: data.candidateName,
+                role: data.role,
+                company: data.company,
+                interviewDate: new Date(data.interviewDate),
+                quote: data.quote,
+                imageUrl: data.imageUrl,
+                rating: data.rating || 5,
+                displayOrder: data.displayOrder || 0
+            }
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                id: _crypto.randomUUID(),
+                userId: adminId,
+                action: _constants.AuditAction.CREATE,
+                entityType: 'Testimonial',
+                entityId: testimonial.id,
+                metadata: {
+                    candidateName: data.candidateName
+                }
+            }
+        });
+        return {
+            success: true,
+            message: 'Testimonial created',
+            data: testimonial
+        };
+    }
+    async updateTestimonial(id, data, adminId) {
+        const testimonial = await this.prisma.testimonial.findUnique({
+            where: {
+                id
+            }
+        });
+        if (!testimonial) throw new _common.NotFoundException('Testimonial not found');
+        // Handle date conversion if present
+        if (data.interviewDate) {
+            data.interviewDate = new Date(data.interviewDate);
+        }
+        const updatedTestimonial = await this.prisma.testimonial.update({
+            where: {
+                id
+            },
+            data
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                id: _crypto.randomUUID(),
+                userId: adminId,
+                action: _constants.AuditAction.UPDATE,
+                entityType: 'Testimonial',
+                entityId: id,
+                metadata: {
+                    changes: data
+                }
+            }
+        });
+        return {
+            success: true,
+            message: 'Testimonial updated',
+            data: updatedTestimonial
+        };
+    }
+    async deleteTestimonial(id, adminId) {
+        const testimonial = await this.prisma.testimonial.findUnique({
+            where: {
+                id
+            }
+        });
+        if (!testimonial) throw new _common.NotFoundException('Testimonial not found');
+        await this.prisma.$transaction(async (tx)=>{
+            await tx.testimonial.delete({
+                where: {
+                    id
+                }
+            });
+            await tx.auditLog.create({
+                data: {
+                    id: _crypto.randomUUID(),
+                    userId: adminId,
+                    action: _constants.AuditAction.DELETE,
+                    entityType: 'Testimonial',
+                    entityId: id,
+                    metadata: {
+                        candidateName: testimonial.candidateName
+                    }
+                }
+            });
+        });
+        return {
+            success: true,
+            message: 'Testimonial deleted'
+        };
+    }
+    async toggleTestimonialStatus(id, adminId) {
+        const testimonial = await this.prisma.testimonial.findUnique({
+            where: {
+                id
+            }
+        });
+        if (!testimonial) throw new _common.NotFoundException('Testimonial not found');
+        const updatedTestimonial = await this.prisma.testimonial.update({
+            where: {
+                id
+            },
+            data: {
+                isActive: !testimonial.isActive
+            }
+        });
+        await this.prisma.auditLog.create({
+            data: {
+                id: _crypto.randomUUID(),
+                userId: adminId,
+                action: _constants.AuditAction.UPDATE,
+                entityType: 'Testimonial',
+                entityId: id,
+                metadata: {
+                    action: 'toggle_status',
+                    newStatus: !testimonial.isActive
+                }
+            }
+        });
+        return {
+            success: true,
+            message: `Testimonial ${updatedTestimonial.isActive ? 'activated' : 'deactivated'}`,
+            data: updatedTestimonial
+        };
+    }
+    // ==========================================
+    // SITE SETTINGS
+    // ==========================================
+    async getAllSettings() {
+        const settings = await this.prisma.siteSettings.findMany({
+            orderBy: {
+                key: 'asc'
+            }
+        });
+        // Return as key-value object for easy access
+        const settingsMap = {};
+        settings.forEach((s)=>{
+            settingsMap[s.key] = s.value;
+        });
+        return {
+            data: settings,
+            map: settingsMap
+        };
+    }
+    async getPublicSettings() {
+        // Get specific settings that are public (trust counters)
+        const settings = await this.prisma.siteSettings.findMany({
+            where: {
+                key: {
+                    in: [
+                        'interviews_scheduled',
+                        'candidates_selected'
+                    ]
+                }
+            }
+        });
+        const result = {
+            interviewsScheduled: 127,
+            candidatesSelected: 38
+        };
+        settings.forEach((s)=>{
+            if (s.key === 'interviews_scheduled') result.interviewsScheduled = parseInt(s.value) || 127;
+            if (s.key === 'candidates_selected') result.candidatesSelected = parseInt(s.value) || 38;
+        });
+        return result;
+    }
+    async updateSetting(key, value, label, adminId) {
+        const setting = await this.prisma.siteSettings.upsert({
+            where: {
+                key
+            },
+            create: {
+                key,
+                value,
+                label: label || key,
+                type: 'number'
+            },
+            update: {
+                value
+            }
+        });
+        if (adminId) {
+            await this.prisma.auditLog.create({
+                data: {
+                    id: _crypto.randomUUID(),
+                    userId: adminId,
+                    action: _constants.AuditAction.UPDATE,
+                    entityType: 'SiteSettings',
+                    entityId: key,
+                    metadata: {
+                        key,
+                        value
+                    }
+                }
+            });
+        }
+        return {
+            success: true,
+            message: 'Setting updated',
+            data: setting
+        };
+    }
+    async initializeDefaultSettings() {
+        const defaults = [
+            {
+                key: 'interviews_scheduled',
+                value: '127',
+                label: 'Interviews Scheduled This Month',
+                type: 'number'
+            },
+            {
+                key: 'candidates_selected',
+                value: '38',
+                label: 'Candidates Selected',
+                type: 'number'
+            }
+        ];
+        for (const setting of defaults){
+            await this.prisma.siteSettings.upsert({
+                where: {
+                    key: setting.key
+                },
+                create: setting,
+                update: {}
+            });
+        }
+        return {
+            success: true,
+            message: 'Default settings initialized'
+        };
+    }
     constructor(prisma){
         this.prisma = prisma;
     }

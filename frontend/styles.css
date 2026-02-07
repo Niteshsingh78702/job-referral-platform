@@ -5001,3 +5001,214 @@ main,
         font-size: 12px;
     }
 }
+
+/* =============================================
+   Testimonials Section
+   ============================================= */
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.testimonial-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.testimonial-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
+}
+
+.blurred-preview {
+    width: 100%;
+    height: 100%;
+    filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.blurred-preview::after {
+    content: '📋';
+    font-size: 48px;
+    filter: blur(0);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.3;
+}
+
+.verified-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.testimonial-content {
+    padding: 20px;
+    flex: 1;
+    background: #ffffff;
+}
+
+.candidate-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.candidate-role {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.interview-company {
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.interview-company strong {
+    color: #1e293b;
+}
+
+.interview-date {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+}
+
+.rating-stars {
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+.testimonial-card .view-proof-btn {
+    margin: 0 20px 20px 20px;
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    transition: var(--transition);
+}
+
+.testimonial-card .view-proof-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Testimonial Modal */
+.testimonial-modal {
+    max-width: 600px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.testimonial-proof-image {
+    width: 100%;
+    max-height: 400px;
+    overflow: hidden;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.testimonial-proof-image img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.testimonial-quote {
+    padding: 24px;
+    background: #ffffff;
+}
+
+.testimonial-quote p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #334155;
+    font-style: italic;
+    position: relative;
+    padding-left: 24px;
+}
+
+.testimonial-quote p::before {
+    content: '"';
+    position: absolute;
+    left: 0;
+    top: -8px;
+    font-size: 48px;
+    color: var(--primary);
+    font-family: Georgia, serif;
+    line-height: 1;
+}
+
+.testimonial-meta {
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.testimonial-meta #testimonialName {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 15px;
+}
+
+.testimonial-meta #testimonialRole {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* Responsive Testimonials */
+@media (max-width: 1024px) {
+    .testimonials-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .testimonial-modal {
+        max-width: 95%;
+        margin: 20px;
+    }
+
+    .testimonial-proof-image {
+        max-height: 300px;
+    }
+}

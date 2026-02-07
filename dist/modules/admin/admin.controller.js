@@ -201,6 +201,36 @@ let AdminController = class AdminController {
     async getHRFraudMetrics() {
         return this.adminService.getHRFraudMetrics();
     }
+    // ===========================================
+    // TESTIMONIAL MANAGEMENT
+    // ===========================================
+    async getTestimonials(page, limit) {
+        return this.adminService.getAllTestimonials(page, limit);
+    }
+    async createTestimonial(data, adminId) {
+        return this.adminService.createTestimonial(data, adminId);
+    }
+    async updateTestimonial(id, data, adminId) {
+        return this.adminService.updateTestimonial(id, data, adminId);
+    }
+    async deleteTestimonial(id, adminId) {
+        return this.adminService.deleteTestimonial(id, adminId);
+    }
+    async toggleTestimonialStatus(id, adminId) {
+        return this.adminService.toggleTestimonialStatus(id, adminId);
+    }
+    // ==========================================
+    // SITE SETTINGS
+    // ==========================================
+    async getSettings() {
+        return this.adminService.getAllSettings();
+    }
+    async updateSetting(key, data, adminId) {
+        return this.adminService.updateSetting(key, data.value, data.label, adminId);
+    }
+    async initializeSettings() {
+        return this.adminService.initializeDefaultSettings();
+    }
     constructor(adminService){
         this.adminService = adminService;
     }
@@ -744,6 +774,88 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "getHRFraudMetrics", null);
+_ts_decorate([
+    (0, _common.Get)('testimonials'),
+    _ts_param(0, (0, _common.Query)('page')),
+    _ts_param(1, (0, _common.Query)('limit')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        Number,
+        Number
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "getTestimonials", null);
+_ts_decorate([
+    (0, _common.Post)('testimonials'),
+    _ts_param(0, (0, _common.Body)()),
+    _ts_param(1, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        Object,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "createTestimonial", null);
+_ts_decorate([
+    (0, _common.Patch)('testimonials/:id'),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_param(1, (0, _common.Body)()),
+    _ts_param(2, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        Object,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "updateTestimonial", null);
+_ts_decorate([
+    (0, _common.Delete)('testimonials/:id'),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_param(1, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "deleteTestimonial", null);
+_ts_decorate([
+    (0, _common.Patch)('testimonials/:id/toggle'),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_param(1, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "toggleTestimonialStatus", null);
+_ts_decorate([
+    (0, _common.Get)('settings'),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "getSettings", null);
+_ts_decorate([
+    (0, _common.Patch)('settings/:key'),
+    _ts_param(0, (0, _common.Param)('key')),
+    _ts_param(1, (0, _common.Body)()),
+    _ts_param(2, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        Object,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "updateSetting", null);
+_ts_decorate([
+    (0, _common.Post)('settings/initialize'),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "initializeSettings", null);
 AdminController = _ts_decorate([
     (0, _common.Controller)('admin'),
     (0, _decorators.Roles)(_constants.UserRole.ADMIN),

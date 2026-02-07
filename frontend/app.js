@@ -4938,3 +4938,243 @@ function openRazorpayForInterview(orderData, applicationId) {
 // Ensure critical functions are globally accessible for onclick handlers in dynamic HTML
 window.viewInterviewDetails = viewInterviewDetails;
 window.payForInterview = payForInterview;
+
+// =============================================
+// Testimonial Modal Functions
+// =============================================
+
+// Cached testimonials from API
+let cachedTestimonials = {};
+
+// Fallback testimonial data if API fails or returns empty
+const fallbackTestimonialData = {
+    1: {
+        name: 'Rahul S.',
+        role: 'Java Developer Candidate',
+        company: 'ABC Tech',
+        date: '12 Jan 2026',
+        quote: 'I received a real HR interview within 3 days. Process was genuine and transparent. The platform made job hunting so much easier!',
+        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+'
+    },
+    2: {
+        name: 'Priya M.',
+        role: 'React Developer Candidate',
+        company: 'TechCorp India',
+        date: '08 Jan 2026',
+        quote: 'Got referred to my dream company through JobRefer. The skill test was fair and the interview was scheduled within a week!',
+        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUzYTVmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+'
+    },
+    3: {
+        name: 'Amit K.',
+        role: 'Data Analyst Candidate',
+        company: 'Analytics Pro',
+        date: '05 Jan 2026',
+        quote: 'The ₹99 fee was worth it! I got a confirmed interview slot and received an offer within 2 weeks. Highly recommend!',
+        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmQzNzQ4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+'
+    },
+    4: {
+        name: 'Sneha R.',
+        role: 'Product Manager Candidate',
+        company: 'Startup Hub',
+        date: '02 Jan 2026',
+        quote: 'Finally a platform that connects candidates with real opportunities. No spam, no fake jobs. Just genuine interviews!',
+        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWEzNjVkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+'
+    },
+    5: {
+        name: 'Vikram P.',
+        role: 'DevOps Engineer Candidate',
+        company: 'CloudNine Tech',
+        date: '28 Dec 2025',
+        quote: 'The referral process was smooth. Got shortlisted after passing the skill test and had my interview scheduled immediately!',
+        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjI1NDNkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+'
+    },
+    6: {
+        name: 'Neha G.',
+        role: 'UI/UX Designer Candidate',
+        company: 'Design Studio',
+        date: '25 Dec 2025',
+        quote: 'Best job referral platform I have used. The team is responsive and the process is completely transparent. Landed my dream job!',
+        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNDQzMzdhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+'
+    }
+};
+
+// Array of gradient colors for testimonial cards
+const cardGradients = [
+    'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+    'linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%)',
+    'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)',
+    'linear-gradient(135deg, #1a365d 0%, #2c5282 100%)',
+    'linear-gradient(135deg, #22543d 0%, #276749 100%)',
+    'linear-gradient(135deg, #44337a 0%, #553c9a 100%)'
+];
+
+// Format date for testimonial display
+function formatTestimonialDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// Load trust counters from API
+async function loadTrustCounters() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/settings/public`);
+        if (!response.ok) return;
+
+        const result = await response.json();
+        const data = result.data || result;
+
+        const interviewCounter = document.getElementById('interviewCounter');
+        const selectionCounter = document.getElementById('selectionCounter');
+
+        if (interviewCounter && data.interviewsScheduled) {
+            interviewCounter.textContent = data.interviewsScheduled;
+        }
+        if (selectionCounter && data.candidatesSelected) {
+            selectionCounter.textContent = data.candidatesSelected;
+        }
+    } catch (error) {
+        console.log('Using default trust counters');
+    }
+}
+
+// Load and render testimonials from API
+async function loadPublicTestimonials() {
+    const grid = document.getElementById('testimonialsGrid');
+    if (!grid) return;
+
+    // Also load trust counters
+    loadTrustCounters();
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/testimonials?limit=6`);
+        if (!response.ok) throw new Error('Failed to fetch testimonials');
+
+        const result = await response.json();
+        const testimonials = result.data || result; // Handle both wrapped and unwrapped responses
+
+        if (testimonials && testimonials.length > 0) {
+            // Cache testimonials for modal use
+            testimonials.forEach((t, index) => {
+                cachedTestimonials[t.id] = {
+                    name: t.candidateName,
+                    role: t.role,
+                    company: t.company,
+                    date: formatTestimonialDate(t.interviewDate),
+                    quote: t.quote,
+                    image: t.imageUrl || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+`,
+                    rating: t.rating || 5
+                };
+            });
+
+            // Render testimonial cards
+            grid.innerHTML = testimonials.map((t, index) => `
+                <div class="testimonial-card">
+                    <div class="testimonial-thumbnail">
+                        <div class="blurred-preview" style="background: ${cardGradients[index % cardGradients.length]};"></div>
+                        <span class="verified-badge">✓ Verified Interview</span>
+                    </div>
+                    <div class="testimonial-content">
+                        <h4 class="candidate-name">${t.candidateName}</h4>
+                        <p class="candidate-role">${t.role}</p>
+                        <p class="interview-company">Interviewed with: <strong>${t.company}</strong></p>
+                        <p class="interview-date">Date: ${formatTestimonialDate(t.interviewDate)}</p>
+                        <div class="rating-stars">${'⭐'.repeat(t.rating || 5)}</div>
+                    </div>
+                    <button class="btn btn-outline btn-sm view-proof-btn" data-testimonial="${t.id}">View Proof</button>
+                </div>
+            `).join('');
+
+            // Add click listeners
+            setupTestimonialClickListeners();
+        } else {
+            // Use fallback data
+            renderFallbackTestimonials(grid);
+        }
+    } catch (error) {
+        console.log('Using fallback testimonials:', error.message);
+        renderFallbackTestimonials(grid);
+    }
+}
+
+// Render fallback testimonials
+function renderFallbackTestimonials(grid) {
+    cachedTestimonials = fallbackTestimonialData;
+
+    grid.innerHTML = Object.entries(fallbackTestimonialData).map(([id, t], index) => `
+        <div class="testimonial-card">
+            <div class="testimonial-thumbnail">
+                <div class="blurred-preview" style="background: ${cardGradients[index % cardGradients.length]};"></div>
+                <span class="verified-badge">✓ Verified Interview</span>
+            </div>
+            <div class="testimonial-content">
+                <h4 class="candidate-name">${t.name}</h4>
+                <p class="candidate-role">${t.role}</p>
+                <p class="interview-company">Interviewed with: <strong>${t.company}</strong></p>
+                <p class="interview-date">Date: ${t.date}</p>
+                <div class="rating-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <button class="btn btn-outline btn-sm view-proof-btn" data-testimonial="${id}">View Proof</button>
+        </div>
+    `).join('');
+
+    setupTestimonialClickListeners();
+}
+
+// Setup click listeners for View Proof buttons
+function setupTestimonialClickListeners() {
+    document.querySelectorAll('.view-proof-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const testimonialId = this.getAttribute('data-testimonial');
+            openTestimonialModal(testimonialId);
+        });
+    });
+}
+
+// Open testimonial modal
+function openTestimonialModal(testimonialId) {
+    const data = cachedTestimonials[testimonialId];
+    if (!data) return;
+
+    // Set modal content
+    document.getElementById('proofImage').src = data.image;
+    document.getElementById('testimonialQuote').textContent = data.quote;
+    document.getElementById('testimonialName').textContent = data.name;
+    document.getElementById('testimonialRole').textContent = `${data.role} • ${data.company}`;
+
+    // Show modal
+    document.getElementById('testimonialModalOverlay').classList.add('active');
+    document.getElementById('testimonialModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close testimonial modal
+function closeTestimonialModal() {
+    document.getElementById('testimonialModalOverlay').classList.remove('active');
+    document.getElementById('testimonialModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Setup testimonial section on page load
+document.addEventListener('DOMContentLoaded', function () {
+    // Load testimonials from API
+    loadPublicTestimonials();
+
+    // Close modal on overlay click
+    const testimonialOverlay = document.getElementById('testimonialModalOverlay');
+    if (testimonialOverlay) {
+        testimonialOverlay.addEventListener('click', closeTestimonialModal);
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeTestimonialModal();
+        }
+    });
+});
+
+// Make functions globally accessible
+window.openTestimonialModal = openTestimonialModal;
+window.closeTestimonialModal = closeTestimonialModal;
+

@@ -9,7 +9,9 @@ Object.defineProperty(exports, "AdminController", {
     }
 });
 const _common = require("@nestjs/common");
+const _platformexpress = require("@nestjs/platform-express");
 const _adminservice = require("./admin.service");
+const _cloudinaryservice = require("../cloudinary/cloudinary.service");
 const _decorators = require("../../common/decorators");
 const _constants = require("../../common/constants");
 function _ts_decorate(decorators, target, key, desc) {
@@ -219,6 +221,38 @@ let AdminController = class AdminController {
     async toggleTestimonialStatus(id, adminId) {
         return this.adminService.toggleTestimonialStatus(id, adminId);
     }
+    async uploadTestimonialImage(file) {
+        if (!file) {
+            throw new _common.BadRequestException('No image file provided');
+        }
+        // Validate file type
+        const allowedMimeTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+            throw new _common.BadRequestException('Invalid file type. Only JPG, PNG, and WEBP images are allowed.');
+        }
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            throw new _common.BadRequestException('File size exceeds 5MB limit.');
+        }
+        try {
+            const result = await this.cloudinaryService.uploadTestimonialImage(file);
+            return {
+                success: true,
+                message: 'Image uploaded successfully',
+                data: {
+                    url: result.url,
+                    publicId: result.publicId
+                }
+            };
+        } catch (error) {
+            throw new _common.BadRequestException('Failed to upload image: ' + error.message);
+        }
+    }
     // ==========================================
     // SITE SETTINGS
     // ==========================================
@@ -231,8 +265,9 @@ let AdminController = class AdminController {
     async initializeSettings() {
         return this.adminService.initializeDefaultSettings();
     }
-    constructor(adminService){
+    constructor(adminService, cloudinaryService){
         this.adminService = adminService;
+        this.cloudinaryService = cloudinaryService;
     }
 };
 _ts_decorate([
@@ -832,6 +867,16 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], AdminController.prototype, "toggleTestimonialStatus", null);
 _ts_decorate([
+    (0, _common.Post)('testimonials/upload-image'),
+    (0, _common.UseInterceptors)((0, _platformexpress.FileInterceptor)('image')),
+    _ts_param(0, (0, _common.UploadedFile)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        typeof Express === "undefined" || typeof Express.Multer === "undefined" || typeof Express.Multer.File === "undefined" ? Object : Express.Multer.File
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], AdminController.prototype, "uploadTestimonialImage", null);
+_ts_decorate([
     (0, _common.Get)('settings'),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", []),
@@ -861,7 +906,8 @@ AdminController = _ts_decorate([
     (0, _decorators.Roles)(_constants.UserRole.ADMIN),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
-        typeof _adminservice.AdminService === "undefined" ? Object : _adminservice.AdminService
+        typeof _adminservice.AdminService === "undefined" ? Object : _adminservice.AdminService,
+        typeof _cloudinaryservice.CloudinaryService === "undefined" ? Object : _cloudinaryservice.CloudinaryService
     ])
 ], AdminController);
 

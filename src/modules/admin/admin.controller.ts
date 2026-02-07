@@ -7,8 +7,13 @@ import {
   Body,
   Param,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminService } from './admin.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { Roles, CurrentUser } from '../../common/decorators';
 import {
   UserRole,
@@ -21,7 +26,10 @@ import {
 @Controller('admin')
 @Roles(UserRole.ADMIN)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) { }
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) { }
 
   // Dashboard
   @Get('dashboard')
@@ -571,6 +579,44 @@ export class AdminController {
     @CurrentUser('sub') adminId: string,
   ) {
     return this.adminService.toggleTestimonialStatus(id, adminId);
+  }
+
+  @Post('testimonials/upload-image')
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadTestimonialImage(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No image file provided');
+    }
+
+    // Validate file type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Invalid file type. Only JPG, PNG, and WEBP images are allowed.',
+      );
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new BadRequestException('File size exceeds 5MB limit.');
+    }
+
+    try {
+      const result = await this.cloudinaryService.uploadTestimonialImage(file);
+      return {
+        success: true,
+        message: 'Image uploaded successfully',
+        data: {
+          url: result.url,
+          publicId: result.publicId,
+        },
+      };
+    } catch (error) {
+      throw new BadRequestException('Failed to upload image: ' + error.message);
+    }
   }
 
   // ==========================================

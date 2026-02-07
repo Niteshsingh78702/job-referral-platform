@@ -3356,6 +3356,8 @@ function showCreateTestimonialModal() {
     document.getElementById('testimonialModalTitle').textContent = 'Add Testimonial';
     document.getElementById('testimonialForm').reset();
     document.getElementById('testimonialId').value = '';
+    // Reset image upload state
+    clearTestimonialImage();
     enableModalRequirements('testimonialModal');
     document.getElementById('testimonialModal').classList.add('active');
 }
@@ -3363,7 +3365,125 @@ function showCreateTestimonialModal() {
 function closeTestimonialModal() {
     disableModalRequirements('testimonialModal');
     document.getElementById('testimonialModal').classList.remove('active');
+    clearTestimonialImage();
 }
+
+// Testimonial Image Upload Functions
+function handleTestimonialImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showToast('Invalid file type. Only JPG, PNG, and WEBP are allowed.', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File size exceeds 5MB limit.', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        document.getElementById('testimonialPreviewImg').src = e.target.result;
+        document.getElementById('testimonialImagePreview').style.display = 'block';
+        document.getElementById('testimonialUploadPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to Cloudinary
+    uploadTestimonialImage(file);
+}
+
+async function uploadTestimonialImage(file) {
+    const statusDiv = document.getElementById('testimonialUploadStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = '<span style="color: var(--info);">⏳ Uploading image...</span>';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/testimonials/upload-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminState.token}`,
+            },
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data?.url) {
+            document.getElementById('testimonialImageUrl').value = data.data.url;
+            statusDiv.innerHTML = '<span style="color: var(--success);">✅ Image uploaded successfully!</span>';
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 2000);
+        } else {
+            throw new Error(data.message || 'Upload failed');
+        }
+    } catch (error) {
+        console.error('Image upload error:', error);
+        statusDiv.innerHTML = `<span style="color: var(--danger);">❌ ${error.message}</span>`;
+        clearTestimonialImage();
+    }
+}
+
+function clearTestimonialImage() {
+    document.getElementById('testimonialImageUrl').value = '';
+    document.getElementById('testimonialImageFile').value = '';
+    document.getElementById('testimonialPreviewImg').src = '';
+    document.getElementById('testimonialImagePreview').style.display = 'none';
+    document.getElementById('testimonialUploadPlaceholder').style.display = 'block';
+    document.getElementById('testimonialUploadStatus').style.display = 'none';
+}
+
+function setupTestimonialImageUpload() {
+    const uploadArea = document.getElementById('testimonialImageUpload');
+    const fileInput = document.getElementById('testimonialImageFile');
+
+    if (uploadArea && fileInput) {
+        // Click to upload
+        uploadArea.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                fileInput.click();
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary)';
+            uploadArea.style.background = 'rgba(99, 102, 241, 0.1)';
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border)';
+            uploadArea.style.background = 'transparent';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border)';
+            uploadArea.style.background = 'transparent';
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = e.dataTransfer.files;
+                handleTestimonialImageSelect({ target: { files: [file] } });
+            }
+        });
+    }
+}
+
+// Initialize image upload when DOM is ready
+document.addEventListener('DOMContentLoaded', setupTestimonialImageUpload);
 
 function editTestimonial(id) {
     const testimonial = adminState.testimonials.find(t => t.id === id);
@@ -3377,9 +3497,18 @@ function editTestimonial(id) {
     document.getElementById('testimonialCompany').value = testimonial.company;
     document.getElementById('testimonialDate').value = testimonial.interviewDate?.split('T')[0] || '';
     document.getElementById('testimonialQuoteInput').value = testimonial.quote;
-    document.getElementById('testimonialImageUrl').value = testimonial.imageUrl || '';
     document.getElementById('testimonialRating').value = testimonial.rating || 5;
     document.getElementById('testimonialOrder').value = testimonial.displayOrder || 0;
+
+    // Handle existing image
+    if (testimonial.imageUrl) {
+        document.getElementById('testimonialImageUrl').value = testimonial.imageUrl;
+        document.getElementById('testimonialPreviewImg').src = testimonial.imageUrl;
+        document.getElementById('testimonialImagePreview').style.display = 'block';
+        document.getElementById('testimonialUploadPlaceholder').style.display = 'none';
+    } else {
+        clearTestimonialImage();
+    }
 
     enableModalRequirements('testimonialModal');
     document.getElementById('testimonialModal').classList.add('active');

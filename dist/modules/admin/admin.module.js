@@ -11,6 +11,7 @@ Object.defineProperty(exports, "AdminModule", {
 const _common = require("@nestjs/common");
 const _admincontroller = require("./admin.controller");
 const _adminservice = require("./admin.service");
+const _cloudinarymodule = require("../cloudinary/cloudinary.module");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -21,6 +22,9 @@ let AdminModule = class AdminModule {
 };
 AdminModule = _ts_decorate([
     (0, _common.Module)({
+        imports: [
+            _cloudinarymodule.CloudinaryModule
+        ],
         controllers: [
             _admincontroller.AdminController
         ],

@@ -45,4 +45,42 @@ export class CloudinaryService {
   async deleteResume(publicId: string): Promise<void> {
     await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
   }
+
+  async uploadTestimonialImage(
+    file: Express.Multer.File,
+  ): Promise<{ url: string; publicId: string }> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'jobrefer/testimonials',
+          resource_type: 'image',
+          public_id: `testimonial_${Date.now()}`,
+          overwrite: true,
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+            { quality: 'auto:good' },
+            { format: 'webp' },
+          ],
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result) return reject(new Error('Upload failed - no result'));
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+          });
+        },
+      );
+
+      // Convert buffer to stream and pipe to Cloudinary
+      const bufferStream = new Readable();
+      bufferStream.push(file.buffer);
+      bufferStream.push(null);
+      bufferStream.pipe(uploadStream);
+    });
+  }
+
+  async deleteImage(publicId: string): Promise<void> {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+  }
 }

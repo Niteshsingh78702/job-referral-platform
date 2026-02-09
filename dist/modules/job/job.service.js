@@ -42,6 +42,7 @@ let JobService = class JobService {
         const job = await this.prisma.$transaction(async (tx)=>{
             const newJob = await tx.job.create({
                 data: {
+                    id: require('crypto').randomUUID(),
                     slug,
                     title: dto.title,
                     description: dto.description,
@@ -61,13 +62,15 @@ let JobService = class JobService {
                     referralFee: dto.referralFee || 499,
                     testId: dto.testId,
                     hrId: hr.id,
-                    status: _constants.JobStatus.PENDING_APPROVAL
+                    status: _constants.JobStatus.PENDING_APPROVAL,
+                    updatedAt: new Date()
                 }
             });
             // Add skills if provided
-            if (dto.JobSkill && dto.jobSkill.length > 0) {
+            if (dto.skills && dto.skills.length > 0) {
                 await tx.jobSkill.createMany({
-                    data: dto.jobSkill.map((skill)=>({
+                    data: dto.skills.map((skill)=>({
+                            id: require('crypto').randomUUID(),
                             jobId: newJob.id,
                             name: skill.name,
                             isRequired: skill.isRequired ?? true
@@ -195,7 +198,7 @@ let JobService = class JobService {
                         id: true,
                         title: true,
                         duration: true,
-                        totalQuestionBank: true
+                        totalQuestions: true
                     }
                 },
                 HR: {
@@ -225,7 +228,7 @@ let JobService = class JobService {
             throw new _common.NotFoundException('Job not found');
         }
         // Check if HR owns this job (skip for admin-created jobs with no HR)
-        if (job.HR && job.hr.userId !== hrId) {
+        if (job.HR && job.HR.userId !== hrId) {
             throw new _common.ForbiddenException('Not authorized to update this job');
         }
         // If job has no HR and user is not the creator, deny access

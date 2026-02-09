@@ -78,7 +78,7 @@ export class ResumeParserService {
       // Parse DOC/DOCX
       else if (
         file.mimetype ===
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
         file.mimetype === 'application/msword'
       ) {
         const result = await mammoth.extractRawText({ buffer: file.buffer });
@@ -89,7 +89,7 @@ export class ResumeParserService {
       const experience = this.extractExperience(text);
       const education = this.extractEducation(text);
 
-      return { text, skills, experience, education };
+      return { text, JobSkill: skills, experience, education };
     } catch (error) {
       console.error('Error parsing resume:', error);
       return {

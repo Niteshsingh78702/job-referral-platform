@@ -209,7 +209,7 @@ export class InterviewService {
       data: {
         scheduledDate: new Date(dto.scheduledDate),
         scheduledTime: dto.scheduledTime,
-        mode: dto.mode || interview.mode, // Update mode if provided
+        mode: dto.mode ? (dto.mode as any) : interview.mode, // Update mode if provided
         interviewLink: dto.interviewLink || null,
         callDetails: dto.callDetails || null,
         scheduledAt: new Date(),

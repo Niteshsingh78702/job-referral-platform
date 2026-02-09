@@ -217,7 +217,7 @@ let SkillBucketService = class SkillBucketService {
                 isPassed: false,
                 isValid: false,
                 isFailed: false,
-                canReTest: true,
+                canRetest: true,
                 neverTaken: true
             };
         }
@@ -239,7 +239,7 @@ let SkillBucketService = class SkillBucketService {
                 validTill,
                 validDaysRemaining: isValid ? daysRemaining : 0,
                 isFailed: false,
-                canReTest: !isValid,
+                canRetest: !isValid,
                 neverTaken: false
             };
         }

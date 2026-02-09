@@ -36,28 +36,13 @@ prisma/seed.ts(425,13): error TS2322: Type '{ name: string; minReferrals: number
   Type '{ name: string; minReferrals: number; commissionPercent: number; bonusPerReferral: number; description: string; badgeIcon: string; }' is not assignable to type 'Without<CommissionTierUncheckedCreateInput, CommissionTierCreateInput> & CommissionTierCreateInput'.
     Type '{ name: string; minReferrals: number; commissionPercent: number; bonusPerReferral: number; description: string; badgeIcon: string; }' is missing the following properties from type 'CommissionTierCreateInput': id, updatedAt
 src/modules/admin/admin.controller.ts(395,7): error TS2345: Argument of type 'string' is not assignable to parameter of type 'PaymentStatus'.
-src/modules/admin/admin.service.ts(1678,7): error TS2322: Type '{ candidateId: string; skillBucketId: string; isPassed: false; score: number; validTill: null; retestAllowedAt: Date; }' is not assignable to type '(Without<SkillTestAttemptCreateInput, SkillTestAttemptUncheckedCreateInput> & SkillTestAttemptUncheckedCreateInput) | (Without<...> & SkillTestAttemptCreateInput)'.
-  Type '{ candidateId: string; skillBucketId: string; isPassed: false; score: number; validTill: null; retestAllowedAt: Date; }' is not assignable to type 'Without<SkillTestAttemptCreateInput, SkillTestAttemptUncheckedCreateInput> & SkillTestAttemptUncheckedCreateInput'.
-    Property 'id' is missing in type '{ candidateId: string; skillBucketId: string; isPassed: false; score: number; validTill: null; retestAllowedAt: Date; }' but required in type 'SkillTestAttemptUncheckedCreateInput'.
 src/modules/candidate/candidate.controller.ts(162,58): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'ApplicationStatus | undefined'.
   Type 'string' is not assignable to type 'ApplicationStatus | undefined'.
-src/modules/hr/services/hr.service.ts(546,15): error TS2339: Property 'jobSkill' does not exist on type 'CreateJobDto'.
-src/modules/hr/services/hr.service.ts(546,31): error TS2339: Property 'jobSkill' does not exist on type 'CreateJobDto'.
-src/modules/hr/services/hr.service.ts(548,21): error TS2339: Property 'jobSkill' does not exist on type 'CreateJobDto'.
-src/modules/hr/services/hr.service.ts(726,15): error TS2339: Property 'jobSkill' does not exist on type 'UpdateJobDto'.
-src/modules/hr/services/hr.service.ts(726,31): error TS2339: Property 'jobSkill' does not exist on type 'UpdateJobDto'.
-src/modules/hr/services/hr.service.ts(733,21): error TS2339: Property 'jobSkill' does not exist on type 'UpdateJobDto'.
 src/modules/hr/services/hr.service.ts(1088,11): error TS2353: Object literal may only specify known properties, and 'hrId' does not exist in type 'Without<InterviewCreateInput, InterviewUncheckedCreateInput> & InterviewUncheckedCreateInput'.
-src/modules/interview/interview.service.ts(212,9): error TS2322: Type 'string' is not assignable to type 'InterviewMode | EnumInterviewModeFieldUpdateOperationsInput | undefined'.
+src/modules/interview/interview.service.ts(212,9): error TS2322: Type 'string | null' is not assignable to type 'InterviewMode | NullableEnumInterviewModeFieldUpdateOperationsInput | null | undefined'.
+  Type 'string' is not assignable to type 'InterviewMode | NullableEnumInterviewModeFieldUpdateOperationsInput | null | undefined'.
 src/modules/job/job.controller.ts(76,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'JobStatus | undefined'.
   Type 'string' is not assignable to type 'JobStatus | undefined'.
-src/modules/payment/payment.service.ts(122,32): error TS2551: Property 'job' does not exist on type '{ Candidate: { id: string; createdAt: Date; updatedAt: Date; userId: string; firstName: string; lastName: string; headline: string | null; bio: string | null; linkedIn: string | null; ... 10 more ...; willingToRelocate: boolean; }; Referral: { ...; } | null; Job: { ...; }; Payment: { ...; }[]; } & { ...; }'. Did you mean 'Job'?
-src/modules/payment/payment.service.ts(143,29): error TS2551: Property 'job' does not exist on type '{ Candidate: { id: string; createdAt: Date; updatedAt: Date; userId: string; firstName: string; lastName: string; headline: string | null; bio: string | null; linkedIn: string | null; ... 10 more ...; willingToRelocate: boolean; }; Referral: { ...; } | null; Job: { ...; }; Payment: { ...; }[]; } & { ...; }'. Did you mean 'Job'?
-src/modules/payment/payment.service.ts(171,60): error TS2551: Property 'job' does not exist on type '{ Candidate: { id: string; createdAt: Date; updatedAt: Date; userId: string; firstName: string; lastName: string; headline: string | null; bio: string | null; linkedIn: string | null; ... 10 more ...; willingToRelocate: boolean; }; Referral: { ...; } | null; Job: { ...; }; Payment: { ...; }[]; } & { ...; }'. Did you mean 'Job'?
-src/modules/payment/payment.service.ts(177,27): error TS2551: Property 'job' does not exist on type '{ Candidate: { id: string; createdAt: Date; updatedAt: Date; userId: string; firstName: string; lastName: string; headline: string | null; bio: string | null; linkedIn: string | null; ... 10 more ...; willingToRelocate: boolean; }; Referral: { ...; } | null; Job: { ...; }; Payment: { ...; }[]; } & { ...; }'. Did you mean 'Job'?
-src/modules/payment/payment.service.ts(461,7): error TS2322: Type '{ paymentId: string; amount: number; reason: string; status: RefundStatus.REQUESTED; }' is not assignable to type '(Without<RefundCreateInput, RefundUncheckedCreateInput> & RefundUncheckedCreateInput) | (Without<...> & RefundCreateInput)'.
-  Type '{ paymentId: string; amount: number; reason: string; status: RefundStatus.REQUESTED; }' is not assignable to type 'Without<RefundCreateInput, RefundUncheckedCreateInput> & RefundUncheckedCreateInput'.
-    Type '{ paymentId: string; amount: number; reason: string; status: RefundStatus.REQUESTED; }' is missing the following properties from type 'RefundUncheckedCreateInput': id, updatedAt
 src/modules/payment/payment.service.ts(587,24): error TS18047: 'application.Interview' is possibly 'null'.
 src/modules/rapid-fire/rapid-fire.service.ts(317,7): error TS2322: Type 'SessionData | null' is not assignable to type 'SessionData | undefined'.
   Type 'null' is not assignable to type 'SessionData | undefined'.
@@ -66,8 +51,3 @@ src/modules/rapid-fire/rapid-fire.service.ts(473,7): error TS2322: Type 'Session
 src/modules/rapid-fire/rapid-fire.service.ts(539,7): error TS2322: Type 'SessionData | null' is not assignable to type 'SessionData | undefined'.
   Type 'null' is not assignable to type 'SessionData | undefined'.
 src/modules/resume-parser/resume-parser.service.ts(92,22): error TS2353: Object literal may only specify known properties, and 'skills' does not exist in type 'ParsedResumeData'.
-src/modules/skill-bucket/skill-bucket.service.ts(184,9): error TS2561: Object literal may only specify known properties, but 'canReTest' does not exist in type 'SkillTestStatusDto'. Did you mean to write 'canRetest'?
-src/modules/skill-bucket/skill-bucket.service.ts(209,9): error TS2561: Object literal may only specify known properties, but 'canReTest' does not exist in type 'SkillTestStatusDto'. Did you mean to write 'canRetest'?
-src/modules/test/test.service.ts(834,7): error TS2322: Type '{ sessionId: string; questionId: string; selectedAnswer: number; isCorrect: boolean; }' is not assignable to type '(Without<TestAnswerCreateInput, TestAnswerUncheckedCreateInput> & TestAnswerUncheckedCreateInput) | (Without<...> & TestAnswerCreateInput)'.
-  Type '{ sessionId: string; questionId: string; selectedAnswer: number; isCorrect: boolean; }' is not assignable to type 'Without<TestAnswerCreateInput, TestAnswerUncheckedCreateInput> & TestAnswerUncheckedCreateInput'.
-    Property 'id' is missing in type '{ sessionId: string; questionId: string; selectedAnswer: number; isCorrect: boolean; }' but required in type 'TestAnswerUncheckedCreateInput'.

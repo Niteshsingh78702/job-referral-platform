@@ -159,7 +159,7 @@ export class CandidateController {
     @CurrentUser('sub') userId: string,
     @Query('status') status?: string,
   ) {
-    return this.candidateService.getApplications(userId, status);
+    return this.candidateService.getApplications(userId, status as ApplicationStatus | undefined);
   }
 
   @Patch('applications/:id/withdraw')

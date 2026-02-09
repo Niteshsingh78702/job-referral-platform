@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+    <title>Success Stories | NaukriShetu - Real Interview Proofs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .testimonials-page-container {
+            min-height: 100vh;
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .testimonials-page-header {
+            padding: 40px 0 30px;
+            text-align: center;
+        }
+
+        .testimonials-page-header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .testimonials-page-header p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .testimonials-count {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .trust-counters {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .trust-counter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
+        }
+
+        .trust-counter.green {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .trust-counter.blue {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .trust-counter .icon {
+            font-size: 20px;
+        }
+
+        .trust-counter.green .icon,
+        .trust-counter.green .number {
+            color: #22c55e;
+        }
+
+        .trust-counter.blue .icon,
+        .trust-counter.blue .number {
+            color: #3b82f6;
+        }
+
+        .trust-counter .number {
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .trust-counter .label {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .testimonial-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonial-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .testimonial-image {
+            width: 100%;
+            height: 160px;
+            background: var(--bg-dark);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .testimonial-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .testimonial-image .placeholder {
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        .testimonial-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .testimonial-role {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .testimonial-company {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .testimonial-date {
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        .testimonial-rating {
+            color: #fbbf24;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .view-proof-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-proof-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover,
+        .pagination button.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .no-testimonials {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-testimonials .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        /* Proof Modal */
+        .testimonial-modal {
+            max-width: 600px;
+        }
+
+        .testimonial-proof-image img {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .testimonial-quote {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .testimonial-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .testimonials-page-container {
+                padding-top: 70px;
+            }
+
+            .testimonials-page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .trust-counters {
+                gap: 16px;
+            }
+
+            .trust-counter {
+                padding: 10px 16px;
+            }
+
+            .trust-counter .number {
+                font-size: 20px;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="logo-img">
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="jobs.html" class="nav-link">Jobs</a>
+                <a href="/#how-it-works" class="nav-link">How It Works</a>
+            </div>
+            <div class="nav-auth">
+                <button class="btn btn-outline" onclick="window.location.href='/'">Login</button>
+                <button class="btn btn-primary" onclick="window.location.href='/'">Get Started</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Testimonials Page Content -->
+    <div class="testimonials-page-container">
+        <div class="container">
+            <a href="/" class="back-link">← Back to Home</a>
+
+            <div class="testimonials-page-header">
+                <h1>Success Stories <span class="testimonials-count" id="totalCount">0</span></h1>
+                <p>Real candidates who got real interviews through NaukriShetu. See their proof and success stories.</p>
+            </div>
+
+            <!-- Trust Counters -->
+            <div class="trust-counters">
+                <div class="trust-counter green">
+                    <span class="icon">✓</span>
+                    <span class="number" id="interviewCounter">127</span>
+                    <span class="label">interviews scheduled this month</span>
+                </div>
+                <div class="trust-counter blue">
+                    <span class="icon">✓</span>
+                    <span class="number" id="selectionCounter">38</span>
+                    <span class="label">candidates selected</span>
+                </div>
+            </div>
+
+            <!-- Testimonials Grid -->
+            <div class="testimonials-grid" id="testimonialsGrid">
+                <p class="loading-text" style="text-align: center; color: #64748b; grid-column: 1 / -1;">Loading
+                    testimonials...</p>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- Testimonial Proof Modal -->
+    <div class="modal-overlay" id="testimonialModalOverlay" onclick="closeTestimonialModal()"></div>
+    <div class="modal testimonial-modal" id="testimonialModal">
+        <button class="modal-close" onclick="closeTestimonialModal()">×</button>
+        <div class="modal-content" id="testimonialModalContent">
+            <div class="testimonial-proof-image">
+                <img id="proofImage" src="" alt="Interview Proof" loading="lazy">
+            </div>
+            <div class="testimonial-quote">
+                <p id="testimonialQuote"></p>
+            </div>
+            <div class="testimonial-meta">
+                <span id="testimonialName"></span>
+                <span id="testimonialRole"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        const API_BASE_URL = '/api/v1';
+
+        // State
+        const state = {
+            testimonials: [],
+            currentPage: 1,
+            testimonialsPerPage: 12
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTestimonials();
+            loadPublicSettings();
+        });
+
+        // Load testimonials from API
+        async function loadTestimonials() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/testimonials`);
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    state.testimonials = data.data;
+                    document.getElementById('totalCount').textContent = data.data.length;
+                    renderTestimonials();
+                } else {
+                    showNoTestimonials();
+                }
+            } catch (error) {
+                console.error('Error loading testimonials:', error);
+                showNoTestimonials();
+            }
+        }
+
+        // Load public settings (counters)
+        async function loadPublicSettings() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings/public`);
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    if (data.data.interviewsScheduled) {
+                        document.getElementById('interviewCounter').textContent = data.data.interviewsScheduled;
+                    }
+                    if (data.data.candidatesSelected) {
+                        document.getElementById('selectionCounter').textContent = data.data.candidatesSelected;
+                    }
+                }
+            } catch (error) {
+                console.log('Using default counter values');
+            }
+        }
+
+        // Render testimonials with pagination
+        function renderTestimonials() {
+            const grid = document.getElementById('testimonialsGrid');
+            const startIndex = (state.currentPage - 1) * state.testimonialsPerPage;
+            const endIndex = startIndex + state.testimonialsPerPage;
+            const pageTestimonials = state.testimonials.slice(startIndex, endIndex);
+
+            if (pageTestimonials.length === 0) {
+                showNoTestimonials();
+                return;
+            }
+
+            grid.innerHTML = pageTestimonials.map(t => `
+                <div class="testimonial-card">
+                    <div class="testimonial-badge">
+                        <span>✓</span> Verified Interview
+                    </div>
+                    <div class="testimonial-image">
+                        ${t.imageUrl
+                    ? `<img src="${t.imageUrl}" alt="Proof" loading="lazy">`
+                    : `<span class="placeholder">📄</span>`
+                }
+                    </div>
+                    <div class="testimonial-name">${t.candidateName || 'Anonymous'}</div>
+                    <div class="testimonial-role">${t.role || 'Job Seeker'}</div>
+                    <div class="testimonial-company">
+                        <span>Interviewed with:</span>
+                        <strong>${t.company || 'Company'}</strong>
+                    </div>
+                    <div class="testimonial-date">Date: ${formatDate(t.interviewDate)}</div>
+                    <div class="testimonial-rating">${'★'.repeat(t.rating || 5)}${'☆'.repeat(5 - (t.rating || 5))}</div>
+                    <button class="view-proof-btn" onclick='openProofModal(${JSON.stringify(t).replace(/'/g, "\\\'")})'>
+                        View Verified Interview
+                    </button>
+                </div>
+            `).join('');
+
+            renderPagination();
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(state.testimonials.length / state.testimonialsPerPage);
+            const pagination = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous button
+            html += `<button ${state.currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${state.currentPage - 1})">← Prev</button>`;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= state.currentPage - 2 && i <= state.currentPage + 2)) {
+                    html += `<button class="${i === state.currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === state.currentPage - 3 || i === state.currentPage + 3) {
+                    html += `<button disabled>...</button>`;
+                }
+            }
+
+            // Next button
+            html += `<button ${state.currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${state.currentPage + 1})">Next →</button>`;
+
+            pagination.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            state.currentPage = page;
+            renderTestimonials();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showNoTestimonials() {
+            document.getElementById('testimonialsGrid').innerHTML = `
+                <div class="no-testimonials" style="grid-column: 1 / -1;">
+                    <div class="icon">📋</div>
+                    <p>No testimonials available yet. Check back soon!</p>
+                </div>
+            `;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Recent';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        // Modal functions
+        function openProofModal(testimonial) {
+            document.getElementById('proofImage').src = testimonial.imageUrl || '';
+            document.getElementById('testimonialQuote').textContent = testimonial.quote || testimonial.feedback || '';
+            document.getElementById('testimonialName').textContent = testimonial.candidateName || 'Anonymous';
+            document.getElementById('testimonialRole').textContent = `${testimonial.role || 'Job Seeker'} at ${testimonial.company || 'Company'}`;
+
+            document.getElementById('testimonialModalOverlay').classList.add('active');
+            document.getElementById('testimonialModal').classList.add('active');
+        }
+
+        function closeTestimonialModal() {
+            document.getElementById('testimonialModalOverlay').classList.remove('active');
+            document.getElementById('testimonialModal').classList.remove('active');
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeTestimonialModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

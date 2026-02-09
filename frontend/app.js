@@ -346,8 +346,8 @@ function updateHeroCTA(isLoggedIn) {
 
     if (heroMainBtn) {
         if (isLoggedIn) {
-            heroMainBtn.innerHTML = 'Browse Jobs <span class="btn-arrow">→</span>';
-            heroMainBtn.onclick = () => scrollToSection('#jobs');
+            heroMainBtn.innerHTML = 'Jobs <span class="btn-arrow">→</span>';
+            heroMainBtn.onclick = () => window.location.href = 'jobs.html';
         } else {
             heroMainBtn.innerHTML = 'Start Your Journey <span class="btn-arrow">→</span>';
             heroMainBtn.onclick = () => showModal('register');
@@ -369,8 +369,8 @@ function updatePricingCTA(isLoggedIn) {
     const pricingCta = document.getElementById('pricingCta');
     if (pricingCta) {
         if (isLoggedIn) {
-            pricingCta.textContent = 'Browse Jobs';
-            pricingCta.onclick = () => scrollToSection('#jobs');
+            pricingCta.textContent = 'Jobs';
+            pricingCta.onclick = () => window.location.href = 'jobs.html';
         } else {
             pricingCta.textContent = 'Get Started Free';
             pricingCta.onclick = () => showModal('register');
@@ -863,9 +863,11 @@ async function loadJobs() {
         }
 
         if (jobs.length > 0) {
-            state.jobs = jobs;
+            state.allJobs = jobs; // Store all jobs
+            state.jobs = jobs.slice(0, 9); // Show only first 9 on homepage
             usingSampleJobs = false;
             renderJobs(state.jobs);
+            updateViewAllButton(jobs.length);
             loadingEl.style.display = 'none';
             sampleJobsEl.style.display = 'none';
         } else {
@@ -882,12 +884,81 @@ async function loadJobs() {
 }
 
 function useDemoJobs() {
-    state.jobs = demoJobs;
-    usingSampleJobs = false; // Set to false so Apply Now works
+    state.allJobs = demoJobs;
+    state.jobs = demoJobs.slice(0, 9);
+    usingSampleJobs = false;
     const sampleJobsEl = document.getElementById('sampleJobs');
     sampleJobsEl.style.display = 'none';
-    renderJobs(demoJobs);
+    renderJobs(state.jobs);
+    updateViewAllButton(demoJobs.length);
     console.log('📦 Using demo jobs (API unavailable)');
+}
+
+// Update View All Jobs button with count
+function updateViewAllButton(totalCount) {
+    const viewAllBtn = document.getElementById('viewAllJobsBtn');
+    if (viewAllBtn && totalCount > 9) {
+        viewAllBtn.textContent = `View All ${totalCount} Jobs →`;
+        viewAllBtn.href = 'jobs.html';
+        viewAllBtn.style.display = 'inline-block';
+    } else if (viewAllBtn) {
+        viewAllBtn.style.display = totalCount <= 9 ? 'none' : 'inline-block';
+    }
+}
+
+// Show all jobs in a modal with pagination
+function showAllJobsModal() {
+    const allJobs = state.allJobs || state.jobs;
+
+    let modal = document.getElementById('allJobsModal');
+    if (!modal) {
+        const modalHTML = `
+            <div class="modal-overlay" id="allJobsModalOverlay" onclick="closeAllJobsModal()"></div>
+            <div class="modal modal-xl" id="allJobsModal" style="max-width: 95%; width: 1200px; max-height: 90vh; overflow-y: auto;">
+                <button class="modal-close" onclick="closeAllJobsModal()">×</button>
+                <div class="modal-content" id="allJobsModalContent"></div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('allJobsModal');
+    }
+
+    const content = document.getElementById('allJobsModalContent');
+    content.innerHTML = `
+        <h2 style="margin-bottom: 8px;">All Jobs (${allJobs.length})</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Browse all available positions</p>
+        <div class="jobs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            ${allJobs.map(job => `
+                <div class="job-card" onclick="closeAllJobsModal(); setTimeout(() => showJobDetails('${job.id}'), 300);" style="cursor: pointer;">
+                    <div class="job-header">
+                        <div class="company-logo" style="background: ${getRandomGradient()}">${job.companyName?.charAt(0) || 'J'}</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">${job.title}</h3>
+                            <p class="company-name">${job.companyName}</p>
+                        </div>
+                        ${job.isHot ? '<span class="job-badge">Hot 🔥</span>' : ''}
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> ${job.location}${job.isRemote ? ' (Remote)' : ''}</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> ${job.experienceMin || 0}-${job.experienceMax || 'Any'} years</span>
+                    </div>
+                    <div class="job-skills">
+                        ${(job.skills || []).slice(0, 3).map(skill => `<span class="skill-tag">${skill.name}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    document.getElementById('allJobsModalOverlay').classList.add('active');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAllJobsModal() {
+    document.getElementById('allJobsModalOverlay')?.classList.remove('active');
+    document.getElementById('allJobsModal')?.classList.remove('active');
+    document.body.style.overflow = '';
 }
 
 function renderJobs(jobs) {
@@ -1264,15 +1335,20 @@ function performJobSearch() {
     const postedDate = document.getElementById('postedDateFilter')?.value;
     const sortBy = document.getElementById('sortBy')?.value || 'relevance';
 
-    let filteredJobs = [...state.jobs];
+    let filteredJobs = [...(state.allJobs || state.jobs)];
 
-    // Text search filter
+    // Text search filter - split into words and match ANY word
     if (searchTerm) {
-        filteredJobs = filteredJobs.filter(job =>
-            job.title.toLowerCase().includes(searchTerm) ||
-            job.companyName.toLowerCase().includes(searchTerm) ||
-            (job.skills || []).some(s => s.name.toLowerCase().includes(searchTerm))
-        );
+        const searchWords = searchTerm.split(/\s+/).filter(w => w.length > 0);
+        filteredJobs = filteredJobs.filter(job => {
+            const titleLower = job.title.toLowerCase();
+            const companyLower = job.companyName?.toLowerCase() || '';
+            const skillNames = (job.skills || []).map(s => s.name.toLowerCase()).join(' ');
+            const searchText = `${titleLower} ${companyLower} ${skillNames}`;
+
+            // Match if ANY search word is found
+            return searchWords.some(word => searchText.includes(word));
+        });
     }
 
     // Location filter with smart matching (handles aliases like Delhi/NCR, Gurgaon/Gurugram)
@@ -1806,6 +1882,20 @@ async function startSkillTestFromJob() {
 let scrollPositionBeforeModal = 0;
 
 function showModal(type) {
+    // Handle special modals FIRST (before activating auth modal)
+    // These have their own overlay and modal elements
+    if (type === 'editProfile') {
+        showProfileModal();
+        return;
+    } else if (type === 'contact') {
+        showContactModal();
+        return;
+    } else if (type === 'refund') {
+        showRefundModal();
+        return;
+    }
+
+    // Now handle auth-related modals
     const overlay = document.getElementById('modalOverlay');
     const modal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
@@ -1838,9 +1928,6 @@ function showModal(type) {
         }
     } else if (type === 'resetPassword') {
         if (resetPasswordForm) resetPasswordForm.style.display = 'block';
-    } else if (type === 'editProfile') {
-        showProfileModal();
-        return;
     }
 
     // Cross-device compatible scroll lock (works on iOS, Android, Desktop)
@@ -1858,6 +1945,64 @@ function closeModal() {
     modal.classList.remove('active');
 
     // Restore scroll position (works on all devices)
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPositionBeforeModal);
+}
+
+// =============================================
+// Contact Us Modal
+// =============================================
+function showContactModal() {
+    const overlay = document.getElementById('contactModalOverlay');
+    const modal = document.getElementById('contactModal');
+    if (overlay) overlay.classList.add('active');
+    if (modal) modal.classList.add('active');
+
+    // Cross-device compatible scroll lock
+    scrollPositionBeforeModal = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollPositionBeforeModal}px`;
+}
+
+function closeContactModal() {
+    const overlay = document.getElementById('contactModalOverlay');
+    const modal = document.getElementById('contactModal');
+    if (overlay) overlay.classList.remove('active');
+    if (modal) modal.classList.remove('active');
+
+    // Restore scroll position
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPositionBeforeModal);
+}
+
+// =============================================
+// Refund Guarantee Modal
+// =============================================
+function showRefundModal() {
+    const overlay = document.getElementById('refundModalOverlay');
+    const modal = document.getElementById('refundModal');
+    if (overlay) overlay.classList.add('active');
+    if (modal) modal.classList.add('active');
+
+    // Cross-device compatible scroll lock
+    scrollPositionBeforeModal = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollPositionBeforeModal}px`;
+}
+
+function closeRefundModal() {
+    const overlay = document.getElementById('refundModalOverlay');
+    const modal = document.getElementById('refundModal');
+    if (overlay) overlay.classList.remove('active');
+    if (modal) modal.classList.remove('active');
+
+    // Restore scroll position
     document.documentElement.classList.remove('modal-open');
     document.body.classList.remove('modal-open');
     document.body.style.top = '';
@@ -2016,7 +2161,7 @@ async function handleGoogleCredential(response) {
             closeModal();
 
             if (data.data.isNewUser) {
-                showToast('success', 'Welcome to JobRefer! Your account has been created.');
+                showToast('success', 'Welcome to NaukriShetu! Your account has been created.');
             } else {
                 showToast('success', 'Welcome back!');
             }
@@ -3713,7 +3858,7 @@ function openRazorpayCheckout(order, applicationId) {
         key: order.razorpayKeyId || 'rzp_test_placeholder',
         amount: order.amount || 9900,
         currency: order.currency || 'INR',
-        name: 'JobRefer',
+        name: 'NaukriShetu',
         description: 'Interview Details Unlock Fee',
         order_id: order.razorpayOrderId,
         handler: async function (response) {
@@ -4880,7 +5025,7 @@ function openRazorpayForInterview(orderData, applicationId) {
         key: orderData.keyId,
         amount: 9900, // ₹99 in paise
         currency: 'INR',
-        name: 'JobRefer',
+        name: 'NaukriShetu',
         description: 'Interview Confirmation Fee',
         order_id: orderData.orderId,
         handler: async function (response) {
@@ -4961,7 +5106,7 @@ const fallbackTestimonialData = {
         role: 'React Developer Candidate',
         company: 'TechCorp India',
         date: '08 Jan 2026',
-        quote: 'Got referred to my dream company through JobRefer. The skill test was fair and the interview was scheduled within a week!',
+        quote: 'Got referred to my dream company through NaukriShetu. The skill test was fair and the interview was scheduled within a week!',
         image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUzYTVmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJJbnRlciIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY0NzQ4YiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkludGVydmlldyBTY3JlZW5zaG90IC0gVmVyaWZpZWQ8L3RleHQ+PC9zdmc+'
     },
     3: {
@@ -5081,7 +5226,7 @@ async function loadPublicTestimonials() {
                         <p class="interview-date">Date: ${formatTestimonialDate(t.interviewDate)}</p>
                         <div class="rating-stars">${'⭐'.repeat(t.rating || 5)}</div>
                     </div>
-                    <button class="btn btn-outline btn-sm view-proof-btn" data-testimonial="${t.id}">View Proof</button>
+                    <button class="btn btn-outline btn-sm view-proof-btn" data-testimonial="${t.id}">View Verified Interview</button>
                 </div>
             `).join('');
 

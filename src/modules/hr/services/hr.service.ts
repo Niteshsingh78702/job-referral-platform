@@ -35,7 +35,7 @@ export class HRService {
   constructor(
     private prisma: PrismaService,
     private tokenService: TokenService,
-  ) {}
+  ) { }
 
   /**
    * Register a new HR account
@@ -543,9 +543,9 @@ export class HRService {
       });
 
       // Add skills
-      if (dto.jobSkill && dto.jobSkill.length > 0) {
+      if (dto.skills && dto.skills.length > 0) {
         await tx.jobSkill.createMany({
-          data: dto.jobSkill.map((skill) => ({
+          data: dto.skills.map((skill: string) => ({
             id: crypto.randomUUID(),
             jobId: newJob.id,
             name: skill,
@@ -723,14 +723,14 @@ export class HRService {
 
     const updatedJob = await this.prisma.$transaction(async (tx) => {
       // Update skills if provided
-      if (dto.jobSkill && dto.jobSkill.length > 0) {
+      if (dto.skills && dto.skills.length > 0) {
         // Delete existing skills
         await tx.jobSkill.deleteMany({
           where: { jobId },
         });
         // Add new skills
         await tx.jobSkill.createMany({
-          data: dto.jobSkill.map((skill) => ({
+          data: dto.skills.map((skill: string) => ({
             id: crypto.randomUUID(),
             jobId,
             name: skill,
@@ -1083,13 +1083,9 @@ export class HRService {
       // Create an Interview record for this application
       const interview = await tx.interview.create({
         data: {
-          id: crypto.randomUUID(),
           applicationId: applicationId,
-          hrId: hr.id,
           status: 'INTERVIEW_CONFIRMED',
           paymentStatus: 'PENDING',
-          createdAt: new Date(),
-          updatedAt: new Date(),
         },
       });
 

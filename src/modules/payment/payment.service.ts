@@ -119,7 +119,7 @@ export class PaymentService {
       };
     }
 
-    const amount = application.job.referralFee * 100; // Razorpay expects paise
+    const amount = application.Job.referralFee * 100; // Razorpay expects paise
 
     // Create Razorpay order
     const razorpay = this.ensureRazorpay();
@@ -140,7 +140,7 @@ export class PaymentService {
         id: crypto.randomUUID(),
         applicationId: application.id,
         razorpayOrderId: order.id,
-        amount: application.job.referralFee,
+        amount: application.Job.referralFee,
         currency: 'INR',
         status: PaymentStatus.ORDER_CREATED,
         orderCreatedAt: new Date(),
@@ -168,13 +168,13 @@ export class PaymentService {
         action: AuditAction.PAYMENT_INITIATED,
         entityType: 'Payment',
         entityId: payment.id,
-        metadata: { orderId: order.id, amount: application.job.referralFee },
+        metadata: { orderId: order.id, amount: application.Job.referralFee },
       },
     });
 
     return {
       orderId: order.id,
-      amount: application.job.referralFee,
+      amount: application.Job.referralFee,
       currency: 'INR',
       paymentId: payment.id,
       keyId: this.configService.get('RAZORPAY_KEY_ID'),
@@ -583,14 +583,16 @@ export class PaymentService {
         });
 
         // Update interview status
-        await tx.interview.update({
-          where: { id: application.Interview.id },
-          data: {
-            status: 'PAYMENT_SUCCESS' as any,
-            paymentStatus: PaymentStatus.SUCCESS as any,
-            paidAt: new Date(),
-          },
-        });
+        if (application.Interview) {
+          await tx.interview.update({
+            where: { id: application.Interview.id },
+            data: {
+              status: 'PAYMENT_SUCCESS' as any,
+              paymentStatus: PaymentStatus.SUCCESS as any,
+              paidAt: new Date(),
+            },
+          });
+        }
 
         // Update application status
         await tx.jobApplication.update({

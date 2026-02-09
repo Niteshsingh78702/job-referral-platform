@@ -546,9 +546,9 @@ let HRService = class HRService {
                 }
             });
             // Add skills
-            if (dto.jobSkill && dto.jobSkill.length > 0) {
+            if (dto.skills && dto.skills.length > 0) {
                 await tx.jobSkill.createMany({
-                    data: dto.jobSkill.map((skill)=>({
+                    data: dto.skills.map((skill)=>({
                             id: _crypto.randomUUID(),
                             jobId: newJob.id,
                             name: skill,
@@ -729,7 +729,7 @@ let HRService = class HRService {
         }
         const updatedJob = await this.prisma.$transaction(async (tx)=>{
             // Update skills if provided
-            if (dto.jobSkill && dto.jobSkill.length > 0) {
+            if (dto.skills && dto.skills.length > 0) {
                 // Delete existing skills
                 await tx.jobSkill.deleteMany({
                     where: {
@@ -738,7 +738,7 @@ let HRService = class HRService {
                 });
                 // Add new skills
                 await tx.jobSkill.createMany({
-                    data: dto.jobSkill.map((skill)=>({
+                    data: dto.skills.map((skill)=>({
                             id: _crypto.randomUUID(),
                             jobId,
                             name: skill,
@@ -1086,13 +1086,9 @@ let HRService = class HRService {
             // Create an Interview record for this application
             const interview = await tx.interview.create({
                 data: {
-                    id: _crypto.randomUUID(),
                     applicationId: applicationId,
-                    hrId: hr.id,
                     status: 'INTERVIEW_CONFIRMED',
-                    paymentStatus: 'PENDING',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
+                    paymentStatus: 'PENDING'
                 }
             });
             // Audit log

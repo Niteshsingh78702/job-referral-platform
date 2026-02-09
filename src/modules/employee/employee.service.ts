@@ -19,7 +19,7 @@ import {
 
 @Injectable()
 export class EmployeeService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Helper to get or create employee profile
   private async getOrCreateEmployee(userId: string) {
@@ -49,11 +49,13 @@ export class EmployeeService {
         // Auto-create employee profile
         employee = await this.prisma.employee.create({
           data: {
+            id: require('crypto').randomUUID(),
             userId: user.id,
             companyName:
               user.email.split('@')[1]?.split('.')[0] || 'Unknown Company',
             companyEmail: user.email,
             isVerified: false,
+            updatedAt: new Date(),
           },
           include: {
             User: {
@@ -88,7 +90,7 @@ export class EmployeeService {
     const tier = await this.getCurrentTier(userId);
 
     return {
-      ...Employee,
+      ...employee,
       currentTier: tier,
     };
   }
@@ -145,7 +147,7 @@ export class EmployeeService {
     const availableReferrals = await this.prisma.referral.count({
       where: {
         status: ReferralStatus.PENDING,
-        type: ReferralType.Employee,
+        type: ReferralType.EMPLOYEE,
         employeeId: null,
         JobApplication: {
           Job: {
@@ -216,7 +218,7 @@ export class EmployeeService {
     const referrals = await this.prisma.referral.findMany({
       where: {
         status: ReferralStatus.PENDING,
-        type: ReferralType.Employee,
+        type: ReferralType.EMPLOYEE,
         employeeId: null, // Not yet claimed by any employee
         JobApplication: {
           Job: {
@@ -227,24 +229,24 @@ export class EmployeeService {
           },
           ...(search
             ? {
-                OR: [
-                  {
-                    Candidate: {
-                      firstName: { contains: search, mode: 'insensitive' },
-                    },
+              OR: [
+                {
+                  Candidate: {
+                    firstName: { contains: search, mode: 'insensitive' },
                   },
-                  {
-                    Candidate: {
-                      lastName: { contains: search, mode: 'insensitive' },
-                    },
+                },
+                {
+                  Candidate: {
+                    lastName: { contains: search, mode: 'insensitive' },
                   },
-                  {
-                    Job: {
-                      title: { contains: search, mode: 'insensitive' },
-                    },
+                },
+                {
+                  Job: {
+                    title: { contains: search, mode: 'insensitive' },
                   },
-                ],
-              }
+                },
+              ],
+            }
             : {}),
         },
       },
@@ -259,7 +261,7 @@ export class EmployeeService {
                 headline: true,
                 totalExperience: true,
                 currentCompany: true,
-                JobSkill: {
+                CandidateSkill: {
                   select: { name: true, level: true },
                 },
               },
@@ -292,9 +294,9 @@ export class EmployeeService {
     return referrals.map((ref) => ({
       ...ref,
       potentialEarning:
-        (ref.application.job.referralFee * commissionRate) / 100 +
+        (ref.JobApplication.Job.referralFee * commissionRate) / 100 +
         bonusPerReferral,
-      candidateTestScore: ref.application.testSessions[0]?.score || null,
+      candidateTestScore: ref.JobApplication.TestSession[0]?.score || null,
     }));
   }
 
@@ -348,7 +350,7 @@ export class EmployeeService {
               },
             },
           },
-          earning: {
+          EmployeeEarning: {
             select: {
               amount: true,
               status: true,
@@ -417,7 +419,7 @@ export class EmployeeService {
     // Verify company match
     if (
       employee.companyName.toLowerCase() !==
-      referral.application.job.companyName.toLowerCase()
+      referral.JobApplication.Job.companyName.toLowerCase()
     ) {
       throw new ForbiddenException('Cannot refer for a different company');
     }
@@ -427,7 +429,7 @@ export class EmployeeService {
     const commissionRate = tier?.current?.commissionPercent || 10;
     const bonusAmount = tier?.current?.bonusPerReferral || 0;
     const earningAmount =
-      (referral.application.job.referralFee * commissionRate) / 100;
+      (referral.JobApplication.Job.referralFee * commissionRate) / 100;
 
     // Perform transaction
     const result = await this.prisma.$transaction(async (tx) => {
@@ -451,6 +453,7 @@ export class EmployeeService {
       // Create earning record
       const earning = await tx.employeeEarning.create({
         data: {
+          id: require('crypto').randomUUID(),
           employeeId: employee.id,
           referralId: referral.id,
           amount: earningAmount,
@@ -458,6 +461,7 @@ export class EmployeeService {
           status: EarningStatus.PENDING,
           tierName: tier?.current?.name || 'Base',
           commissionRate: commissionRate,
+          updatedAt: new Date(),
         },
       });
 
@@ -599,7 +603,7 @@ export class EmployeeService {
         userId: true,
         designation: true,
         referralCount: true,
-        successfulReferral: true,
+        successfulReferrals: true,
         points: true,
         badges: true,
         User: {
@@ -610,12 +614,12 @@ export class EmployeeService {
         Referral:
           period === 'month'
             ? {
-                where: dateFilter,
-                select: { id: true },
-              }
+              where: dateFilter,
+              select: { id: true },
+            }
             : undefined,
       },
-      orderBy: period === 'month' ? undefined : { successfulReferral: 'desc' },
+      orderBy: period === 'month' ? undefined : { successfulReferrals: 'desc' },
       take: 20,
     });
 
@@ -623,11 +627,11 @@ export class EmployeeService {
     let leaderboard = employees.map((emp, index) => ({
       rank: index + 1,
       employeeId: emp.id,
-      email: emp.user.email.replace(/(.{3}).*@/, '$1***@'), // Partial hide email
+      email: emp.User.email.replace(/(.{3}).*@/, '$1***@'), // Partial hide email
       designation: emp.designation,
       referralCount:
-        period === 'month' ? emp.referrals?.length || 0 : emp.referralCount,
-      successfulReferral: emp.successfulReferrals,
+        period === 'month' ? emp.Referral?.length || 0 : emp.referralCount,
+      successfulReferrals: emp.successfulReferrals,
       points: emp.points,
       badges: emp.badges,
       isCurrentUser: emp.userId === userId,
@@ -648,7 +652,7 @@ export class EmployeeService {
       const higherRanked = await this.prisma.employee.count({
         where: {
           companyName: { equals: employee.companyName, mode: 'insensitive' },
-          successfulReferral: { gt: employee.successfulReferrals },
+          successfulReferrals: { gt: employee.successfulReferrals },
         },
       });
       currentUserRank = higherRanked + 1;
@@ -659,7 +663,7 @@ export class EmployeeService {
       currentUserRank: currentUserInLeaderboard?.rank || currentUserRank,
       currentUserStats: {
         referralCount: employee.referralCount,
-        successfulReferral: employee.successfulReferrals,
+        successfulReferrals: employee.successfulReferrals,
         points: employee.points,
       },
     };
@@ -689,19 +693,19 @@ export class EmployeeService {
 
     const tier = await this.prisma.commissionTier.findFirst({
       where: {
-        minReferral: { lte: employee.successfulReferrals },
+        minReferrals: { lte: employee.successfulReferrals },
         isActive: true,
       },
-      orderBy: { minReferral: 'desc' },
+      orderBy: { minReferrals: 'desc' },
     });
 
     // Get next tier
     const nextTier = await this.prisma.commissionTier.findFirst({
       where: {
-        minReferral: { gt: employee.successfulReferrals },
+        minReferrals: { gt: employee.successfulReferrals },
         isActive: true,
       },
-      orderBy: { minReferral: 'asc' },
+      orderBy: { minReferrals: 'asc' },
     });
 
     return {
@@ -786,7 +790,7 @@ export class EmployeeService {
     const referral = await this.prisma.referral.findUnique({
       where: { id: referralId },
       include: {
-        earning: true,
+        EmployeeEarning: true,
         Employee: true,
       },
     });
@@ -812,7 +816,7 @@ export class EmployeeService {
       // Update earning to eligible
       if (referral.EmployeeEarning) {
         await tx.employeeEarning.update({
-          where: { id: referral.employeeEarning.id },
+          where: { id: referral.EmployeeEarning.id },
           data: { status: EarningStatus.ELIGIBLE },
         });
       }
@@ -822,7 +826,7 @@ export class EmployeeService {
         await tx.employee.update({
           where: { id: referral.employeeId },
           data: {
-            successfulReferral: { increment: 1 },
+            successfulReferrals: { increment: 1 },
             points: { increment: 50 }, // Bonus points for successful hire
           },
         });

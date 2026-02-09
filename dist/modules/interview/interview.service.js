@@ -222,7 +222,7 @@ let InterviewService = class InterviewService {
             data: {
                 scheduledDate: new Date(dto.scheduledDate),
                 scheduledTime: dto.scheduledTime,
-                mode: dto.mode || interview.mode,
+                mode: dto.mode ? dto.mode : interview.mode,
                 interviewLink: dto.interviewLink || null,
                 callDetails: dto.callDetails || null,
                 scheduledAt: new Date(),

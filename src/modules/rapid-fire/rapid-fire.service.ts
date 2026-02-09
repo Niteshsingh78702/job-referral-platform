@@ -563,7 +563,7 @@ export class RapidFireTestService {
   /**
    * Restore session from database if server restarted
    */
-  private async restoreSessionFromDb(sessionId: string, userId: string): Promise<SessionData | null> {
+  private async restoreSessionFromDb(sessionId: string, userId: string): Promise<SessionData | undefined> {
     try {
       const dbSession = await this.prisma.testSession.findUnique({
         where: { id: sessionId },
@@ -572,13 +572,13 @@ export class RapidFireTestService {
 
       if (!dbSession) {
         console.log(`Session ${sessionId} not found in database`);
-        return null;
+        return undefined;
       }
 
       // Check if session is active and not expired
       if (dbSession.status !== 'ACTIVE' || !dbSession.endsAt || new Date() > dbSession.endsAt) {
         console.log(`Session ${sessionId} is not active or expired`);
-        return null;
+        return undefined;
       }
 
       // Get the user's candidate record
@@ -589,7 +589,7 @@ export class RapidFireTestService {
 
       if (!user?.Candidate?.id) {
         console.log(`User ${userId} has no candidate record`);
-        return null;
+        return undefined;
       }
 
       // Get skillBucketId from the first SkillBucket in the array
@@ -617,7 +617,7 @@ export class RapidFireTestService {
       return sessionData;
     } catch (error) {
       console.error('Error restoring session from DB:', error);
-      return null;
+      return undefined;
     }
   }
 

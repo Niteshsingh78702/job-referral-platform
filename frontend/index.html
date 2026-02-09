@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
-    <title>JobRefer - Find Your Dream Job Through Referrals</title>
+    <title>NaukriShetu - Get Real Job Interview Opportunities | Pay Only After Interview</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -17,18 +17,19 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="/" class="logo">
-                <span class="logo-icon">💼</span>
-                <span class="logo-text">JobRefer</span>
+                <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="logo-img">
             </a>
             <div class="nav-links">
-                <a href="/#jobs" class="nav-link" onclick="goToSection('#jobs'); return false;">Browse Jobs</a>
+                <a href="jobs.html" class="nav-link">Jobs</a>
                 <a href="/#how-it-works" class="nav-link" onclick="goToSection('#how-it-works'); return false;">How It
                     Works</a>
                 <a href="/#pricing" class="nav-link" onclick="goToSection('#pricing'); return false;">Pricing</a>
             </div>
             <div class="nav-auth" id="navAuth">
+                <a href="#" class="nav-link" onclick="showModal('contact'); return false;">Contact Us</a>
+                <a href="#" class="nav-link" onclick="showModal('refund'); return false;">Refund</a>
                 <button class="btn btn-outline" onclick="showModal('login')">Login</button>
-                <button class="btn btn-primary" onclick="showModal('register')">Get Started</button>
+                <button class="btn btn-primary" onclick="showModal('register')">Register</button>
             </div>
             <div class="nav-user" id="navUser" style="display: none;">
                 <a href="#dashboard" class="nav-link">My Dashboard</a>
@@ -55,36 +56,36 @@
     <section class="hero">
         <div class="hero-bg"></div>
         <div class="hero-content">
-            <div class="hero-badge">🚀 #1 Job Referral Platform in India</div>
+            <div class="hero-badge">✅ Skill-Based Job Platform</div>
             <h1 class="hero-title">
-                Get <span class="gradient-text">Referred</span> to Your
-                <br>Dream Company
+                Get <span class="gradient-text">Real</span> Job Interview
+                <br>Opportunities
             </h1>
             <p class="hero-subtitle">
-                Skill-based screening → Interview scheduled → Pay only ₹99 if interview confirmed.
-                <br>No upfront fees. No hidden charges. Real interviews, real opportunities.
+                Apply for jobs and pay only after your interview is scheduled.
+                <br>No upfront fees. No fake guarantees.
             </p>
             <div class="hero-cta" id="heroCta">
                 <button class="btn btn-primary btn-lg" id="heroMainBtn" onclick="showModal('register')">
-                    Start Your Journey
+                    Start Applying Free
                     <span class="btn-arrow">→</span>
                 </button>
                 <button class="btn btn-ghost btn-lg" id="heroSecondaryBtn" onclick="scrollToSection('#how-it-works')">
-                    Learn More
+                    See How It Works
                 </button>
             </div>
             <div class="hero-stats">
                 <div class="stat">
-                    <span class="stat-value">10,000+</span>
+                    <span class="stat-value">500+</span>
                     <span class="stat-label">Active Jobs</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-value">5,000+</span>
-                    <span class="stat-label">Successful Referrals</span>
+                    <span class="stat-value">100+</span>
+                    <span class="stat-label">Interviews Scheduled</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-value">500+</span>
-                    <span class="stat-label">Partner Companies</span>
+                    <span class="stat-value">150+</span>
+                    <span class="stat-label">Hiring Companies</span>
                 </div>
             </div>
         </div>
@@ -112,10 +113,10 @@
                     <h2>Welcome back, <span id="dashboardUserName">User</span>! 👋</h2>
                     <p>Here's what's happening with your job search</p>
                 </div>
-                <button class="btn btn-primary" onclick="scrollToSection('#jobs')">
-                    Browse Jobs
+                <a href="jobs.html" class="btn btn-primary">
+                    Jobs
                     <span class="btn-arrow">→</span>
-                </button>
+                </a>
             </div>
 
             <!-- Dashboard Stats -->
@@ -213,37 +214,34 @@
         <div class="container">
             <div class="section-header">
                 <span class="section-badge">How It Works</span>
-                <h2 class="section-title">Your Path to Getting Hired</h2>
-                <p class="section-subtitle">Simple 4-step process to get referred to your dream company</p>
+                <h2 class="section-title">Simple 4-Step Process</h2>
+                <p class="section-subtitle">Apply for free. Pay only after your interview is confirmed.</p>
             </div>
             <div class="steps-grid">
                 <div class="step-card">
                     <div class="step-number">01</div>
                     <div class="step-icon">🧠</div>
-                    <h3 class="step-title">Pass Skill Test</h3>
-                    <p class="step-desc">Take a quick skill assessment (valid 7 days). Pass once, apply to unlimited
-                        jobs!
-                    </p>
+                    <h3 class="step-title">Take a Quick Skill Test</h3>
+                    <p class="step-desc">Pass a simple test to prove your skills. Valid for 7 days. One test unlocks all
+                        jobs for that skill.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-number">02</div>
                     <div class="step-icon">📝</div>
-                    <h3 class="step-title">Apply to Jobs</h3>
-                    <p class="step-desc">Browse jobs and apply for free. No payment needed until interview is scheduled.
-                    </p>
+                    <h3 class="step-title">Apply to Jobs (Free)</h3>
+                    <p class="step-desc">Browse and apply to jobs for free. No payment required at this step.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-number">03</div>
                     <div class="step-icon">📅</div>
-                    <h3 class="step-title">Interview Scheduled</h3>
-                    <p class="step-desc">HR reviews your profile and schedules interview. You'll be notified instantly.
-                    </p>
+                    <h3 class="step-title">HR Schedules Interview</h3>
+                    <p class="step-desc">HR reviews your profile. If selected, they schedule your interview.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-number">04</div>
                     <div class="step-icon">💰</div>
-                    <h3 class="step-title">Pay ₹99 & Connect</h3>
-                    <p class="step-desc">Pay only ₹99 to unlock interview details. No interview = No payment!</p>
+                    <h3 class="step-title">Pay ₹99 After Interview Confirmed</h3>
+                    <p class="step-desc">Pay only ₹99 to get your interview details. No interview = No payment!</p>
                 </div>
             </div>
         </div>
@@ -253,9 +251,9 @@
     <section class="section section-dark" id="jobs">
         <div class="container">
             <div class="section-header">
-                <span class="section-badge">Open Positions</span>
-                <h2 class="section-title">Latest Job Opportunities</h2>
-                <p class="section-subtitle">Hand-picked jobs from top companies looking for talent like you</p>
+                <span class="section-badge">Jobs</span>
+                <h2 class="section-title">Browse Open Positions</h2>
+                <p class="section-subtitle">Find jobs that match your skills. Apply for free.</p>
             </div>
 
             <!-- Search & Filters -->
@@ -489,7 +487,7 @@
             </div>
 
             <div class="text-center mt-8">
-                <button class="btn btn-outline btn-lg">View All Jobs →</button>
+                <a href="jobs.html" class="btn btn-outline btn-lg" id="viewAllJobsBtn">View All Jobs →</a>
             </div>
         </div>
     </section>
@@ -498,10 +496,9 @@
     <section class="section" id="pricing">
         <div class="container">
             <div class="section-header">
-                <span class="section-badge">Transparent Pricing</span>
-                <h2 class="section-title">Pay Only When Interview is Scheduled</h2>
-                <p class="section-subtitle">No upfront fees. No hidden charges. Pay ₹99 only after HR schedules your
-                    interview.</p>
+                <span class="section-badge">Simple Pricing</span>
+                <h2 class="section-title">No Interview = No Payment</h2>
+                <p class="section-subtitle">Apply for free. Pay ₹99 only after HR schedules your interview.</p>
             </div>
             <div class="pricing-card">
                 <div class="pricing-header">
@@ -509,38 +506,65 @@
                     <div class="pricing-amount">
                         <span class="currency">₹</span>
                         <span class="price">99</span>
-                        <span class="period">/interview</span>
+                        <span class="period">only</span>
                     </div>
                 </div>
                 <div class="pricing-features">
                     <div class="feature">
                         <span class="feature-icon">✓</span>
-                        <span>Free job applications (unlimited)</span>
+                        <span>Free job applications (apply to any job)</span>
                     </div>
                     <div class="feature">
                         <span class="feature-icon">✓</span>
-                        <span>Free skill tests (valid 7 days)</span>
+                        <span>Free skill test (valid for 7 days)</span>
                     </div>
                     <div class="feature">
                         <span class="feature-icon">✓</span>
-                        <span>Apply to multiple jobs with same skill</span>
+                        <span>One skill test unlocks all jobs for that skill</span>
                     </div>
                     <div class="feature">
                         <span class="feature-icon">✓</span>
-                        <span>Pay only after interview is scheduled</span>
+                        <span>Pay ₹99 only after interview is scheduled</span>
                     </div>
                     <div class="feature">
                         <span class="feature-icon">✓</span>
-                        <span>Get interview date, time & mode</span>
+                        <span>Get interview date, time & details</span>
                     </div>
                     <div class="feature">
                         <span class="feature-icon">✓</span>
-                        <span>100% refund if HR doesn't show up</span>
+                        <span>100% refund if HR cancels or doesn't show</span>
                     </div>
                 </div>
-                <button class="btn btn-primary btn-lg btn-block" id="pricingCta" onclick="showModal('register')">Get
-                    Started Free</button>
+                <button class="btn btn-primary btn-lg btn-block" id="pricingCta" onclick="showModal('register')">Start
+                    Applying Free</button>
             </div>
+        </div>
+    </section>
+
+    <!-- Why ₹99 Section -->
+    <section class="why-99-section">
+        <div class="container">
+            <h2 class="why-99-title">Why ₹99?</h2>
+            <p class="why-99-text">
+                We charge a small ₹99 fee only after your interview is scheduled<br>
+                to ensure candidates stay serious and attend interviews on time.
+            </p>
+            <p class="why-99-helps">This helps:</p>
+            <div class="why-99-benefits">
+                <div class="why-99-benefit">
+                    <span class="benefit-icon">✓</span>
+                    <span>Candidates get real interview opportunities</span>
+                </div>
+                <div class="why-99-benefit">
+                    <span class="benefit-icon">✓</span>
+                    <span>HR avoid last-minute no-shows</span>
+                </div>
+                <div class="why-99-benefit">
+                    <span class="benefit-icon">✓</span>
+                    <span>Faster and fair hiring for everyone</span>
+                </div>
+            </div>
+            <p class="why-99-tagline">No interview → No payment. Simple.</p>
         </div>
     </section>
 
@@ -549,8 +573,8 @@
         <div class="container">
             <div class="section-header">
                 <span class="section-badge">Real Interviews</span>
-                <h2 class="section-title">Real Interviews Happening on Our Platform</h2>
-                <p class="section-subtitle">Verified candidates. Real HR interviews. Transparent process.</p>
+                <h2 class="section-title">Real Candidates, Real Interviews</h2>
+                <p class="section-subtitle">See what our candidates say about their interview experience.</p>
             </div>
 
             <!-- Trust Counters -->
@@ -577,7 +601,7 @@
             </div>
 
             <div class="text-center mt-8">
-                <button class="btn btn-outline btn-lg">View All Interviews →</button>
+                <a href="testimonials.html" class="btn btn-outline btn-lg">View All Interviews →</a>
             </div>
         </div>
     </section>
@@ -606,35 +630,33 @@
             <div class="footer-grid">
                 <div class="footer-brand">
                     <a href="/" class="logo">
-                        <span class="logo-icon">💼</span>
-                        <span class="logo-text">JobRefer</span>
+                        <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="logo-img">
                     </a>
-                    <p class="footer-desc">India's #1 job referral platform. Get referred to your dream company and land
-                        interviews faster.</p>
+                    <p class="footer-desc">A skill-based job platform. Apply for jobs free, pay only after your
+                        interview is scheduled. No fake guarantees.</p>
                 </div>
                 <div class="footer-links">
                     <h4>For Candidates</h4>
-                    <a href="#">Browse Jobs</a>
-                    <a href="#">How It Works</a>
-                    <a href="#">Pricing</a>
-                    <a href="#">Success Stories</a>
+                    <a href="jobs.html">Jobs</a>
+                    <a href="/#how-it-works" onclick="goToSection('#how-it-works'); return false;">How It Works</a>
+                    <a href="/#pricing" onclick="goToSection('#pricing'); return false;">Pricing</a>
+                    <a href="/#testimonials" onclick="goToSection('#testimonials'); return false;">Success Stories</a>
                 </div>
                 <div class="footer-links">
                     <h4>For Companies</h4>
-                    <a href="#">Post Jobs</a>
-                    <a href="#">HR Dashboard</a>
-                    <a href="#">Employee Referral Program</a>
+                    <a href="hr-login.html">Post Jobs</a>
+                    <a href="hr-dashboard.html">HR Dashboard</a>
                 </div>
                 <div class="footer-links">
                     <h4>Support</h4>
-                    <a href="#">Help Center</a>
-                    <a href="#">Contact Us</a>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
+                    <a href="#" onclick="showModal('contact'); return false;">Help Center</a>
+                    <a href="#" onclick="showModal('contact'); return false;">Contact Us</a>
+                    <a href="privacy-policy.html">Privacy Policy</a>
+                    <a href="terms-and-conditions.html">Terms of Service</a>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 JobRefer. All rights reserved.</p>
+                <p>&copy; 2026 NaukriShetu. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -687,8 +709,7 @@
             <div class="modal-footer">
                 <p>Don't have an account? <a href="#" onclick="showModal('register')">Sign up</a></p>
                 <p style="margin-top: 12px; font-size: 12px; color: #94a3b8;">
-                    Are you an <a href="employee-login.html" style="color: #818cf8;">Employee</a> or
-                    <a href="hr-login.html" style="color: #818cf8;">HR/Recruiter</a>?
+                    Are you an <a href="hr-login.html" style="color: #818cf8;">HR/Recruiter</a>?
                 </p>
             </div>
         </div>
@@ -747,8 +768,7 @@
                 <div class="other-portals"
                     style="background: rgba(99, 102, 241, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; text-align: center;">
                     <p style="margin: 0; color: #94a3b8;">
-                        Are you an <a href="employee-login.html" style="color: #818cf8;">Employee</a> or
-                        <a href="hr-login.html" style="color: #818cf8;">HR/Recruiter</a>?
+                        Are you an <a href="hr-login.html" style="color: #818cf8;">HR/Recruiter</a>?
                     </p>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
@@ -805,6 +825,50 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block btn-lg">Reset Password</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Contact Us Modal -->
+    <div class="modal-overlay" id="contactModalOverlay" onclick="closeContactModal()"></div>
+    <div class="modal" id="contactModal">
+        <button class="modal-close" onclick="closeContactModal()">×</button>
+        <div class="modal-content">
+            <div style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
+                <h2 class="modal-title">Need Help? We're Here for You.</h2>
+                <p class="modal-subtitle" style="max-width: 400px; margin: 0 auto 24px;">
+                    Have questions about interviews, payments, or refunds?<br>
+                    Our support team will respond within 24 hours.
+                </p>
+                <div style="background: rgba(99, 102, 241, 0.1); padding: 20px; border-radius: 12px; margin-top: 20px;">
+                    <p style="color: #e2e8f0; margin-bottom: 12px;"><strong>📧 Email Us:</strong></p>
+                    <a href="mailto:support@naukrishetu.com"
+                        style="color: #818cf8; font-size: 18px; text-decoration: none;">support@naukrishetu.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Guarantee Modal -->
+    <div class="modal-overlay" id="refundModalOverlay" onclick="closeRefundModal()"></div>
+    <div class="modal" id="refundModal">
+        <button class="modal-close" onclick="closeRefundModal()">×</button>
+        <div class="modal-content">
+            <div style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🛡️</div>
+                <h2 class="modal-title">100% Refund if Interview Doesn't Happen</h2>
+                <p class="modal-subtitle" style="max-width: 420px; margin: 0 auto 24px;">
+                    If HR cancels or fails to attend the interview,<br>
+                    your ₹99 will be fully refunded — no questions asked.
+                </p>
+                <div
+                    style="background: rgba(34, 197, 94, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #22c55e;">
+                        <span style="font-size: 20px;">✓</span>
+                        <span style="font-weight: 600;">Your money is always protected</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

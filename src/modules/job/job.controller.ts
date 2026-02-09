@@ -11,7 +11,7 @@ import {
 import { JobService } from './job.service';
 import { CreateJobDto, UpdateJobDto, ApplyJobDto, JobQueryDto } from './dto';
 import { Public, CurrentUser, Roles } from '../../common/decorators';
-import { UserRole } from '../../common/constants';
+import { UserRole, JobStatus } from '../../common/constants';
 
 @Controller('jobs')
 export class JobController {
@@ -73,6 +73,6 @@ export class JobController {
     @CurrentUser('sub') userId: string,
     @Query('status') status?: string,
   ) {
-    return this.jobService.getHRJobs(userId, status);
+    return this.jobService.getHRJobs(userId, status as JobStatus | undefined);
   }
 }

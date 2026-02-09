@@ -1,0 +1,17 @@
+﻿prisma/reset-schedule-for-new-flow.ts(41,74): error TS2339: Property 'name' does not exist on type '{ id: string; email: string; phone: string | null; googleId: string | null; passwordHash: string | null; role: UserRole; status: UserStatus; emailVerified: boolean; ... 4 more ...; authProvider: string; }'.
+src/modules/admin/admin.controller.ts(395,7): error TS2345: Argument of type 'string' is not assignable to parameter of type 'PaymentStatus'.
+src/modules/candidate/candidate.controller.ts(162,58): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'ApplicationStatus | undefined'.
+  Type 'string' is not assignable to type 'ApplicationStatus | undefined'.
+src/modules/hr/services/hr.service.ts(1088,11): error TS2353: Object literal may only specify known properties, and 'hrId' does not exist in type 'Without<InterviewCreateInput, InterviewUncheckedCreateInput> & InterviewUncheckedCreateInput'.
+src/modules/interview/interview.service.ts(212,9): error TS2322: Type 'string | null' is not assignable to type 'InterviewMode | NullableEnumInterviewModeFieldUpdateOperationsInput | null | undefined'.
+  Type 'string' is not assignable to type 'InterviewMode | NullableEnumInterviewModeFieldUpdateOperationsInput | null | undefined'.
+src/modules/job/job.controller.ts(76,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'JobStatus | undefined'.
+  Type 'string' is not assignable to type 'JobStatus | undefined'.
+src/modules/payment/payment.service.ts(587,24): error TS18047: 'application.Interview' is possibly 'null'.
+src/modules/rapid-fire/rapid-fire.service.ts(317,7): error TS2322: Type 'SessionData | null' is not assignable to type 'SessionData | undefined'.
+  Type 'null' is not assignable to type 'SessionData | undefined'.
+src/modules/rapid-fire/rapid-fire.service.ts(473,7): error TS2322: Type 'SessionData | null' is not assignable to type 'SessionData | undefined'.
+  Type 'null' is not assignable to type 'SessionData | undefined'.
+src/modules/rapid-fire/rapid-fire.service.ts(539,7): error TS2322: Type 'SessionData | null' is not assignable to type 'SessionData | undefined'.
+  Type 'null' is not assignable to type 'SessionData | undefined'.
+src/modules/resume-parser/resume-parser.service.ts(92,22): error TS2353: Object literal may only specify known properties, and 'skills' does not exist in type 'ParsedResumeData'.

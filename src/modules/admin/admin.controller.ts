@@ -392,7 +392,7 @@ export class AdminController {
   ) {
     return this.adminService.updatePaymentStatus(
       paymentId,
-      newStatus,
+      newStatus as PaymentStatus,
       adminId,
       reason,
     );

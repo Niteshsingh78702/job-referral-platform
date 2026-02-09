@@ -21,7 +21,7 @@ const RETEST_COOLDOWN_HOURS = 24;
 export class SkillBucketService {
   private readonly logger = new Logger(SkillBucketService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // ==========================================
   // ADMIN: Skill Bucket Management
@@ -181,7 +181,7 @@ export class SkillBucketService {
         isPassed: false,
         isValid: false,
         isFailed: false,
-        canReTest: true,
+        canRetest: true,
         neverTaken: true,
       };
     }
@@ -206,7 +206,7 @@ export class SkillBucketService {
         validTill,
         validDaysRemaining: isValid ? daysRemaining : 0,
         isFailed: false,
-        canReTest: !isValid, // Can retest if expired
+        canRetest: !isValid, // Can retest if expired
         neverTaken: false,
       };
     }
@@ -317,8 +317,8 @@ export class SkillBucketService {
 
     this.logger.log(
       `Recorded skill test attempt: candidate=${candidateId}, skill=${skillBucketId}, ` +
-        `passed=${isPassed}, score=${score}, validTill=${validTill}, retestAllowedAt=${retestAllowedAt}, ` +
-        `validityDays=${validityDays}, cooldownHours=${cooldownHours}`,
+      `passed=${isPassed}, score=${score}, validTill=${validTill}, retestAllowedAt=${retestAllowedAt}, ` +
+      `validityDays=${validityDays}, cooldownHours=${cooldownHours}`,
     );
 
     return attempt;

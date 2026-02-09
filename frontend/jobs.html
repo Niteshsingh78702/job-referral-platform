@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+    <title>All Jobs | NaukriShetu - Skill-Based Job Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Jobs Page Specific Styles */
+        .jobs-page-container {
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        .jobs-page-header {
+            padding: 40px 0 20px;
+            text-align: center;
+        }
+
+        .jobs-page-header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .jobs-page-header p {
+            color: var(--text-secondary);
+        }
+
+        .jobs-count {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .pagination button.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .no-jobs-found {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-jobs-found .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .jobs-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .results-info {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Autocomplete Suggestions */
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-suggestions.active {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.active {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .suggestion-icon {
+            font-size: 16px;
+            opacity: 0.6;
+        }
+
+        .suggestion-text {
+            flex: 1;
+        }
+
+        .suggestion-text .title {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .suggestion-text .subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .suggestion-count {
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .suggestion-category {
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-darker);
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .jobs-page-container {
+                padding-top: 70px;
+            }
+
+            .jobs-page-header {
+                padding: 24px 0 16px;
+            }
+
+            .jobs-page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .nav-auth {
+                gap: 8px;
+            }
+
+            .nav-auth .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .search-bar {
+                padding: 16px;
+            }
+
+            .search-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .search-input-wrapper {
+                width: 100%;
+            }
+
+            .search-row .btn {
+                width: 100%;
+            }
+
+            .filters-row {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .filter-select {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 120px;
+                font-size: 12px;
+                padding: 10px 8px;
+            }
+
+            .filters-row .btn-ghost {
+                width: 100%;
+                margin-top: 8px;
+            }
+
+            .jobs-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px;
+            }
+
+            .job-card {
+                padding: 16px;
+            }
+
+            .job-title {
+                font-size: 16px;
+            }
+
+            .job-details {
+                flex-wrap: wrap;
+            }
+
+            .job-footer {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .job-footer-left {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .pagination {
+                gap: 4px;
+            }
+
+            .pagination button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .back-link {
+                font-size: 14px;
+            }
+
+            /* Modal responsive */
+            .modal {
+                width: 95% !important;
+                max-width: 95% !important;
+                margin: 16px auto;
+                max-height: calc(100vh - 32px);
+            }
+
+            .job-detail-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+
+            .flow-steps-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .flow-step-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .jobs-page-header h1 {
+                font-size: 1.25rem;
+            }
+
+            .jobs-count {
+                font-size: 12px;
+                padding: 3px 8px;
+            }
+
+            .filter-select {
+                flex: 1 1 100%;
+            }
+
+            .pagination button {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .company-logo {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .skill-tag {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="logo-img">
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/#how-it-works" class="nav-link">How It Works</a>
+                <a href="/#pricing" class="nav-link">Pricing</a>
+            </div>
+            <div class="nav-auth" id="navAuth">
+                <button class="btn btn-outline" onclick="window.location.href='/'">Login</button>
+                <button class="btn btn-primary" onclick="window.location.href='/'">Get Started</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Jobs Page Content -->
+    <div class="jobs-page-container">
+        <div class="container">
+            <a href="/" class="back-link">← Back to Home</a>
+
+            <div class="jobs-page-header">
+                <h1>All Jobs <span class="jobs-count" id="totalJobsCount">0</span></h1>
+                <p>Find jobs that match your skills. Apply for free.</p>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="search-bar">
+                <div class="search-row">
+                    <div class="search-input-wrapper" style="position: relative;">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="jobSearch" placeholder="Search jobs by title, company, or skills..."
+                            class="search-input"
+                            onkeypress="if(event.key==='Enter') { hideSuggestions(); searchJobs(); }"
+                            oninput="showSuggestions(this.value)" onfocus="showSuggestions(this.value)"
+                            autocomplete="off">
+                        <div class="search-suggestions" id="searchSuggestions"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="searchJobs()">Search</button>
+                    <button class="btn btn-outline saved-jobs-btn" onclick="toggleSavedJobsView()" id="savedJobsBtn">
+                        ❤️ Saved
+                    </button>
+                </div>
+                <div class="filters-row">
+                    <select id="locationFilter" class="filter-select" onchange="searchJobs()">
+                        <option value="">All Locations</option>
+                        <option value="bangalore">Bangalore</option>
+                        <option value="mumbai">Mumbai</option>
+                        <option value="delhi">Delhi NCR</option>
+                        <option value="noida">Noida</option>
+                        <option value="gurgaon">Gurgaon</option>
+                        <option value="hyderabad">Hyderabad</option>
+                        <option value="pune">Pune</option>
+                        <option value="chennai">Chennai</option>
+                        <option value="kolkata">Kolkata</option>
+                        <option value="ahmedabad">Ahmedabad</option>
+                        <option value="jaipur">Jaipur</option>
+                        <option value="kochi">Kochi</option>
+                        <option value="chandigarh">Chandigarh</option>
+                        <option value="indore">Indore</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                    <select id="experienceFilter" class="filter-select" onchange="searchJobs()">
+                        <option value="">Experience</option>
+                        <option value="0-1">Fresher (0-1 yrs)</option>
+                        <option value="1-2">1-2 years</option>
+                        <option value="2-4">2-4 years</option>
+                        <option value="4-6">4-6 years</option>
+                        <option value="6-10">6-10 years</option>
+                        <option value="10+">10+ years</option>
+                    </select>
+                    <select id="jobTypeFilter" class="filter-select" onchange="searchJobs()">
+                        <option value="">Job Type</option>
+                        <option value="fulltime">Full-time</option>
+                        <option value="parttime">Part-time</option>
+                        <option value="contract">Contract</option>
+                        <option value="internship">Internship</option>
+                    </select>
+                    <select id="workModeFilter" class="filter-select" onchange="searchJobs()">
+                        <option value="">Work Mode</option>
+                        <option value="office">Office</option>
+                        <option value="hybrid">Hybrid</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                    <select id="postedDateFilter" class="filter-select" onchange="searchJobs()">
+                        <option value="">Posted Date</option>
+                        <option value="24h">Last 24 hours</option>
+                        <option value="week">Last Week</option>
+                        <option value="month">Last Month</option>
+                    </select>
+                    <select id="sortBy" class="filter-select" onchange="searchJobs()">
+                        <option value="relevance">Sort: Relevance</option>
+                        <option value="date">Sort: Newest</option>
+                        <option value="salary">Sort: Salary ↓</option>
+                    </select>
+                    <button class="btn btn-ghost btn-sm" onclick="clearAllFilters()">Clear Filters</button>
+                </div>
+            </div>
+
+            <!-- Jobs Stats -->
+            <div class="jobs-stats">
+                <span class="results-info" id="resultsInfo">Loading jobs...</span>
+            </div>
+
+            <!-- Job Cards Grid -->
+            <div class="jobs-grid" id="jobsGrid">
+                <div class="loading-spinner" id="jobsLoading">
+                    <div class="spinner"></div>
+                    <p>Loading jobs...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay" id="jobModalOverlay" onclick="closeJobModal()"></div>
+    <div class="modal modal-lg job-detail-modal" id="jobDetailModal">
+        <button class="modal-close" onclick="closeJobModal()">×</button>
+        <div class="modal-content" id="jobDetailContent"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        const API_BASE_URL = '/api/v1';
+
+        // State management
+        const state = {
+            jobs: [],
+            allJobs: [],
+            filteredJobs: [],
+            currentPage: 1,
+            jobsPerPage: 12,
+            token: localStorage.getItem('token'),
+            user: JSON.parse(localStorage.getItem('user') || 'null')
+        };
+
+        // Saved jobs from localStorage
+        let savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+        let showingSavedOnly = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadJobs();
+            parseURLFilters();
+        });
+
+        // Parse URL parameters for filters
+        function parseURLFilters() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('search')) document.getElementById('jobSearch').value = params.get('search');
+            if (params.get('location')) document.getElementById('locationFilter').value = params.get('location');
+            if (params.get('experience')) document.getElementById('experienceFilter').value = params.get('experience');
+        }
+
+        // Load all jobs from API
+        async function loadJobs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/jobs`);
+                const data = await response.json();
+
+                let jobs = [];
+                if (data.success && data.data) {
+                    jobs = Array.isArray(data.data) ? data.data : (data.data.data || []);
+                } else if (Array.isArray(data)) {
+                    jobs = data;
+                }
+
+                state.allJobs = jobs;
+                state.jobs = jobs;
+                document.getElementById('totalJobsCount').textContent = jobs.length;
+                document.getElementById('jobsLoading').style.display = 'none';
+
+                searchJobs(); // Apply any URL filters
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                document.getElementById('jobsLoading').innerHTML = `
+                    <div class="no-jobs-found">
+                        <div class="icon">😕</div>
+                        <p>Unable to load jobs. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Autocomplete suggestions
+        function showSuggestions(query) {
+            const suggestionsDiv = document.getElementById('searchSuggestions');
+
+            if (!query || query.length < 1) {
+                suggestionsDiv.classList.remove('active');
+                return;
+            }
+
+            // Get the current search term (text after last comma)
+            const terms = query.split(',');
+            const currentTerm = terms[terms.length - 1].trim();
+
+            if (!currentTerm || currentTerm.length < 1) {
+                suggestionsDiv.classList.remove('active');
+                return;
+            }
+
+            const queryLower = currentTerm.toLowerCase();
+
+            // Get unique job titles, skills and companies matching the query
+            const titleMatches = new Map();
+            const skillMatches = new Map();
+            const companyMatches = new Map();
+
+            state.allJobs.forEach(job => {
+                // Title matches
+                if (job.title.toLowerCase().includes(queryLower)) {
+                    const key = job.title;
+                    titleMatches.set(key, (titleMatches.get(key) || 0) + 1);
+                }
+
+                // Skill matches
+                (job.skills || []).forEach(skill => {
+                    if (skill.name.toLowerCase().includes(queryLower)) {
+                        const key = skill.name;
+                        skillMatches.set(key, (skillMatches.get(key) || 0) + 1);
+                    }
+                });
+
+                // Company matches
+                if (job.companyName?.toLowerCase().includes(queryLower)) {
+                    const key = job.companyName;
+                    companyMatches.set(key, (companyMatches.get(key) || 0) + 1);
+                }
+            });
+
+            let html = '';
+
+            // Job titles
+            if (titleMatches.size > 0) {
+                html += '<div class="suggestion-category">Job Titles</div>';
+                [...titleMatches.entries()].slice(0, 5).forEach(([title, count]) => {
+                    html += `
+                        <div class="suggestion-item" onclick="selectSuggestion('${title.replace(/'/g, "\\'")}')">
+                            <span class="suggestion-icon">💼</span>
+                            <div class="suggestion-text">
+                                <div class="title">${title}</div>
+                            </div>
+                            <span class="suggestion-count">${count} job${count > 1 ? 's' : ''}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // Skills
+            if (skillMatches.size > 0) {
+                html += '<div class="suggestion-category">Skills</div>';
+                [...skillMatches.entries()].slice(0, 5).forEach(([skill, count]) => {
+                    html += `
+                        <div class="suggestion-item" onclick="selectSuggestion('${skill.replace(/'/g, "\\'")}')">
+                            <span class="suggestion-icon">🎯</span>
+                            <div class="suggestion-text">
+                                <div class="title">${skill}</div>
+                            </div>
+                            <span class="suggestion-count">${count} job${count > 1 ? 's' : ''}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // Companies
+            if (companyMatches.size > 0) {
+                html += '<div class="suggestion-category">Companies</div>';
+                [...companyMatches.entries()].slice(0, 3).forEach(([company, count]) => {
+                    html += `
+                        <div class="suggestion-item" onclick="selectSuggestion('${company.replace(/'/g, "\\'")}')">
+                            <span class="suggestion-icon">🏢</span>
+                            <div class="suggestion-text">
+                                <div class="title">${company}</div>
+                            </div>
+                            <span class="suggestion-count">${count} job${count > 1 ? 's' : ''}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            if (html) {
+                suggestionsDiv.innerHTML = html;
+                suggestionsDiv.classList.add('active');
+            } else {
+                suggestionsDiv.classList.remove('active');
+            }
+        }
+
+        function hideSuggestions() {
+            document.getElementById('searchSuggestions').classList.remove('active');
+        }
+
+        function selectSuggestion(value) {
+            const input = document.getElementById('jobSearch');
+            const currentValue = input.value.trim();
+
+            // If there's already content, check for last comma
+            if (currentValue) {
+                const lastCommaIndex = currentValue.lastIndexOf(',');
+                if (lastCommaIndex !== -1) {
+                    // Replace text after last comma
+                    input.value = currentValue.substring(0, lastCommaIndex + 1) + ' ' + value + ', ';
+                } else {
+                    // Replace entire text and add comma for next term
+                    input.value = value + ', ';
+                }
+            } else {
+                input.value = value + ', ';
+            }
+
+            hideSuggestions();
+            input.focus();
+            // Don't auto-search, let user add more terms
+        }
+
+        // Close suggestions on click outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-input-wrapper')) {
+                hideSuggestions();
+            }
+        });
+
+        // Search and filter jobs
+        function searchJobs() {
+            // Show skeleton loading
+            const jobsGrid = document.getElementById('jobsGrid');
+            jobsGrid.classList.add('loading');
+            jobsGrid.innerHTML = `
+                ${[1, 2, 3, 4, 5, 6].map(() => `
+                    <div class="skeleton-card">
+                        <div class="skeleton-row">
+                            <div class="skeleton-line badge"></div>
+                        </div>
+                        <div class="skeleton-line title"></div>
+                        <div class="skeleton-line company"></div>
+                        <div class="skeleton-row">
+                            <div class="skeleton-line badge"></div>
+                            <div class="skeleton-line badge"></div>
+                        </div>
+                        <div class="skeleton-line description"></div>
+                        <div class="skeleton-line description"></div>
+                    </div>
+                `).join('')}
+            `;
+
+            // Delay filter to show loading animation
+            setTimeout(() => {
+                performSearch();
+            }, 200);
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
+            const location = document.getElementById('locationFilter').value.toLowerCase();
+            const experience = document.getElementById('experienceFilter')?.value;
+            const jobType = document.getElementById('jobTypeFilter')?.value;
+            const workMode = document.getElementById('workModeFilter')?.value;
+            const postedDate = document.getElementById('postedDateFilter')?.value;
+            const sortBy = document.getElementById('sortBy')?.value || 'relevance';
+
+            let filtered = [...state.allJobs];
+
+            // Text search - handle comma-separated terms (like Naukri)
+            if (searchTerm) {
+                // Split by comma first, then by spaces within each term
+                const searchTerms = searchTerm.split(',')
+                    .map(t => t.trim().toLowerCase())
+                    .filter(t => t.length > 0);
+
+                filtered = filtered.filter(job => {
+                    const titleLower = job.title.toLowerCase();
+                    const companyLower = job.companyName?.toLowerCase() || '';
+                    const skillNames = (job.skills || []).map(s => s.name.toLowerCase()).join(' ');
+                    const locationLower = job.location?.toLowerCase() || '';
+                    const searchText = `${titleLower} ${companyLower} ${skillNames} ${locationLower}`;
+
+                    // Job must match ALL comma-separated terms
+                    return searchTerms.every(term => {
+                        // Each term can have multiple words - match if ANY word in term is found
+                        const words = term.split(/\s+/).filter(w => w.length > 0);
+                        return words.some(word => searchText.includes(word));
+                    });
+                });
+            }
+
+            // Location filter
+            if (location) {
+                const locationAliases = {
+                    'delhi': ['delhi', 'new delhi', 'ncr', 'delhi ncr'],
+                    'gurgaon': ['gurgaon', 'gurugram'],
+                    'bangalore': ['bangalore', 'bengaluru'],
+                    'mumbai': ['mumbai', 'bombay'],
+                    'chennai': ['chennai', 'madras'],
+                    'kolkata': ['kolkata', 'calcutta']
+                };
+
+                const aliases = locationAliases[location] || [location];
+                filtered = filtered.filter(job => {
+                    const jobLoc = job.location?.toLowerCase() || '';
+                    return aliases.some(alias => jobLoc.includes(alias)) ||
+                        (location === 'remote' && job.isRemote);
+                });
+            }
+
+            // Experience filter
+            if (experience) {
+                const [minExp, maxExp] = experience === '10+' ? [10, 50] : experience.split('-').map(Number);
+                filtered = filtered.filter(job => {
+                    const jobMin = job.experienceMin || 0;
+                    const jobMax = job.experienceMax || 50;
+                    return jobMin <= maxExp && jobMax >= minExp;
+                });
+            }
+
+            // Work mode filter
+            if (workMode) {
+                filtered = filtered.filter(job => {
+                    if (workMode === 'remote') return job.isRemote;
+                    if (workMode === 'hybrid') return job.workMode?.toLowerCase() === 'hybrid';
+                    return !job.isRemote;
+                });
+            }
+
+            // Posted date filter
+            if (postedDate) {
+                const now = new Date();
+                const cutoff = new Date();
+                if (postedDate === '24h') cutoff.setHours(now.getHours() - 24);
+                else if (postedDate === 'week') cutoff.setDate(now.getDate() - 7);
+                else if (postedDate === 'month') cutoff.setMonth(now.getMonth() - 1);
+
+                filtered = filtered.filter(job => {
+                    const postedAt = new Date(job.postedAt || job.createdAt);
+                    return postedAt >= cutoff;
+                });
+            }
+
+            // Sort
+            if (sortBy === 'date') {
+                filtered.sort((a, b) => new Date(b.postedAt || b.createdAt) - new Date(a.postedAt || a.createdAt));
+            } else if (sortBy === 'salary') {
+                filtered.sort((a, b) => (b.salaryMax || 0) - (a.salaryMax || 0));
+            }
+
+            // Saved jobs filter
+            if (showingSavedOnly) {
+                filtered = filtered.filter(job => savedJobs.includes(job.id));
+            }
+
+            state.filteredJobs = filtered;
+            state.currentPage = 1;
+
+            // Update results info
+            document.getElementById('resultsInfo').textContent =
+                `Showing ${filtered.length} of ${state.allJobs.length} jobs`;
+
+            renderPaginatedJobs();
+        }
+
+        // Render jobs with pagination
+        function renderPaginatedJobs() {
+            const start = (state.currentPage - 1) * state.jobsPerPage;
+            const end = start + state.jobsPerPage;
+            const pageJobs = state.filteredJobs.slice(start, end);
+
+            const jobsGrid = document.getElementById('jobsGrid');
+            jobsGrid.classList.remove('loading');
+
+            if (pageJobs.length === 0) {
+                jobsGrid.innerHTML = `
+                    <div class="no-jobs-found" style="grid-column: 1 / -1;">
+                        <div class="icon">🔍</div>
+                        <h3>No jobs found</h3>
+                        <p>Try adjusting your search or filters</p>
+                        <button class="btn btn-primary" onclick="clearAllFilters()" style="margin-top: 16px;">Clear All Filters</button>
+                    </div>
+                `;
+            } else {
+                jobsGrid.innerHTML = pageJobs.map(job => renderJobCard(job)).join('');
+            }
+
+            renderPagination();
+        }
+
+        // Render single job card
+        function renderJobCard(job) {
+            return `
+                <div class="job-card" onclick="showJobDetails('${job.id}')" style="cursor: pointer;">
+                    <button class="save-job-btn ${isJobSaved(job.id) ? 'saved' : ''}" onclick="toggleSaveJob('${job.id}', event)" title="${isJobSaved(job.id) ? 'Remove from saved' : 'Save job'}">
+                        ${isJobSaved(job.id) ? '❤️' : '🤍'}
+                    </button>
+                    <div class="job-header">
+                        <div class="company-logo" style="background: ${getRandomGradient()}">${job.companyName?.charAt(0) || 'J'}</div>
+                        <div class="job-meta">
+                            <h3 class="job-title">${job.title}</h3>
+                            <p class="company-name">${job.companyName}</p>
+                        </div>
+                        ${job.isHot ? '<span class="job-badge">Hot 🔥</span>' : ''}
+                    </div>
+                    <div class="job-details">
+                        <span class="job-detail"><span class="detail-icon">📍</span> ${job.location}${job.isRemote ? ' (Remote)' : ''}</span>
+                        <span class="job-detail"><span class="detail-icon">💼</span> ${job.experienceMin || 0}-${job.experienceMax || 'Any'} years</span>
+                        ${job.salaryMin ? `<span class="job-detail"><span class="detail-icon">💰</span> ₹${formatSalary(job.salaryMin)}-${formatSalary(job.salaryMax)} LPA</span>` : ''}
+                    </div>
+                    <div class="job-skills">
+                        ${(job.skills || []).slice(0, 3).map(skill => `<span class="skill-tag">${skill.name}</span>`).join('')}
+                        ${(job.skills || []).length > 3 ? `<span class="skill-tag">+${job.skills.length - 3}</span>` : ''}
+                    </div>
+                    <div class="skill-test-notice">
+                        <span class="test-required-badge">🧪 Skill Test Required (Valid 7 Days)</span>
+                    </div>
+                    <div class="job-footer">
+                        <div class="job-footer-left">
+                            <span class="interview-fee">💳 Pay ₹99 only if interview scheduled</span>
+                            <span class="posted-time">📅 ${getTimeAgo(job.postedAt || job.createdAt)}</span>
+                        </div>
+                        ${getApplyButtonHtml(job.id, true)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(state.filteredJobs.length / state.jobsPerPage);
+            const paginationDiv = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationDiv.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous button
+            html += `<button ${state.currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${state.currentPage - 1})">← Previous</button>`;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= state.currentPage - 2 && i <= state.currentPage + 2)) {
+                    html += `<button class="${i === state.currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === state.currentPage - 3 || i === state.currentPage + 3) {
+                    html += `<button disabled>...</button>`;
+                }
+            }
+
+            // Next button
+            html += `<button ${state.currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${state.currentPage + 1})">Next →</button>`;
+
+            paginationDiv.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            state.currentPage = page;
+            renderPaginatedJobs();
+            window.scrollTo({ top: 200, behavior: 'smooth' });
+        }
+
+        // Clear all filters
+        function clearAllFilters() {
+            document.getElementById('jobSearch').value = '';
+            document.getElementById('locationFilter').value = '';
+            document.getElementById('experienceFilter').value = '';
+            document.getElementById('jobTypeFilter').value = '';
+            document.getElementById('workModeFilter').value = '';
+            document.getElementById('postedDateFilter').value = '';
+            document.getElementById('sortBy').value = 'relevance';
+            showingSavedOnly = false;
+            document.getElementById('savedJobsBtn')?.classList.remove('active');
+            searchJobs();
+        }
+
+        // Toggle saved jobs view
+        function toggleSavedJobsView() {
+            showingSavedOnly = !showingSavedOnly;
+            const btn = document.getElementById('savedJobsBtn');
+            if (showingSavedOnly) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+            searchJobs();
+        }
+
+        // Save/unsave jobs
+        function toggleSaveJob(jobId, event) {
+            if (event) event.stopPropagation();
+
+            const index = savedJobs.indexOf(jobId);
+            if (index > -1) {
+                savedJobs.splice(index, 1);
+            } else {
+                savedJobs.push(jobId);
+            }
+            localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+            renderPaginatedJobs();
+        }
+
+        function isJobSaved(jobId) {
+            return savedJobs.includes(jobId);
+        }
+
+        // Job detail modal
+        function showJobDetails(jobId) {
+            const job = state.allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const content = document.getElementById('jobDetailContent');
+            content.innerHTML = `
+                <div class="job-detail-header">
+                    <div class="company-logo-lg" style="background: ${getRandomGradient()}">${job.companyName?.charAt(0) || 'J'}</div>
+                    <div>
+                        <h2 class="modal-title">${job.title}</h2>
+                        <p class="modal-subtitle">${job.companyName} • ${job.location}${job.isRemote ? ' (Remote)' : ''}</p>
+                    </div>
+                    ${job.isHot ? '<span class="job-badge" style="margin-left: auto;">Hot 🔥</span>' : ''}
+                </div>
+                
+                <div class="job-detail-info">
+                    <div class="info-item">
+                        <span class="info-label">Experience</span>
+                        <span class="info-value">${job.experienceMin || 0}-${job.experienceMax || 'Any'} years</span>
+                    </div>
+                    ${job.salaryMin ? `
+                    <div class="info-item">
+                        <span class="info-label">Salary Range</span>
+                        <span class="info-value">₹${formatSalary(job.salaryMin)}-${formatSalary(job.salaryMax)} LPA</span>
+                    </div>
+                    ` : ''}
+                    <div class="info-item">
+                        <span class="info-label">Interview Fee</span>
+                        <span class="info-value" style="color: var(--success);">₹99 (only if scheduled)</span>
+                    </div>
+                </div>
+                
+                <div class="job-flow-steps">
+                    <h4>📋 How to Apply</h4>
+                    <div class="flow-steps-grid">
+                        <div class="flow-step">
+                            <span class="flow-step-icon">🧪</span>
+                            <span class="flow-step-text">Pass Skill Test (Valid 7 Days)</span>
+                        </div>
+                        <div class="flow-step-arrow">→</div>
+                        <div class="flow-step">
+                            <span class="flow-step-icon">📝</span>
+                            <span class="flow-step-text">Submit Application (Free)</span>
+                        </div>
+                        <div class="flow-step-arrow">→</div>
+                        <div class="flow-step">
+                            <span class="flow-step-icon">📅</span>
+                            <span class="flow-step-text">HR Schedules Interview</span>
+                        </div>
+                        <div class="flow-step-arrow">→</div>
+                        <div class="flow-step">
+                            <span class="flow-step-icon">💳</span>
+                            <span class="flow-step-text">Pay ₹99 to Unlock Details</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="job-detail-skills">
+                    <h4>Required Skills</h4>
+                    <div class="skills-list">
+                        ${(job.skills || []).map(skill => `<span class="skill-tag">${skill.name}</span>`).join('')}
+                        ${(!job.skills || job.skills.length === 0) ? '<span class="text-muted">No specific skills listed</span>' : ''}
+                    </div>
+                </div>
+                
+                ${job.description ? `
+                <div class="job-detail-description">
+                    <h4>Job Description</h4>
+                    <p>${job.description}</p>
+                </div>
+                ` : ''}
+                
+                <div class="job-detail-actions">
+                    ${getApplyButtonHtml(job.id, false)}
+                    <button class="btn btn-outline ${isJobSaved(job.id) ? 'saved' : ''}" onclick="toggleSaveJob('${job.id}'); closeJobModal(); setTimeout(() => showJobDetails('${job.id}'), 300);">
+                        ${isJobSaved(job.id) ? '❤️ Saved' : '🤍 Save Job'}
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('jobModalOverlay').classList.add('active');
+            document.getElementById('jobDetailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeJobModal() {
+            document.getElementById('jobModalOverlay')?.classList.remove('active');
+            document.getElementById('jobDetailModal')?.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Apply for job - redirect to homepage to login
+        function applyForJob(jobId) {
+            if (!state.token) {
+                showToast('info', 'Please login to apply for jobs');
+                setTimeout(() => {
+                    window.location.href = '/?apply=' + jobId;
+                }, 1000);
+                return;
+            }
+            // If logged in, redirect to homepage which has the full application logic
+            window.location.href = '/#jobs';
+        }
+
+        function getApplyButtonHtml(jobId, isSmall = true) {
+            const sizeClass = isSmall ? 'btn-sm' : '';
+            return `<button class="btn btn-primary ${sizeClass}" onclick="event.stopPropagation(); applyForJob('${jobId}')">Apply Now</button>`;
+        }
+
+        // Utility functions
+        function formatSalary(amount) {
+            if (!amount) return '0';
+            if (amount >= 10000000) return (amount / 10000000).toFixed(1) + 'Cr';
+            if (amount >= 100000) return (amount / 100000).toFixed(0);
+            return amount.toString();
+        }
+
+        function getTimeAgo(dateString) {
+            if (!dateString) return 'Recently';
+            const now = new Date();
+            const date = new Date(dateString);
+            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+            return `${Math.floor(diffDays / 30)} months ago`;
+        }
+
+        function getRandomGradient() {
+            const gradients = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+            ];
+            return gradients[Math.floor(Math.random() * gradients.length)];
+        }
+
+        function showToast(type, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+
+</html>

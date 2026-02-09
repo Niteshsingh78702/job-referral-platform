@@ -39,6 +39,7 @@ export class JobService {
     const job = await this.prisma.$transaction(async (tx) => {
       const newJob = await tx.job.create({
         data: {
+          id: require('crypto').randomUUID(),
           slug,
           title: dto.title,
           description: dto.description,
@@ -59,13 +60,15 @@ export class JobService {
           testId: dto.testId,
           hrId: hr.id,
           status: JobStatus.PENDING_APPROVAL,
+          updatedAt: new Date(),
         },
       });
 
       // Add skills if provided
-      if (dto.JobSkill && dto.jobSkill.length > 0) {
+      if (dto.skills && dto.skills.length > 0) {
         await tx.jobSkill.createMany({
-          data: dto.jobSkill.map((skill) => ({
+          data: dto.skills.map((skill: any) => ({
+            id: require('crypto').randomUUID(),
             jobId: newJob.id,
             name: skill.name,
             isRequired: skill.isRequired ?? true,
@@ -175,7 +178,7 @@ export class JobService {
             id: true,
             title: true,
             duration: true,
-            totalQuestionBank: true,
+            totalQuestions: true,
           },
         },
         HR: {
@@ -206,7 +209,7 @@ export class JobService {
     }
 
     // Check if HR owns this job (skip for admin-created jobs with no HR)
-    if (job.HR && job.hr.userId !== hrId) {
+    if (job.HR && job.HR.userId !== hrId) {
       throw new ForbiddenException('Not authorized to update this job');
     }
 

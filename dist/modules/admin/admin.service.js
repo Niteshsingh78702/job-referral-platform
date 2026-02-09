@@ -1355,8 +1355,8 @@ let AdminService = class AdminService {
                         action: 'no_show',
                         noShowType,
                         notes,
-                        candidateId: interview.application?.candidateId || null,
-                        jobId: interview.application?.jobId || null
+                        candidateId: interview.JobApplication?.candidateId || null,
+                        jobId: interview.JobApplication?.jobId || null
                     }
                 }
             });
@@ -1380,7 +1380,7 @@ let AdminService = class AdminService {
                         id: true,
                         title: true,
                         duration: true,
-                        totalQuestionBank: true
+                        totalQuestions: true
                     }
                 },
                 TestTemplate: {
@@ -1434,14 +1434,28 @@ let AdminService = class AdminService {
         }
         const skillBucket = await this.prisma.skillBucket.create({
             data: {
+                id: _crypto.randomUUID(),
                 code: data.code,
                 name: data.name,
                 description: data.description,
                 displayName: data.displayName || `HR Shortlisting Check - ${data.name}`,
                 experienceMin: data.experienceMin ?? 0,
                 experienceMax: data.experienceMax ?? 3,
-                testId: data.testId,
-                testTemplateId: data.testTemplateId
+                ...data.testId && {
+                    Test: {
+                        connect: {
+                            id: data.testId
+                        }
+                    }
+                },
+                ...data.testTemplateId && {
+                    TestTemplate: {
+                        connect: {
+                            id: data.testTemplateId
+                        }
+                    }
+                },
+                updatedAt: new Date()
             }
         });
         await this.prisma.auditLog.create({
@@ -1496,20 +1510,20 @@ let AdminService = class AdminService {
             include: {
                 _count: {
                     select: {
-                        jobs: true,
-                        attempts: true,
-                        jobRequirements: true
+                        Job: true,
+                        SkillTestAttempt: true,
+                        JobRequiredSkillBucket: true
                     }
                 }
             }
         });
         if (!bucket) throw new _common.NotFoundException('Skill bucket not found');
         // Check if skill bucket is in use
-        if (bucket._count.jobs > 0 || bucket._count.jobRequirements > 0) {
-            throw new _common.BadRequestException(`Cannot delete skill bucket: it is assigned to ${bucket._count.jobs + bucket._count.jobRequirements} job(s). Deactivate it instead.`);
+        if (bucket._count.Job > 0 || bucket._count.JobRequiredSkillBucket > 0) {
+            throw new _common.BadRequestException(`Cannot delete skill bucket: it is assigned to ${bucket._count.Job + bucket._count.JobRequiredSkillBucket} job(s). Deactivate it instead.`);
         }
         // If there are attempts, just deactivate instead of hard delete
-        if (bucket._count.attempts > 0) {
+        if (bucket._count.SkillTestAttempt > 0) {
             await this.prisma.skillBucket.update({
                 where: {
                     id
@@ -1581,6 +1595,7 @@ let AdminService = class AdminService {
                 }
             },
             create: {
+                id: _crypto.randomUUID(),
                 jobId,
                 skillBucketId
             },
@@ -1652,7 +1667,7 @@ let AdminService = class AdminService {
             },
             include: {
                 SkillBucket: true,
-                requiredSkillBucket: {
+                JobRequiredSkillBucket: {
                     include: {
                         SkillBucket: true
                     },
@@ -1667,7 +1682,7 @@ let AdminService = class AdminService {
             jobId: job.id,
             jobTitle: job.title,
             legacySkillBucket: job.SkillBucket,
-            compositeRequirements: job.requiredSkillBuckets
+            compositeRequirements: job.JobRequiredSkillBucket
         };
     }
     // ===========================================
@@ -1738,13 +1753,15 @@ let AdminService = class AdminService {
             // Create refund record
             const refund = await tx.refund.create({
                 data: {
+                    id: _crypto.randomUUID(),
                     paymentId,
                     amount: payment.amount,
                     reason: `ADMIN Refund: ${reason}`,
                     status: _constants.RefundStatus.APPROVED,
                     processedBy: adminId,
                     processedAt: new Date(),
-                    adminNotes: 'Manual refund by admin'
+                    adminNotes: 'Manual refund by admin',
+                    updatedAt: new Date()
                 }
             });
             // Update payment status
@@ -1950,6 +1967,7 @@ let AdminService = class AdminService {
         const validTill = new Date(now.getTime() + validityDays * 24 * 60 * 60 * 1000);
         const attempt = await this.prisma.skillTestAttempt.create({
             data: {
+                id: _crypto.randomUUID(),
                 candidateId,
                 skillBucketId,
                 isPassed: true,

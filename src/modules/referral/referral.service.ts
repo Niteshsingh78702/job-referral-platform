@@ -14,7 +14,7 @@ import {
 
 @Injectable()
 export class ReferralService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Get pending referrals for HR
   async getPendingReferralsForHR(hrUserId: string) {
@@ -45,7 +45,7 @@ export class ReferralService {
                 headline: true,
                 totalExperience: true,
                 currentCompany: true,
-                JobSkill: true,
+                CandidateSkill: true,
                 // Don't include contact until payment
               },
             },
@@ -76,7 +76,7 @@ export class ReferralService {
     return this.prisma.referral.findMany({
       where: {
         status: ReferralStatus.PENDING,
-        type: ReferralType.Employee,
+        type: ReferralType.EMPLOYEE,
         OR: [
           { employeeId: employee.id },
           {
@@ -100,7 +100,7 @@ export class ReferralService {
                 lastName: true,
                 headline: true,
                 totalExperience: true,
-                JobSkill: true,
+                CandidateSkill: true,
               },
             },
             Job: {
@@ -146,8 +146,8 @@ export class ReferralService {
     // Verify authorization
     if (userRole === 'HR') {
       if (
-        !referral.application.job.HR ||
-        referral.application.job.hr.userId !== userId
+        !referral.JobApplication.Job.HR ||
+        referral.JobApplication.Job.HR.userId !== userId
       ) {
         throw new ForbiddenException('Not authorized to confirm this referral');
       }
@@ -161,7 +161,7 @@ export class ReferralService {
       // Verify employee is at the same company
       if (
         employee.companyName.toLowerCase() !==
-        referral.application.job.companyName.toLowerCase()
+        referral.JobApplication.Job.companyName.toLowerCase()
       ) {
         throw new ForbiddenException(
           'Not authorized to refer for this company',
@@ -218,8 +218,8 @@ export class ReferralService {
 
     // Only HR can mark as contacted
     if (
-      !referral.application.job.HR ||
-      referral.application.job.hr.userId !== userId
+      !referral.JobApplication.Job.HR ||
+      referral.JobApplication.Job.HR.userId !== userId
     ) {
       throw new ForbiddenException('Only HR can mark as contacted');
     }
@@ -252,8 +252,8 @@ export class ReferralService {
     }
 
     if (
-      !referral.application.job.HR ||
-      referral.application.job.hr.userId !== userId
+      !referral.JobApplication.Job.HR ||
+      referral.JobApplication.Job.HR.userId !== userId
     ) {
       throw new ForbiddenException('Not authorized');
     }

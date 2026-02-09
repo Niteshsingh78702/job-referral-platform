@@ -55,7 +55,7 @@ let ReferralService = class ReferralService {
                                 headline: true,
                                 totalExperience: true,
                                 currentCompany: true,
-                                JobSkill: true
+                                CandidateSkill: true
                             }
                         },
                         Job: {
@@ -86,7 +86,7 @@ let ReferralService = class ReferralService {
         return this.prisma.referral.findMany({
             where: {
                 status: _constants.ReferralStatus.PENDING,
-                type: _constants.ReferralType.Employee,
+                type: _constants.ReferralType.EMPLOYEE,
                 OR: [
                     {
                         employeeId: employee.id
@@ -112,7 +112,7 @@ let ReferralService = class ReferralService {
                                 lastName: true,
                                 headline: true,
                                 totalExperience: true,
-                                JobSkill: true
+                                CandidateSkill: true
                             }
                         },
                         Job: {
@@ -156,7 +156,7 @@ let ReferralService = class ReferralService {
         }
         // Verify authorization
         if (userRole === 'HR') {
-            if (!referral.application.job.HR || referral.application.job.hr.userId !== userId) {
+            if (!referral.JobApplication.Job.HR || referral.JobApplication.Job.HR.userId !== userId) {
                 throw new _common.ForbiddenException('Not authorized to confirm this referral');
             }
         } else if (userRole === 'EMPLOYEE') {
@@ -169,7 +169,7 @@ let ReferralService = class ReferralService {
                 throw new _common.ForbiddenException('Employee profile not found');
             }
             // Verify employee is at the same company
-            if (employee.companyName.toLowerCase() !== referral.application.job.companyName.toLowerCase()) {
+            if (employee.companyName.toLowerCase() !== referral.JobApplication.Job.companyName.toLowerCase()) {
                 throw new _common.ForbiddenException('Not authorized to refer for this company');
             }
         }
@@ -234,7 +234,7 @@ let ReferralService = class ReferralService {
             throw new _common.NotFoundException('Referral not found');
         }
         // Only HR can mark as contacted
-        if (!referral.application.job.HR || referral.application.job.hr.userId !== userId) {
+        if (!referral.JobApplication.Job.HR || referral.JobApplication.Job.HR.userId !== userId) {
             throw new _common.ForbiddenException('Only HR can mark as contacted');
         }
         return this.prisma.referral.update({
@@ -269,7 +269,7 @@ let ReferralService = class ReferralService {
         if (!referral) {
             throw new _common.NotFoundException('Referral not found');
         }
-        if (!referral.application.job.HR || referral.application.job.hr.userId !== userId) {
+        if (!referral.JobApplication.Job.HR || referral.JobApplication.Job.HR.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
         return this.prisma.$transaction(async (tx)=>{

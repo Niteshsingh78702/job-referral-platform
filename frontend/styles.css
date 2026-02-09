@@ -204,14 +204,30 @@ a:hover {
 .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-size: 24px;
     font-weight: 800;
     color: var(--text-primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.logo:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
 }
 
 .logo-icon {
     font-size: 28px;
+}
+
+.logo-img {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    transition: var(--transition);
 }
 
 .nav-links {
@@ -884,6 +900,119 @@ a:hover {
     border-top: 1px solid var(--border);
     color: var(--text-muted);
     font-size: 14px;
+}
+
+/* =============================================
+   Why ₹99 Section
+   ============================================= */
+.why-99-section {
+    background: linear-gradient(180deg, var(--bg-dark) 0%, rgba(99, 102, 241, 0.05) 50%, var(--bg-dark) 100%);
+    padding: 60px 0;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.why-99-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.why-99-text {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.why-99-helps {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+.why-99-benefits {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.why-99-benefit {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.why-99-benefit .benefit-icon {
+    color: #22c55e;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.why-99-tagline {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-light);
+    margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+    .why-99-section {
+        padding: 40px 20px;
+    }
+
+    .why-99-title {
+        font-size: 24px;
+    }
+
+    .why-99-text {
+        font-size: 14px;
+    }
+
+    .why-99-text br {
+        display: none;
+    }
+
+    .why-99-benefit {
+        font-size: 14px;
+    }
+
+    .why-99-tagline {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .why-99-section {
+        padding: 32px 16px;
+    }
+
+    .why-99-title {
+        font-size: 22px;
+    }
+
+    .why-99-text {
+        font-size: 13px;
+        padding: 0 8px;
+    }
+
+    .why-99-benefit {
+        font-size: 13px;
+        text-align: left;
+    }
+
+    .why-99-tagline {
+        font-size: 15px;
+    }
 }
 
 /* =============================================
@@ -3626,11 +3755,15 @@ html.modal-open body {
     }
 
     .logo {
-        font-size: 20px;
+        font-size: 18px;
     }
 
     .logo-icon {
-        font-size: 24px;
+        font-size: 22px;
+    }
+
+    .logo-img {
+        height: 32px;
     }
 
     /* Hero Section */
@@ -3861,11 +3994,15 @@ html.modal-open body {
     }
 
     .logo {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .logo-icon {
-        font-size: 22px;
+        font-size: 20px;
+    }
+
+    .logo-img {
+        height: 28px;
     }
 
     /* Hero */
@@ -4653,11 +4790,15 @@ main,
     }
 
     .logo {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .logo-icon {
-        font-size: 22px;
+        font-size: 20px;
+    }
+
+    .logo-img {
+        height: 30px;
     }
 
     .nav-auth .btn,

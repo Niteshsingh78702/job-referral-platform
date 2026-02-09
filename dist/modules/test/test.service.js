@@ -152,8 +152,8 @@ let TestService = class TestService {
                 description: dto.description,
                 duration: dto.duration || 30,
                 passingScore: dto.passingScore || 70,
-                totalTestQuestion: dto.totalQuestions || 20,
-                shuffleTestQuestion: dto.shuffleQuestions ?? true,
+                totalQuestions: dto.totalQuestions || 20,
+                shuffleQuestions: dto.shuffleQuestions ?? true,
                 maxTabSwitches: dto.maxTabSwitches || 2,
                 difficulty: dto.difficulty || 'MEDIUM',
                 updatedAt: new Date()
@@ -656,7 +656,7 @@ let TestService = class TestService {
                 status: _constants.TestSessionStatus.ACTIVE,
                 startedAt: new Date(),
                 endsAt: new Date(endsAt),
-                totalTestQuestion: test.TestQuestion.length,
+                totalQuestions: test.TestQuestion.length,
                 questionOrder
             }
         });
@@ -742,7 +742,7 @@ let TestService = class TestService {
             sessionId: session.id,
             testTitle: session.Test.title,
             duration: session.Test.duration,
-            totalTestQuestion: session.totalQuestions,
+            totalQuestions: session.totalQuestions,
             remainingTime: Math.max(0, Math.floor((sessionData.endsAt - Date.now()) / 1000)),
             TestQuestion: orderedQuestions,
             answers: session.TestAnswer.map((a)=>({
@@ -820,14 +820,14 @@ let TestService = class TestService {
                     }
                 },
                 Test: true,
-                answers: true
+                TestAnswer: true
             }
         });
         if (!session) {
             throw new _common.NotFoundException('Session not found');
         }
         // Check authorization (application may be null for rapid fire tests)
-        if (session.application && session.application.candidate.userId !== userId) {
+        if (session.JobApplication && session.JobApplication.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
         if (session.status !== _constants.TestSessionStatus.ACTIVE) {
@@ -911,7 +911,7 @@ let TestService = class TestService {
                     }
                 },
                 Test: true,
-                answers: true
+                TestAnswer: true
             }
         });
         if (!session || session.status !== _constants.TestSessionStatus.ACTIVE) {
@@ -920,9 +920,9 @@ let TestService = class TestService {
         return this.processTestSubmission(session, true);
     }
     async processTestSubmission(session, isAutoSubmit) {
-        const correctAnswers = session.answers.filter((a)=>a.isCorrect).length;
+        const correctAnswers = session.TestAnswer.filter((a)=>a.isCorrect).length;
         const score = correctAnswers / session.totalQuestions * 100;
-        const isPassed = score >= session.test.passingScore;
+        const isPassed = score >= session.Test.passingScore;
         // Update session
         await this.prisma.testSession.update({
             where: {

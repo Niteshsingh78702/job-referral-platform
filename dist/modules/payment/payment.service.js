@@ -120,7 +120,7 @@ let PaymentService = class PaymentService {
                 paymentId: pendingPayment.id
             };
         }
-        const amount = application.job.referralFee * 100; // Razorpay expects paise
+        const amount = application.Job.referralFee * 100; // Razorpay expects paise
         // Create Razorpay order
         const razorpay = this.ensureRazorpay();
         const order = await razorpay.orders.create({
@@ -139,7 +139,7 @@ let PaymentService = class PaymentService {
                 id: _crypto.randomUUID(),
                 applicationId: application.id,
                 razorpayOrderId: order.id,
-                amount: application.job.referralFee,
+                amount: application.Job.referralFee,
                 currency: 'INR',
                 status: _constants.PaymentStatus.ORDER_CREATED,
                 orderCreatedAt: new Date(),
@@ -174,13 +174,13 @@ let PaymentService = class PaymentService {
                 entityId: payment.id,
                 metadata: {
                     orderId: order.id,
-                    amount: application.job.referralFee
+                    amount: application.Job.referralFee
                 }
             }
         });
         return {
             orderId: order.id,
-            amount: application.job.referralFee,
+            amount: application.Job.referralFee,
             currency: 'INR',
             paymentId: payment.id,
             keyId: this.configService.get('RAZORPAY_KEY_ID')
@@ -580,16 +580,18 @@ let PaymentService = class PaymentService {
                     }
                 });
                 // Update interview status
-                await tx.interview.update({
-                    where: {
-                        id: application.Interview.id
-                    },
-                    data: {
-                        status: 'PAYMENT_SUCCESS',
-                        paymentStatus: _constants.PaymentStatus.SUCCESS,
-                        paidAt: new Date()
-                    }
-                });
+                if (application.Interview) {
+                    await tx.interview.update({
+                        where: {
+                            id: application.Interview.id
+                        },
+                        data: {
+                            status: 'PAYMENT_SUCCESS',
+                            paymentStatus: _constants.PaymentStatus.SUCCESS,
+                            paidAt: new Date()
+                        }
+                    });
+                }
                 // Update application status
                 await tx.jobApplication.update({
                     where: {

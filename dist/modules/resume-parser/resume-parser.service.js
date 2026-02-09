@@ -36,7 +36,7 @@ let ResumeParserService = class ResumeParserService {
             const education = this.extractEducation(text);
             return {
                 text,
-                skills,
+                JobSkill: skills,
                 experience,
                 education
             };

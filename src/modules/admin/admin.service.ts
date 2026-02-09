@@ -1029,8 +1029,8 @@ export class AdminService {
             action: 'no_show',
             noShowType,
             notes,
-            candidateId: interview.application?.candidateId || null,
-            jobId: interview.application?.jobId || null,
+            candidateId: interview.JobApplication?.candidateId || null,
+            jobId: interview.JobApplication?.jobId || null,
           },
         },
       });
@@ -1055,7 +1055,7 @@ export class AdminService {
             id: true,
             title: true,
             duration: true,
-            totalQuestionBank: true,
+            totalQuestions: true,
           },
         },
         TestTemplate: {
@@ -1126,14 +1126,16 @@ export class AdminService {
 
     const skillBucket = await this.prisma.skillBucket.create({
       data: {
+        id: crypto.randomUUID(),
         code: data.code,
         name: data.name,
         description: data.description,
         displayName: data.displayName || `HR Shortlisting Check - ${data.name}`,
         experienceMin: data.experienceMin ?? 0,
         experienceMax: data.experienceMax ?? 3,
-        testId: data.testId,
-        testTemplateId: data.testTemplateId,
+        ...(data.testId && { Test: { connect: { id: data.testId } } }),
+        ...(data.testTemplateId && { TestTemplate: { connect: { id: data.testTemplateId } } }),
+        updatedAt: new Date(),
       },
     });
 
@@ -1185,9 +1187,9 @@ export class AdminService {
       include: {
         _count: {
           select: {
-            jobs: true,
-            attempts: true,
-            jobRequirements: true,
+            Job: true,
+            SkillTestAttempt: true,
+            JobRequiredSkillBucket: true,
           },
         },
       },
@@ -1196,14 +1198,14 @@ export class AdminService {
     if (!bucket) throw new NotFoundException('Skill bucket not found');
 
     // Check if skill bucket is in use
-    if (bucket._count.jobs > 0 || bucket._count.jobRequirements > 0) {
+    if (bucket._count.Job > 0 || bucket._count.JobRequiredSkillBucket > 0) {
       throw new BadRequestException(
-        `Cannot delete skill bucket: it is assigned to ${bucket._count.jobs + bucket._count.jobRequirements} job(s). Deactivate it instead.`,
+        `Cannot delete skill bucket: it is assigned to ${bucket._count.Job + bucket._count.JobRequiredSkillBucket} job(s). Deactivate it instead.`,
       );
     }
 
     // If there are attempts, just deactivate instead of hard delete
-    if (bucket._count.attempts > 0) {
+    if (bucket._count.SkillTestAttempt > 0) {
       await this.prisma.skillBucket.update({
         where: { id },
         data: { isActive: false },
@@ -1265,6 +1267,7 @@ export class AdminService {
         jobId_skillBucketId: { jobId, skillBucketId },
       },
       create: {
+        id: crypto.randomUUID(),
         jobId,
         skillBucketId,
       },
@@ -1331,7 +1334,7 @@ export class AdminService {
       where: { id: jobId },
       include: {
         SkillBucket: true, // Legacy single bucket
-        requiredSkillBucket: {
+        JobRequiredSkillBucket: {
           include: {
             SkillBucket: true,
           },
@@ -1346,7 +1349,7 @@ export class AdminService {
       jobId: job.id,
       jobTitle: job.title,
       legacySkillBucket: job.SkillBucket,
-      compositeRequirements: job.requiredSkillBuckets,
+      compositeRequirements: job.JobRequiredSkillBucket,
     };
   }
 
@@ -1412,6 +1415,7 @@ export class AdminService {
       // Create refund record
       const refund = await tx.refund.create({
         data: {
+          id: crypto.randomUUID(),
           paymentId,
           amount: payment.amount,
           reason: `ADMIN Refund: ${reason}`,
@@ -1419,6 +1423,7 @@ export class AdminService {
           processedBy: adminId,
           processedAt: new Date(),
           adminNotes: 'Manual refund by admin',
+          updatedAt: new Date(),
         },
       });
 
@@ -1617,6 +1622,7 @@ export class AdminService {
 
     const attempt = await this.prisma.skillTestAttempt.create({
       data: {
+        id: crypto.randomUUID(),
         candidateId,
         skillBucketId,
         isPassed: true,

@@ -153,8 +153,8 @@ export class TestService {
         description: dto.description,
         duration: dto.duration || 30,
         passingScore: dto.passingScore || 70,
-        totalTestQuestion: dto.totalQuestions || 20,
-        shuffleTestQuestion: dto.shuffleQuestions ?? true,
+        totalQuestions: dto.totalQuestions || 20,
+        shuffleQuestions: dto.shuffleQuestions ?? true,
         maxTabSwitches: dto.maxTabSwitches || 2,
         difficulty: dto.difficulty || 'MEDIUM',
         updatedAt: new Date(),
@@ -665,7 +665,7 @@ export class TestService {
         status: TestSessionStatus.ACTIVE,
         startedAt: new Date(),
         endsAt: new Date(endsAt),
-        totalTestQuestion: test.TestQuestion.length,
+        totalQuestions: test.TestQuestion.length,
         questionOrder,
       },
     });
@@ -767,7 +767,7 @@ export class TestService {
       sessionId: session.id,
       testTitle: session.Test!.title,
       duration: session.Test!.duration,
-      totalTestQuestion: session.totalQuestions,
+      totalQuestions: session.totalQuestions,
       remainingTime: Math.max(
         0,
         Math.floor((sessionData.endsAt - Date.now()) / 1000),
@@ -854,7 +854,7 @@ export class TestService {
       include: {
         JobApplication: { include: { Candidate: true } },
         Test: true,
-        answers: true,
+        TestAnswer: true,
       },
     });
 
@@ -864,8 +864,8 @@ export class TestService {
 
     // Check authorization (application may be null for rapid fire tests)
     if (
-      session.application &&
-      session.application.candidate.userId !== userId
+      session.JobApplication &&
+      session.JobApplication.Candidate.userId !== userId
     ) {
       throw new ForbiddenException('Not authorized');
     }
@@ -955,7 +955,7 @@ export class TestService {
       include: {
         JobApplication: { include: { Candidate: true } },
         Test: true,
-        answers: true,
+        TestAnswer: true,
       },
     });
 
@@ -967,11 +967,11 @@ export class TestService {
   }
 
   private async processTestSubmission(session: any, isAutoSubmit: boolean) {
-    const correctAnswers = session.answers.filter(
+    const correctAnswers = session.TestAnswer.filter(
       (a: any) => a.isCorrect,
     ).length;
     const score = (correctAnswers / session.totalQuestions) * 100;
-    const isPassed = score >= session.test.passingScore;
+    const isPassed = score >= session.Test.passingScore;
 
     // Update session
     await this.prisma.testSession.update({

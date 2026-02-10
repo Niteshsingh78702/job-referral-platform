@@ -511,7 +511,7 @@ function toggleProfileMenu() {
 }
 
 function showDashboard() {
-    scrollToSection('#dashboard');
+    goBack();
     document.getElementById('profileMenu')?.classList.remove('active');
 }
 
@@ -3096,6 +3096,48 @@ function showSettings() {
     // Update URL hash for bookmarkable URLs
     if (window.location.hash !== '#settings') {
         history.replaceState(null, '', '#settings');
+    }
+}
+
+async function confirmDeleteAccount() {
+    const confirmed = confirm(
+        '⚠️ Are you sure you want to delete your account?\n\n' +
+        'This action is PERMANENT and cannot be undone.\n' +
+        'All your data, applications, and profile will be deleted.'
+    );
+
+    if (!confirmed) return;
+
+    // Double confirmation for safety
+    const doubleConfirm = confirm(
+        '🚨 FINAL WARNING\n\n' +
+        'You are about to permanently delete your account.\n' +
+        'Type OK to confirm deletion.'
+    );
+
+    if (!doubleConfirm) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/candidates/account`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${state.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            showToast('success', 'Account deleted successfully. Goodbye! 👋');
+            setTimeout(() => {
+                logout();
+            }, 1500);
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to delete account. Please try again.');
+        }
+    } catch (error) {
+        console.error('Delete account error:', error);
+        showToast('error', 'Something went wrong. Please try again later.');
     }
 }
 

@@ -91,6 +91,9 @@ let CandidateController = class CandidateController {
     async getPaymentHistory(userId) {
         return this.candidateService.getPaymentHistory(userId);
     }
+    async deleteAccount(userId) {
+        return this.candidateService.deleteAccount(userId);
+    }
     constructor(candidateService, cloudinaryService, resumeParserService){
         this.candidateService = candidateService;
         this.cloudinaryService = cloudinaryService;
@@ -260,6 +263,15 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CandidateController.prototype, "getPaymentHistory", null);
+_ts_decorate([
+    (0, _common.Delete)('account'),
+    _ts_param(0, (0, _decorators.CurrentUser)('sub')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CandidateController.prototype, "deleteAccount", null);
 CandidateController = _ts_decorate([
     (0, _common.Controller)('candidates'),
     (0, _decorators.Roles)(_constants.UserRole.CANDIDATE),

@@ -559,6 +559,88 @@ let CandidateService = class CandidateService {
             }
         });
     }
+    // Delete own account
+    async deleteAccount(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId
+            },
+            include: {
+                Candidate: true
+            }
+        });
+        if (!user || !user.Candidate) {
+            throw new _common.NotFoundException('User not found');
+        }
+        await this.prisma.$transaction(async (tx)=>{
+            // Delete related authentication and session records
+            await tx.oTPToken.deleteMany({
+                where: {
+                    userId
+                }
+            });
+            await tx.refreshToken.deleteMany({
+                where: {
+                    userId
+                }
+            });
+            await tx.passwordResetToken.deleteMany({
+                where: {
+                    userId
+                }
+            });
+            await tx.deviceLog.deleteMany({
+                where: {
+                    userId
+                }
+            });
+            await tx.notification.deleteMany({
+                where: {
+                    userId
+                }
+            });
+            // Nullify audit logs (don't delete, keep for records)
+            await tx.auditLog.updateMany({
+                where: {
+                    userId
+                },
+                data: {
+                    userId: null
+                }
+            });
+            // Nullify suspicious activities
+            await tx.suspiciousActivity.updateMany({
+                where: {
+                    userId
+                },
+                data: {
+                    userId: null
+                }
+            });
+            // Delete skill test attempts
+            await tx.skillTestAttempt.deleteMany({
+                where: {
+                    candidateId: user.Candidate.id
+                }
+            });
+            // Delete the candidate (CandidateSkill, Education, Experience cascade)
+            await tx.candidate.delete({
+                where: {
+                    userId
+                }
+            });
+            // Delete the user
+            await tx.user.delete({
+                where: {
+                    id: userId
+                }
+            });
+        });
+        return {
+            success: true,
+            message: 'Account deleted successfully'
+        };
+    }
     constructor(prisma){
         this.prisma = prisma;
     }

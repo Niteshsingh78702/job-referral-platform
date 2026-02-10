@@ -179,4 +179,9 @@ export class CandidateController {
   async getPaymentHistory(@CurrentUser('sub') userId: string) {
     return this.candidateService.getPaymentHistory(userId);
   }
+
+  @Delete('account')
+  async deleteAccount(@CurrentUser('sub') userId: string) {
+    return this.candidateService.deleteAccount(userId);
+  }
 }

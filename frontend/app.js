@@ -160,7 +160,7 @@ function handleHashRoute() {
     } else if (hash === '#profile') {
         if (token) {
             setTimeout(() => {
-                showProfileModal();
+                showProfile();
             }, 100);
         }
     } else if (hash === '#how-it-works' || hash === '#pricing') {
@@ -516,12 +516,7 @@ function showDashboard() {
 }
 
 function showProfile() {
-    showToast('info', 'Profile settings coming soon!');
-    document.getElementById('profileMenu')?.classList.remove('active');
-}
-
-function showApplications() {
-    showToast('info', 'Applications page coming soon!');
+    showModal('editProfile');
     document.getElementById('profileMenu')?.classList.remove('active');
 }
 
@@ -3039,6 +3034,8 @@ function showPage(pageId) {
     document.getElementById('how-it-works')?.style.setProperty('display', 'none');
     document.getElementById('jobs')?.style.setProperty('display', 'none');
     document.getElementById('pricing')?.style.setProperty('display', 'none');
+    document.querySelector('.why-99-section')?.style.setProperty('display', 'none');
+    document.getElementById('testimonials')?.style.setProperty('display', 'none');
     document.querySelector('.footer')?.style.setProperty('display', 'none');
 
     // Hide other page sections
@@ -3062,6 +3059,8 @@ function goBack() {
     document.getElementById('how-it-works')?.style.setProperty('display', 'block');
     document.getElementById('jobs')?.style.setProperty('display', 'block');
     document.getElementById('pricing')?.style.setProperty('display', 'block');
+    document.querySelector('.why-99-section')?.style.setProperty('display', 'block');
+    document.getElementById('testimonials')?.style.setProperty('display', 'block');
     document.querySelector('.footer')?.style.setProperty('display', 'block');
 
     // Hide page sections

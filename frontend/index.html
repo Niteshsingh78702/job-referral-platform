@@ -698,6 +698,10 @@
                 <div class="form-group">
                     <label class="form-label">Password</label>
                     <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                    <label class="show-password-label">
+                        <input type="checkbox" onchange="togglePassword('loginPassword', this)">
+                        <span class="show-password-text">👁 Show Password</span>
+                    </label>
                 </div>
                 <div class="form-options">
                     <a href="#" onclick="showModal('forgotPassword'); return false;" class="forgot-link">Forgot
@@ -757,6 +761,10 @@
                     <label class="form-label">Password</label>
                     <input type="password" id="regPassword" class="form-input" placeholder="Min 8 characters" required
                         minlength="8">
+                    <label class="show-password-label">
+                        <input type="checkbox" onchange="togglePassword('regPassword', this)">
+                        <span class="show-password-text">👁 Show Password</span>
+                    </label>
                 </div>
                 <div class="form-group">
                     <label class="form-label">I am a</label>
@@ -822,6 +830,11 @@
                     <label class="form-label">Confirm Password</label>
                     <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm password"
                         required minlength="8">
+                    <label class="show-password-label">
+                        <input type="checkbox"
+                            onchange="togglePassword('newPassword', this); togglePassword('confirmPassword', this)">
+                        <span class="show-password-text">👁 Show Password</span>
+                    </label>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block btn-lg">Reset Password</button>
             </form>

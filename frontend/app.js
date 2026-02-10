@@ -23,6 +23,14 @@ let confirmModalResolver = null;
 // Navigation Helper Functions
 // =============================================
 
+// Toggle password visibility (used by Show Password checkbox)
+function togglePassword(inputId, checkbox) {
+    const input = document.getElementById(inputId);
+    if (input) {
+        input.type = checkbox && checkbox.checked ? 'text' : 'password';
+    }
+}
+
 /**
  * Navigate to a section on the main page
  * Works from any page - redirects to main page if needed

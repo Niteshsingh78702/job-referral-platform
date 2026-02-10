@@ -1177,6 +1177,41 @@ html.modal-open body {
     color: var(--text-muted);
 }
 
+/* Show Password Checkbox */
+.show-password-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.show-password-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+    margin: 0;
+    border-radius: 4px;
+}
+
+.show-password-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    transition: color 0.2s ease;
+}
+
+.show-password-label:hover .show-password-text {
+    color: var(--primary-light);
+}
+
+.show-password-label input[type="checkbox"]:checked~.show-password-text {
+    color: var(--primary-light);
+}
+
 .modal-footer {
     margin-top: 24px;
     text-align: center;

@@ -470,12 +470,34 @@ async function loadUserStats() {
 function getUserDisplayName() {
     if (!state.user) return 'User';
 
+    // Check firstName directly
     if (state.user.firstName) {
         return state.user.firstName;
     }
 
+    // Check nested candidate/profile firstName
+    if (state.user.candidate?.firstName) {
+        return state.user.candidate.firstName;
+    }
+
+    // Check name field (from Google login)
+    if (state.user.name) {
+        return state.user.name.split(' ')[0];
+    }
+
+    // Check fullName field
+    if (state.user.fullName) {
+        return state.user.fullName.split(' ')[0];
+    }
+
+    // Last resort: use email but clean it up - extract name part
     if (state.user.email) {
-        return state.user.email.split('@')[0];
+        const emailPrefix = state.user.email.split('@')[0];
+        // Try to extract a readable name from email (e.g., nitesh.singh -> Nitesh)
+        const namePart = emailPrefix.split(/[._\-\d]/)[0];
+        if (namePart && namePart.length > 1) {
+            return namePart.charAt(0).toUpperCase() + namePart.slice(1).toLowerCase();
+        }
     }
 
     return 'User';

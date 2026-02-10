@@ -62,6 +62,31 @@ function scrollToSection(sectionId) {
 }
 
 // =============================================
+// Mobile Menu
+// =============================================
+function toggleMobileMenu() {
+    const drawer = document.getElementById('mobileDrawer');
+    const overlay = document.getElementById('mobileDrawerOverlay');
+    const hamburger = document.getElementById('hamburgerBtn');
+    if (drawer && overlay && hamburger) {
+        drawer.classList.toggle('active');
+        overlay.classList.toggle('active');
+        hamburger.classList.toggle('active');
+        document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : '';
+    }
+}
+
+function closeMobileMenu() {
+    const drawer = document.getElementById('mobileDrawer');
+    const overlay = document.getElementById('mobileDrawerOverlay');
+    const hamburger = document.getElementById('hamburgerBtn');
+    if (drawer) drawer.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    if (hamburger) hamburger.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// =============================================
 // Initialize App
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -316,6 +341,20 @@ function updateUIForLoggedInUser() {
     if (userNameEl) userNameEl.textContent = displayName;
     if (userAvatarEl) userAvatarEl.textContent = initial;
 
+    // Update mobile drawer for logged-in state
+    const mobileUserInfo = document.getElementById('mobileUserInfo');
+    const mobileUserName = document.getElementById('mobileUserName');
+    const mobileUserAvatar = document.getElementById('mobileUserAvatar');
+    const mobileLoggedInLinks = document.getElementById('mobileLoggedInLinks');
+    const mobileDrawerFooter = document.getElementById('mobileDrawerFooter');
+    const mobileLogoutFooter = document.getElementById('mobileLogoutFooter');
+    if (mobileUserInfo) mobileUserInfo.style.display = 'flex';
+    if (mobileUserName) mobileUserName.textContent = displayName;
+    if (mobileUserAvatar) mobileUserAvatar.textContent = initial;
+    if (mobileLoggedInLinks) mobileLoggedInLinks.style.display = 'block';
+    if (mobileDrawerFooter) mobileDrawerFooter.style.display = 'none';
+    if (mobileLogoutFooter) mobileLogoutFooter.style.display = 'flex';
+
     // Update hero CTA
     updateHeroCTA(true);
 
@@ -334,6 +373,16 @@ function updateUIForLoggedOutUser() {
     // Update navigation
     document.getElementById('navAuth').style.display = 'flex';
     document.getElementById('navUser').style.display = 'none';
+
+    // Reset mobile drawer for logged-out state
+    const mobileUserInfo = document.getElementById('mobileUserInfo');
+    const mobileLoggedInLinks = document.getElementById('mobileLoggedInLinks');
+    const mobileDrawerFooter = document.getElementById('mobileDrawerFooter');
+    const mobileLogoutFooter = document.getElementById('mobileLogoutFooter');
+    if (mobileUserInfo) mobileUserInfo.style.display = 'none';
+    if (mobileLoggedInLinks) mobileLoggedInLinks.style.display = 'none';
+    if (mobileDrawerFooter) mobileDrawerFooter.style.display = 'flex';
+    if (mobileLogoutFooter) mobileLogoutFooter.style.display = 'none';
 
     // Update hero CTA
     updateHeroCTA(false);

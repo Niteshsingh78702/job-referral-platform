@@ -52,6 +52,63 @@
                     </div>
                 </div>
             </div>
+            <!-- Hamburger Menu Button (Mobile) -->
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+        <!-- Mobile Drawer -->
+        <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="closeMobileMenu()"></div>
+        <div class="mobile-drawer" id="mobileDrawer">
+            <div class="mobile-drawer-header">
+                <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="mobile-drawer-logo">
+                <button class="mobile-drawer-close" onclick="closeMobileMenu()">✕</button>
+            </div>
+            <div class="mobile-drawer-body">
+                <!-- Logged-in user info (hidden by default) -->
+                <div class="mobile-user-info" id="mobileUserInfo" style="display: none;">
+                    <div class="mobile-user-avatar" id="mobileUserAvatar">U</div>
+                    <div>
+                        <div class="mobile-user-name" id="mobileUserName">User</div>
+                        <a href="#profile" class="mobile-user-profile-link"
+                            onclick="showProfile(); closeMobileMenu();">View & update profile</a>
+                    </div>
+                </div>
+                <div class="mobile-drawer-links">
+                    <a href="jobs.html" class="mobile-drawer-link">🔍 Jobs</a>
+                    <a href="/#how-it-works" class="mobile-drawer-link"
+                        onclick="goToSection('#how-it-works'); closeMobileMenu(); return false;">📋 How It Works</a>
+                    <a href="/#pricing" class="mobile-drawer-link"
+                        onclick="goToSection('#pricing'); closeMobileMenu(); return false;">💰 Pricing</a>
+                    <hr class="mobile-drawer-divider">
+                    <a href="#" class="mobile-drawer-link"
+                        onclick="showModal('contact'); closeMobileMenu(); return false;">💬 Contact Us</a>
+                    <a href="#" class="mobile-drawer-link"
+                        onclick="showModal('refund'); closeMobileMenu(); return false;">🔄 Refund Policy</a>
+                    <!-- Logged-in only links -->
+                    <div class="mobile-logged-in-links" id="mobileLoggedInLinks" style="display: none;">
+                        <hr class="mobile-drawer-divider">
+                        <a href="#dashboard" class="mobile-drawer-link" onclick="showDashboard(); closeMobileMenu();">📊
+                            Dashboard</a>
+                        <a href="#applications" class="mobile-drawer-link"
+                            onclick="showApplications(); closeMobileMenu();">📋 Applications</a>
+                        <a href="#settings" class="mobile-drawer-link" onclick="closeMobileMenu();">⚙️ Settings</a>
+                    </div>
+                </div>
+            </div>
+            <div class="mobile-drawer-footer" id="mobileDrawerFooter">
+                <button class="btn btn-outline btn-block"
+                    onclick="showModal('login'); closeMobileMenu();">Login</button>
+                <button class="btn btn-primary btn-block"
+                    onclick="showModal('register'); closeMobileMenu();">Register</button>
+            </div>
+            <!-- Logout button (hidden by default) -->
+            <div class="mobile-drawer-footer mobile-logout-footer" id="mobileLogoutFooter" style="display: none;">
+                <button class="btn btn-outline btn-block" onclick="logout(); closeMobileMenu();"
+                    style="color: #ef4444; border-color: #ef4444;">🚪 Logout</button>
+            </div>
         </div>
     </nav>
 

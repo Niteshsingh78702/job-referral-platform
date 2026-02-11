@@ -5415,6 +5415,458 @@ main,
 }
 
 /* =============================================
+   Trust Counters (class-based, replaces inline styles)
+   ============================================= */
+.trust-counters {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.trust-counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 12px;
+}
+
+.trust-counter-green {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.trust-counter-blue {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.trust-counter-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.trust-counter-value {
+    font-weight: 700;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.trust-counter-label {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* =============================================
+   FINAL Mobile Overrides — Consolidation
+   These override conflicting rules scattered
+   across 36 media query blocks above.
+   ============================================= */
+
+/* -- Tablets (max-width: 768px) -- */
+@media (max-width: 768px) {
+
+    /* Trust counters: stack vertically on tablets */
+    .trust-counters {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .trust-counter {
+        width: 100%;
+        max-width: 360px;
+        justify-content: center;
+        padding: 10px 16px;
+        flex-wrap: wrap;
+    }
+
+    .trust-counter-value {
+        font-size: 20px;
+    }
+
+    .trust-counter-label {
+        font-size: 13px;
+    }
+
+    /* Ensure hero doesn't force full viewport on short phones */
+    .hero {
+        min-height: auto;
+    }
+
+    /* Ensure hero badge doesn't overflow */
+    .hero-badge {
+        word-break: break-word;
+        text-align: center;
+    }
+
+    /* Hero subtitle: remove forced line-breaks */
+    .hero-subtitle br {
+        display: none;
+    }
+
+    /* Search bar: ensure all rows stack properly */
+    .search-bar {
+        flex-direction: column;
+    }
+
+    .search-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-row .btn {
+        width: 100%;
+    }
+
+    /* Filters row: horizontal scroll, no wrapping */
+    .filters-row {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 8px;
+        padding-bottom: 8px;
+    }
+
+    .filters-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-select {
+        flex-shrink: 0;
+        min-width: 130px;
+    }
+
+    /* Job header: ensure badge doesn't overlap title */
+    .job-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .job-badge {
+        order: -1;
+        align-self: flex-start;
+    }
+
+    .job-meta {
+        min-width: 0;
+        flex: 1 1 0%;
+    }
+
+    .job-title {
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* Job footer: stack buttons */
+    .job-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .job-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Profile card header: stack on mobile */
+    .profile-card-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .profile-card-header .btn {
+        width: 100%;
+    }
+
+    /* Dashboard header: stack */
+    .dashboard-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    /* Dashboard stats: 2 columns on tablet, 1 on phone */
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /* Eligibility card: wrap text */
+    .eligibility-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+
+    /* Modal: ensure proper scrolling and no overflow */
+    .modal {
+        width: calc(100% - 24px);
+        max-width: 440px;
+    }
+
+    /* Pricing card: don't let it overflow */
+    .pricing-card {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    /* Contact/Refund modal text: remove forced line-breaks */
+    .modal-subtitle br {
+        display: none;
+    }
+
+    /* Footer grid: single column */
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+}
+
+/* -- Mobile phones (max-width: 480px) -- */
+@media (max-width: 480px) {
+
+    /* Trust counters: even more compact */
+    .trust-counter {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .trust-counter-value {
+        font-size: 18px;
+    }
+
+    .trust-counter-label {
+        font-size: 12px;
+    }
+
+    /* Dashboard stats: single column */
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    /* Pricing card: tighter padding */
+    .pricing-card {
+        padding: 24px 16px;
+    }
+
+    /* Hero CTA buttons: full width */
+    .hero-cta {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .hero-cta .btn {
+        width: 100%;
+    }
+
+    /* Hero stats: stack vertically */
+    .hero-stats {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+    }
+
+    /* Form rows: stack to single column */
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    /* Steps grid: single column */
+    .steps-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Filter select: full width */
+    .filter-select {
+        min-width: 120px;
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+
+    /* Contact/Refund modal: ensure readable */
+    .modal {
+        padding: 20px 16px;
+    }
+
+    /* Footer: reduce spacing */
+    .footer {
+        padding: 40px 0 24px;
+    }
+}
+
+/* -- Very small phones (max-width: 360px) -- */
+@media (max-width: 360px) {
+
+    /* Trust counters: compact layout */
+    .trust-counter {
+        flex-direction: column;
+        text-align: center;
+        padding: 10px;
+        gap: 4px;
+    }
+
+    .trust-counter-value {
+        font-size: 20px;
+    }
+
+    .trust-counter-label {
+        font-size: 11px;
+    }
+
+    /* Hero: tighter spacing */
+    .hero {
+        padding: 80px 12px 36px;
+    }
+
+    .hero-title {
+        font-size: 22px;
+        letter-spacing: -0.5px;
+    }
+
+    .hero-subtitle {
+        font-size: 13px;
+        margin-bottom: 24px;
+    }
+
+    .hero-cta {
+        margin-bottom: 32px;
+    }
+
+    /* Navigation: compact */
+    .nav-container {
+        padding: 10px 12px;
+    }
+
+    .logo-img {
+        height: 26px;
+    }
+
+    /* Container: tighter gutters */
+    .container {
+        padding: 0 10px;
+    }
+
+    /* Section padding */
+    .section {
+        padding: 36px 0;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
+
+    .section-subtitle {
+        font-size: 13px;
+    }
+
+    /* Job card: compact */
+    .job-card {
+        padding: 14px;
+    }
+
+    .company-logo {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+
+    .job-title {
+        font-size: 15px;
+    }
+
+    /* Buttons: compact */
+    .btn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+
+    .btn-lg {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    /* Step cards */
+    .step-card {
+        padding: 18px;
+    }
+
+    .step-icon {
+        font-size: 32px;
+    }
+
+    .step-number {
+        font-size: 36px;
+    }
+
+    /* Pricing */
+    .pricing-card {
+        padding: 20px 14px;
+    }
+
+    .price {
+        font-size: 40px;
+    }
+
+    /* Modal */
+    .modal {
+        width: calc(100% - 16px);
+        padding: 18px 14px;
+    }
+
+    .modal-title {
+        font-size: 20px;
+    }
+
+    /* Footer */
+    .footer-desc {
+        font-size: 13px;
+    }
+}
+
+/* -- Extra small (max-width: 320px) -- */
+@media (max-width: 320px) {
+    .hero-title {
+        font-size: 20px;
+    }
+
+    .hero-badge {
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+
+    .trust-counter {
+        padding: 8px;
+    }
+
+    .trust-counter-value {
+        font-size: 18px;
+    }
+
+    .company-logo {
+        width: 36px;
+        height: 36px;
+        font-size: 15px;
+    }
+
+    .btn {
+        padding: 7px 12px;
+        font-size: 11px;
+    }
+
+    .modal {
+        width: calc(100% - 12px);
+        padding: 16px 12px;
+    }
+}
+
+/* =============================================
    Testimonials Section
    ============================================= */
 .testimonials-grid {

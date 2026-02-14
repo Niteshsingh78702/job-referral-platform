@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
-    <title>All Jobs | NaukriShetu - Skill-Based Job Platform</title>
+    <title>All Opportunities | NaukriShetu - Skill-Based Career Platform</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -384,8 +384,8 @@
             <a href="/" class="back-link">← Back to Home</a>
 
             <div class="jobs-page-header">
-                <h1>All Jobs <span class="jobs-count" id="totalJobsCount">0</span></h1>
-                <p>Find jobs that match your skills. Apply for free.</p>
+                <h1>All Opportunities <span class="jobs-count" id="totalJobsCount">0</span></h1>
+                <p>Find opportunities that match your skills. Apply for free.</p>
             </div>
 
             <!-- Search & Filters -->
@@ -393,7 +393,7 @@
                 <div class="search-row">
                     <div class="search-input-wrapper" style="position: relative;">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="jobSearch" placeholder="Search jobs by title, company, or skills..."
+                        <input type="text" id="jobSearch" placeholder="Search by title, company, or skills..."
                             class="search-input"
                             onkeypress="if(event.key==='Enter') { hideSuggestions(); searchJobs(); }"
                             oninput="showSuggestions(this.value)" onfocus="showSuggestions(this.value)"
@@ -434,7 +434,7 @@
                         <option value="10+">10+ years</option>
                     </select>
                     <select id="jobTypeFilter" class="filter-select" onchange="searchJobs()">
-                        <option value="">Job Type</option>
+                        <option value="">Type</option>
                         <option value="fulltime">Full-time</option>
                         <option value="parttime">Part-time</option>
                         <option value="contract">Contract</option>
@@ -463,14 +463,14 @@
 
             <!-- Jobs Stats -->
             <div class="jobs-stats">
-                <span class="results-info" id="resultsInfo">Loading jobs...</span>
+                <span class="results-info" id="resultsInfo">Loading opportunities...</span>
             </div>
 
             <!-- Job Cards Grid -->
             <div class="jobs-grid" id="jobsGrid">
                 <div class="loading-spinner" id="jobsLoading">
                     <div class="spinner"></div>
-                    <p>Loading jobs...</p>
+                    <p>Loading opportunities...</p>
                 </div>
             </div>
 

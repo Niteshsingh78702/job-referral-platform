@@ -504,7 +504,7 @@ function updatePricingCTA(isLoggedIn) {
     const pricingCta = document.getElementById('pricingCta');
     if (pricingCta) {
         if (isLoggedIn) {
-            pricingCta.textContent = 'Jobs';
+            pricingCta.textContent = 'Opportunities';
             pricingCta.onclick = () => window.location.href = 'jobs.html';
         } else {
             pricingCta.textContent = 'Get Started Free';
@@ -1050,7 +1050,7 @@ function useDemoJobs() {
 function updateViewAllButton(totalCount) {
     const viewAllBtn = document.getElementById('viewAllJobsBtn');
     if (viewAllBtn && totalCount > 9) {
-        viewAllBtn.textContent = `View All ${totalCount} Jobs →`;
+        viewAllBtn.textContent = `View All ${totalCount} Opportunities →`;
         viewAllBtn.href = 'jobs.html';
         viewAllBtn.style.display = 'inline-block';
     } else if (viewAllBtn) {
@@ -1077,7 +1077,7 @@ function showAllJobsModal() {
 
     const content = document.getElementById('allJobsModalContent');
     content.innerHTML = `
-        <h2 style="margin-bottom: 8px;">All Jobs (${allJobs.length})</h2>
+        <h2 style="margin-bottom: 8px;">All Opportunities (${allJobs.length})</h2>
         <p style="color: var(--text-secondary); margin-bottom: 24px;">Browse all available positions</p>
         <div class="jobs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
             ${allJobs.map(job => `
@@ -1288,7 +1288,7 @@ function showJobDetails(jobId) {
         
         ${similarJobs.length > 0 ? `
         <div class="similar-jobs-section">
-            <h4>Similar Jobs You Might Like</h4>
+            <h4>Similar Opportunities You Might Like</h4>
             <div class="similar-jobs-grid">
                 ${similarJobs.map(sJob => `
                     <div class="similar-job-card" onclick="closeJobModal(); setTimeout(() => showJobDetails('${sJob.id}'), 300);">
@@ -1620,7 +1620,7 @@ function performJobSearch() {
         document.getElementById('jobsGrid').innerHTML = `
             <div class="empty-state" style="text-align: center; padding: 60px 20px; grid-column: 1 / -1;">
                 <p style="font-size: 48px; margin-bottom: 16px;">🔍</p>
-                <p style="font-size: 18px; margin-bottom: 8px; color: var(--text-primary);">No jobs found</p>
+                <p style="font-size: 18px; margin-bottom: 8px; color: var(--text-primary);">No opportunities found</p>
                 <p style="font-size: 14px; color: var(--text-secondary);">Try adjusting your filters</p>
                 <button class="btn btn-primary btn-sm" style="margin-top: 16px;" onclick="clearAllFilters()">Clear Filters</button>
             </div>

@@ -125,14 +125,54 @@
                 Apply for jobs and pay only after your interview is scheduled.
                 <br>No upfront fees. No fake guarantees.
             </p>
-            <div class="hero-cta" id="heroCta">
-                <button class="btn btn-primary btn-lg" id="heroMainBtn" onclick="showModal('register')">
-                    Start Applying Free
-                    <span class="btn-arrow">→</span>
+            <div class="hero-search-bar" id="heroSearchBar">
+                <div class="hero-search-input-wrapper" style="position: relative;">
+                    <span class="hero-search-icon">🔍</span>
+                    <input type="text" id="heroJobSearch" placeholder="Job title, skills, or keyword..."
+                        class="hero-search-input"
+                        onkeypress="if(event.key==='Enter') { hideHeroSuggestions(); heroSearch(); }"
+                        oninput="showHeroSuggestions(this.value)" onfocus="showHeroSuggestions(this.value)"
+                        autocomplete="off">
+                    <div class="hero-search-suggestions" id="heroSearchSuggestions"></div>
+                </div>
+                <div class="hero-search-divider"></div>
+                <div class="hero-search-input-wrapper hero-location-wrapper">
+                    <span class="hero-search-icon">📍</span>
+                    <select id="heroLocationSearch" class="hero-location-select">
+                        <option value="">All Locations</option>
+                        <option value="bangalore">Bangalore</option>
+                        <option value="mumbai">Mumbai</option>
+                        <option value="delhi">Delhi NCR</option>
+                        <option value="noida">Noida</option>
+                        <option value="gurgaon">Gurgaon</option>
+                        <option value="hyderabad">Hyderabad</option>
+                        <option value="pune">Pune</option>
+                        <option value="chennai">Chennai</option>
+                        <option value="kolkata">Kolkata</option>
+                        <option value="ahmedabad">Ahmedabad</option>
+                        <option value="jaipur">Jaipur</option>
+                        <option value="kochi">Kochi</option>
+                        <option value="chandigarh">Chandigarh</option>
+                        <option value="indore">Indore</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-lg hero-search-btn" onclick="heroSearch()">
+                    Search Jobs
                 </button>
-                <button class="btn btn-ghost btn-lg" id="heroSecondaryBtn" onclick="scrollToSection('#how-it-works')">
-                    See How It Works
-                </button>
+            </div>
+            <div class="hero-popular-tags">
+                <span class="popular-label">Popular:</span>
+                <a onclick="document.getElementById('heroJobSearch').value='Java Developer'; heroSearch()">Java
+                    Developer</a>,
+                <a onclick="document.getElementById('heroJobSearch').value='React Developer'; heroSearch()">React
+                    Developer</a>,
+                <a onclick="document.getElementById('heroJobSearch').value='Full Stack Developer'; heroSearch()">Full
+                    Stack Developer</a>,
+                <a onclick="document.getElementById('heroJobSearch').value='Python Developer'; heroSearch()">Python
+                    Developer</a>,
+                <a onclick="document.getElementById('heroJobSearch').value='DevOps Engineer'; heroSearch()">DevOps
+                    Engineer</a>
             </div>
             <div class="hero-stats">
                 <div class="stat">
@@ -163,6 +203,115 @@
                 <div class="card-text">Interview Scheduled</div>
             </div>
 
+        </div>
+    </section>
+
+    <!-- Browse by Job Role -->
+    <section class="section job-categories-section" id="job-categories">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">🏷️ Browse by Role</span>
+                <h2 class="section-title">Explore Software Engineering Jobs</h2>
+                <p class="section-subtitle">Click on a role to find matching job opportunities</p>
+            </div>
+            <div class="categories-grid">
+                <a href="jobs.html?search=Frontend Developer" class="category-card">
+                    <div class="category-icon">🎨</div>
+                    <div class="category-info">
+                        <h3>Frontend Developer</h3>
+                        <p>React, Angular, Vue.js</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Backend Developer" class="category-card">
+                    <div class="category-icon">⚙️</div>
+                    <div class="category-info">
+                        <h3>Backend Developer</h3>
+                        <p>Node.js, Java, Python</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Full Stack Developer" class="category-card">
+                    <div class="category-icon">💻</div>
+                    <div class="category-info">
+                        <h3>Full Stack Developer</h3>
+                        <p>End-to-end development</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=React Developer" class="category-card">
+                    <div class="category-icon">⚛️</div>
+                    <div class="category-info">
+                        <h3>React Developer</h3>
+                        <p>React.js, Next.js, Redux</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Node.js Developer" class="category-card">
+                    <div class="category-icon">🟢</div>
+                    <div class="category-info">
+                        <h3>Node.js Developer</h3>
+                        <p>Express, NestJS, APIs</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Java Developer" class="category-card">
+                    <div class="category-icon">☕</div>
+                    <div class="category-info">
+                        <h3>Java Developer</h3>
+                        <p>Spring Boot, Microservices</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Python Developer" class="category-card">
+                    <div class="category-icon">🐍</div>
+                    <div class="category-info">
+                        <h3>Python Developer</h3>
+                        <p>Django, Flask, FastAPI</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=DevOps Engineer" class="category-card">
+                    <div class="category-icon">🚀</div>
+                    <div class="category-info">
+                        <h3>DevOps Engineer</h3>
+                        <p>AWS, Docker, Kubernetes</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Data Engineer" class="category-card">
+                    <div class="category-icon">📊</div>
+                    <div class="category-info">
+                        <h3>Data Engineer</h3>
+                        <p>SQL, Spark, ETL Pipelines</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Mobile Developer" class="category-card">
+                    <div class="category-icon">📱</div>
+                    <div class="category-info">
+                        <h3>Mobile Developer</h3>
+                        <p>Android, iOS, React Native</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=QA Engineer" class="category-card">
+                    <div class="category-icon">🧪</div>
+                    <div class="category-info">
+                        <h3>QA Engineer</h3>
+                        <p>Testing, Automation, Selenium</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+                <a href="jobs.html?search=Cloud Engineer" class="category-card">
+                    <div class="category-icon">☁️</div>
+                    <div class="category-info">
+                        <h3>Cloud Engineer</h3>
+                        <p>AWS, Azure, GCP</p>
+                    </div>
+                    <span class="category-arrow">→</span>
+                </a>
+            </div>
         </div>
     </section>
 
@@ -303,6 +452,31 @@
                     <div class="step-icon">💰</div>
                     <h3 class="step-title">Pay ₹99 After Interview Confirmed</h3>
                     <p class="step-desc">Pay only ₹99 to get your interview details. No interview = No payment!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Guide Section -->
+    <section class="section video-guide-section" id="video-guide">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">📺 Platform Guide</span>
+                <h2 class="section-title">Watch How It Works</h2>
+                <p class="section-subtitle">See a quick walkthrough of how NaukriShetu helps you land real interviews.
+                </p>
+            </div>
+            <div class="video-wrapper">
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID" title="NaukriShetu Platform Guide"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="video-caption">
+                    <span class="video-caption-icon">💡</span>
+                    <span>New to NaukriShetu? This 2-minute video covers everything you need to know!</span>
                 </div>
             </div>
         </div>

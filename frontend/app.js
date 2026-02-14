@@ -398,29 +398,107 @@ function updateUIForLoggedOutUser() {
 }
 
 function updateHeroCTA(isLoggedIn) {
-    const heroMainBtn = document.getElementById('heroMainBtn');
-    const heroSecondaryBtn = document.getElementById('heroSecondaryBtn');
+    // Hero now uses search bar instead of CTA buttons - no dynamic update needed
+}
 
-    if (heroMainBtn) {
-        if (isLoggedIn) {
-            heroMainBtn.innerHTML = 'Jobs <span class="btn-arrow">→</span>';
-            heroMainBtn.onclick = () => window.location.href = 'jobs.html';
-        } else {
-            heroMainBtn.innerHTML = 'Start Your Journey <span class="btn-arrow">→</span>';
-            heroMainBtn.onclick = () => showModal('register');
-        }
+// Hero search bar - redirects to jobs.html with search params
+function heroSearch() {
+    const searchInput = document.getElementById('heroJobSearch');
+    const locationSelect = document.getElementById('heroLocationSearch');
+    const search = searchInput ? searchInput.value.trim() : '';
+    const location = locationSelect ? locationSelect.value : '';
+
+    if (!search) {
+        searchInput.placeholder = 'Please enter a job title or skill...';
+        searchInput.classList.add('shake');
+        searchInput.focus();
+        setTimeout(() => searchInput.classList.remove('shake'), 500);
+        return;
     }
 
-    if (heroSecondaryBtn) {
-        if (isLoggedIn) {
-            heroSecondaryBtn.textContent = 'My Dashboard';
-            heroSecondaryBtn.onclick = () => scrollToSection('#dashboard');
-        } else {
-            heroSecondaryBtn.textContent = 'Learn More';
-            heroSecondaryBtn.onclick = () => scrollToSection('#how-it-works');
-        }
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (location) params.set('location', location);
+
+    const queryString = params.toString();
+    window.location.href = 'jobs.html' + (queryString ? '?' + queryString : '');
+}
+
+// Hero search autocomplete suggestions
+const heroJobSuggestions = [
+    'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+    'React Developer', 'Angular Developer', 'Vue.js Developer',
+    'Node.js Developer', 'Java Developer', 'Python Developer',
+    'DevOps Engineer', 'Data Engineer', 'Data Scientist',
+    'Mobile Developer', 'Android Developer', 'iOS Developer',
+    'React Native Developer', 'Flutter Developer',
+    'QA Engineer', 'SDET', 'Automation Tester',
+    'Cloud Engineer', 'AWS Engineer', 'Azure Engineer',
+    'Machine Learning Engineer', 'AI Engineer',
+    'Site Reliability Engineer', 'Platform Engineer',
+    'Software Engineer', 'Senior Software Engineer',
+    'Tech Lead', 'Engineering Manager',
+    'Security Engineer', 'Blockchain Developer',
+    'Embedded Developer', 'Firmware Engineer',
+    'Database Administrator', 'SQL Developer',
+    'UI/UX Developer', 'WordPress Developer',
+    'PHP Developer', 'Ruby Developer', 'Go Developer', 'Rust Developer',
+    'Spring Boot Developer', 'Microservices Developer',
+    'Kubernetes Engineer', 'Docker Engineer',
+    'ETL Developer', 'Power BI Developer', 'Tableau Developer'
+];
+
+function showHeroSuggestions(value) {
+    const container = document.getElementById('heroSearchSuggestions');
+    if (!container) return;
+
+    const query = value.trim().toLowerCase();
+    if (query.length < 1) {
+        container.innerHTML = '';
+        container.classList.remove('active');
+        return;
+    }
+
+    const matches = heroJobSuggestions.filter(s =>
+        s.toLowerCase().includes(query)
+    ).slice(0, 8);
+
+    if (matches.length === 0) {
+        container.innerHTML = '';
+        container.classList.remove('active');
+        return;
+    }
+
+    container.innerHTML = matches.map(s => `
+        <div class="hero-suggestion-item" onmousedown="selectHeroSuggestion('${s}')">
+            <span class="suggestion-icon">🔍</span>
+            <span class="suggestion-label">${s}</span>
+        </div>
+    `).join('');
+    container.classList.add('active');
+}
+
+function selectHeroSuggestion(value) {
+    const input = document.getElementById('heroJobSearch');
+    if (input) input.value = value;
+    hideHeroSuggestions();
+}
+
+function hideHeroSuggestions() {
+    const container = document.getElementById('heroSearchSuggestions');
+    if (container) {
+        container.innerHTML = '';
+        container.classList.remove('active');
     }
 }
+
+// Close hero suggestions when clicking outside
+document.addEventListener('click', function (e) {
+    const searchBar = document.getElementById('heroSearchBar');
+    if (searchBar && !searchBar.contains(e.target)) {
+        hideHeroSuggestions();
+    }
+});
 
 function updatePricingCTA(isLoggedIn) {
     const pricingCta = document.getElementById('pricingCta');

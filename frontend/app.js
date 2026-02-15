@@ -1330,7 +1330,7 @@ function showJobDetails(jobId) {
 }
 
 function getSimilarJobs(currentJob) {
-    const allJobs = [...state.jobs, ...demoJobs];
+    const allJobs = [...state.jobs];
     const currentSkills = (currentJob.skills || []).map(s => s.name.toLowerCase());
 
     // Score each job by similarity

@@ -1797,6 +1797,17 @@ async function applyForJob(jobId) {
 
 
     // Real API call for non-demo jobs
+    // Show loading state on the button
+    const applyBtns = document.querySelectorAll(`button[onclick*="applyForJob('${jobId}')"]`);
+    const origTexts = [];
+    applyBtns.forEach(btn => {
+        origTexts.push(btn.innerHTML);
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><span class="apply-spinner"></span> Applying...</span>';
+        btn.style.opacity = '0.7';
+        btn.style.pointerEvents = 'none';
+    });
+
     try {
         const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/apply`, {
             method: 'POST',
@@ -1844,6 +1855,13 @@ async function applyForJob(jobId) {
             showApplicationSuccessModal(jobTitle, company);
             loadUserStats();
         } else {
+            // Restore buttons on error
+            applyBtns.forEach((btn, i) => {
+                btn.disabled = false;
+                btn.innerHTML = origTexts[i];
+                btn.style.opacity = '';
+                btn.style.pointerEvents = '';
+            });
             // If already applied, still track it in demoApplications to disable button
             const isAlreadyApplied = data.message && data.message.toLowerCase().includes('already applied');
             if (isAlreadyApplied) {
@@ -1880,6 +1898,13 @@ async function applyForJob(jobId) {
             }
         }
     } catch (error) {
+        // Restore buttons on network error
+        applyBtns.forEach((btn, i) => {
+            btn.disabled = false;
+            btn.innerHTML = origTexts[i];
+            btn.style.opacity = '';
+            btn.style.pointerEvents = '';
+        });
         console.error('Apply error:', error);
         showToast('error', 'Unable to apply. Please try again.');
     }

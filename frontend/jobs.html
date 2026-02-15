@@ -14,6 +14,12 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>window.GOOGLE_CLIENT_ID = '29990959574-h0bekp3eu5rarn8ji69mlmogc845hm9p.apps.googleusercontent.com';</script>
     <style>
+        @keyframes btnSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         /* Jobs Page Specific Styles */
         .jobs-page-container {
             min-height: 100vh;
@@ -375,6 +381,24 @@
                 <button class="btn btn-outline" onclick="window.location.href='/'">Login</button>
                 <button class="btn btn-primary" onclick="window.location.href='/'">Get Started</button>
             </div>
+            <div class="nav-user" id="navUser" style="display: none;">
+                <a href="/" class="nav-link">My Dashboard</a>
+                <div class="profile-dropdown">
+                    <button class="profile-btn" onclick="toggleProfileMenu()">
+                        <span class="profile-avatar" id="userAvatar">U</span>
+                        <span id="userName">User</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="profile-menu" id="profileMenu">
+                        <a href="/#dashboard" class="menu-item">📊 Dashboard</a>
+                        <a href="/#profile" class="menu-item">👤 My Profile</a>
+                        <a href="/#applications" class="menu-item">📋 Applications</a>
+                        <a href="/#settings" class="menu-item">⚙️ Settings</a>
+                        <hr class="menu-divider">
+                        <a href="#" onclick="logoutFromJobs()" class="menu-item menu-item-danger">🚪 Logout</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -507,11 +531,81 @@
         let savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
         let showingSavedOnly = false;
 
+        // Track which jobs user already applied to
+        let appliedJobIds = [];
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            updateNavAuth();
             loadJobs();
             parseURLFilters();
+            loadAppliedJobs();
         });
+
+        // Update navbar based on auth state
+        function updateNavAuth() {
+            if (state.token && state.user) {
+                document.getElementById('navAuth').style.display = 'none';
+                document.getElementById('navUser').style.display = 'flex';
+
+                // Get display name using same logic as homepage
+                let displayName = 'User';
+                if (state.user.firstName) {
+                    displayName = state.user.firstName;
+                } else if (state.user.candidate?.firstName) {
+                    displayName = state.user.candidate.firstName;
+                } else if (state.user.name) {
+                    displayName = state.user.name.split(' ')[0];
+                } else if (state.user.fullName) {
+                    displayName = state.user.fullName.split(' ')[0];
+                } else if (state.user.email) {
+                    displayName = state.user.email.split('@')[0];
+                }
+
+                const initial = displayName.charAt(0).toUpperCase();
+                const userNameEl = document.getElementById('userName');
+                const userAvatarEl = document.getElementById('userAvatar');
+                if (userNameEl) userNameEl.textContent = displayName;
+                if (userAvatarEl) userAvatarEl.textContent = initial;
+            }
+        }
+
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            if (menu) menu.classList.toggle('active');
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.profile-dropdown')) {
+                document.getElementById('profileMenu')?.classList.remove('active');
+            }
+        });
+
+        function logoutFromJobs() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        // Load already-applied jobs from API
+        async function loadAppliedJobs() {
+            if (!state.token) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/candidates/applications`, {
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+                const data = await response.json();
+                if (data.success && data.data) {
+                    const apps = Array.isArray(data.data) ? data.data : (data.data.data || []);
+                    appliedJobIds = apps.map(a => a.jobId || a.job?.id).filter(Boolean);
+                    // Re-render to show updated button states
+                    if (state.filteredJobs.length > 0) renderPaginatedJobs();
+                }
+            } catch (e) {
+                console.log('Could not load applied jobs:', e);
+            }
+        }
 
         // Parse URL parameters for filters
         function parseURLFilters() {
@@ -1072,6 +1166,17 @@
                 return;
             }
 
+            // Show loading state on the button
+            const btns = document.querySelectorAll(`button[onclick*="applyForJob('${jobId}')"]`);
+            const originalTexts = [];
+            btns.forEach(btn => {
+                originalTexts.push(btn.innerHTML);
+                btn.disabled = true;
+                btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:btnSpin 0.6s linear infinite;display:inline-block;"></span> Applying...</span>';
+                btn.style.opacity = '0.7';
+                btn.style.pointerEvents = 'none';
+            });
+
             // Find job details
             const job = state.allJobs.find(j => j.id === jobId);
             const jobTitle = job?.title || 'Unknown Position';
@@ -1097,6 +1202,9 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Track this job as applied
+                    appliedJobIds.push(jobId);
+
                     // Close job detail modal if open
                     closeJobModal();
 
@@ -1106,6 +1214,13 @@
                     // Re-render to update button state
                     renderPaginatedJobs();
                 } else {
+                    // Restore buttons on error
+                    btns.forEach((btn, i) => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalTexts[i];
+                        btn.style.opacity = '';
+                        btn.style.pointerEvents = '';
+                    });
                     const message = data.message || '';
                     if (message.toLowerCase().includes('already applied')) {
                         showToast('info', 'You have already applied for this job. Go to Applications to take the test.');
@@ -1120,6 +1235,13 @@
                     }
                 }
             } catch (error) {
+                // Restore buttons on network error
+                btns.forEach((btn, i) => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalTexts[i];
+                    btn.style.opacity = '';
+                    btn.style.pointerEvents = '';
+                });
                 console.error('Apply error:', error);
                 showToast('error', 'Unable to apply. Please try again.');
             }
@@ -1156,7 +1278,7 @@
                             </p>
                         </div>
                         <div style="display: flex; gap: 12px;">
-                            <button onclick="window.location.href='/'" 
+                            <button onclick="window.location.href='/#applications'" 
                                 style="flex: 1; padding: 12px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;">
                                 📋 My Applications
                             </button>
@@ -1173,6 +1295,9 @@
 
         function getApplyButtonHtml(jobId, isSmall = true) {
             const sizeClass = isSmall ? 'btn-sm' : '';
+            if (appliedJobIds.includes(jobId)) {
+                return `<button class="btn btn-outline ${sizeClass}" disabled style="opacity:0.7;cursor:default;">Applied ✓</button>`;
+            }
             return `<button class="btn btn-primary ${sizeClass}" onclick="event.stopPropagation(); applyForJob('${jobId}')">Apply Now</button>`;
         }
 

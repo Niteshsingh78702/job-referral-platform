@@ -1653,6 +1653,53 @@ function clearAllFilters() {
     // Removed: showToast - silent filtering is more professional
 }
 
+// Show professional success modal after applying
+function showApplicationSuccessModal(jobTitle, company) {
+    // Remove any existing success modal
+    const existing = document.getElementById('applicationSuccessModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'applicationSuccessModal';
+    modal.innerHTML = `
+        <style>
+            @keyframes successFadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes successScaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+            @keyframes successBounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+        </style>
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: successFadeIn 0.3s ease;">
+            <div style="background: white; border-radius: 16px; max-width: 440px; width: 100%; padding: 40px 32px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: successScaleIn 0.3s ease;">
+                <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #22c55e, #16a34a); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: successBounceIn 0.5s ease 0.2s both;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h2 style="font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 8px;">Application Submitted! 🎉</h2>
+                <p style="font-size: 15px; color: #64748b; margin: 0 0 20px; line-height: 1.5;">
+                    You've successfully applied for<br>
+                    <strong style="color: #1e293b;">${jobTitle}</strong> at <strong style="color: #1e293b;">${company}</strong>
+                </p>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 24px; text-align: left;">
+                    <p style="font-size: 13px; color: #15803d; margin: 0; line-height: 1.6;">
+                        <strong>📋 Next Step:</strong> Go to <strong>My Applications</strong> to take the skill assessment test. Your application status will be updated once completed.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="document.getElementById('applicationSuccessModal').remove(); showApplications();" 
+                        style="flex: 1; padding: 12px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.2s;">
+                        📋 View My Applications
+                    </button>
+                    <button onclick="document.getElementById('applicationSuccessModal').remove();" 
+                        style="flex: 1; padding: 12px 16px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.2s;">
+                        Keep Browsing
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
 async function applyForJob(jobId) {
     console.log('🔵 applyForJob called with jobId:', jobId);
     console.log('🔵 Current token:', state.token ? 'EXISTS' : 'NULL');
@@ -1744,7 +1791,7 @@ async function applyForJob(jobId) {
         // Re-render jobs to update button state
         renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
 
-        showToast('success', 'Application submitted! Go to My Applications to take the assessment test.');
+        showApplicationSuccessModal(jobTitle, company);
         return;
     }
 
@@ -1794,7 +1841,7 @@ async function applyForJob(jobId) {
             // Re-render jobs to update button state
             renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
 
-            showToast('success', 'Application submitted! You can now take the assessment test.');
+            showApplicationSuccessModal(jobTitle, company);
             loadUserStats();
         } else {
             // If already applied, still track it in demoApplications to disable button

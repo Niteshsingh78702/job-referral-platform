@@ -618,7 +618,7 @@
         // Load all jobs from API
         async function loadJobs() {
             try {
-                const response = await fetch(`${API_BASE_URL}/jobs`);
+                const response = await fetch(`${API_BASE_URL}/jobs?limit=100`);
                 const data = await response.json();
 
                 let jobs = [];

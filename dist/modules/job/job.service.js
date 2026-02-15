@@ -169,7 +169,10 @@ let JobService = class JobService {
             })
         ]);
         return {
-            data: jobs,
+            data: jobs.map(({ JobSkill, ...rest })=>({
+                    ...rest,
+                    skills: JobSkill
+                })),
             meta: {
                 page: page || 1,
                 limit: limit || 10,
@@ -212,7 +215,11 @@ let JobService = class JobService {
         if (!job) {
             throw new _common.NotFoundException('Job not found');
         }
-        return job;
+        const { JobSkill, ...rest } = job;
+        return {
+            ...rest,
+            skills: JobSkill
+        };
     }
     // Update job
     async updateJob(jobId, hrId, dto) {
@@ -235,7 +242,7 @@ let JobService = class JobService {
         if (!job.HR) {
             throw new _common.ForbiddenException('Only admin can update admin-created jobs');
         }
-        return this.prisma.job.update({
+        const updated = await this.prisma.job.update({
             where: {
                 id: jobId
             },
@@ -244,6 +251,11 @@ let JobService = class JobService {
                 JobSkill: true
             }
         });
+        const { JobSkill, ...rest } = updated;
+        return {
+            ...rest,
+            skills: JobSkill
+        };
     }
     // Apply for job
     async applyForJob(jobId, userId, dto) {
@@ -399,7 +411,7 @@ let JobService = class JobService {
         if (!hr) {
             throw new _common.NotFoundException('HR profile not found');
         }
-        return this.prisma.job.findMany({
+        const jobs = await this.prisma.job.findMany({
             where: {
                 hrId: hr.id,
                 ...status && {
@@ -418,6 +430,10 @@ let JobService = class JobService {
                 createdAt: 'desc'
             }
         });
+        return jobs.map(({ JobSkill, ...rest })=>({
+                ...rest,
+                skills: JobSkill
+            }));
     }
     /**
    * Check if a candidate can apply for a job (for frontend pre-check)

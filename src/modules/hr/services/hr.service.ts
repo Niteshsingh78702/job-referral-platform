@@ -486,7 +486,10 @@ export class HRService {
     ]);
 
     return {
-      jobs,
+      jobs: jobs.map(({ JobSkill, ...rest }) => ({
+        ...rest,
+        skills: JobSkill,
+      })),
       pagination: {
         page,
         limit,
@@ -692,7 +695,8 @@ export class HRService {
       throw new ForbiddenException('You can only view your own jobs');
     }
 
-    return job;
+    const { JobSkill, ...rest } = job;
+    return { ...rest, skills: JobSkill };
   }
 
   /**
@@ -780,7 +784,8 @@ export class HRService {
       return updated;
     });
 
-    return updatedJob;
+    const { JobSkill, ...rest } = updatedJob;
+    return { ...rest, skills: JobSkill };
   }
 
   /**

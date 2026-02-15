@@ -3166,8 +3166,10 @@ let previousPage = null;
 function showPage(pageId) {
     // Hide main content sections
     document.querySelector('.hero')?.style.setProperty('display', 'none');
+    document.getElementById('job-categories')?.style.setProperty('display', 'none');
     document.getElementById('dashboard')?.style.setProperty('display', 'none');
     document.getElementById('how-it-works')?.style.setProperty('display', 'none');
+    document.getElementById('video-guide')?.style.setProperty('display', 'none');
     document.getElementById('jobs')?.style.setProperty('display', 'none');
     document.getElementById('pricing')?.style.setProperty('display', 'none');
     document.querySelector('.why-99-section')?.style.setProperty('display', 'none');
@@ -3191,8 +3193,10 @@ function showPage(pageId) {
 function goBack() {
     // Show main content sections
     document.querySelector('.hero')?.style.setProperty('display', 'flex');
+    document.getElementById('job-categories')?.style.setProperty('display', 'block');
     document.getElementById('dashboard')?.style.setProperty('display', state.token ? 'block' : 'none');
     document.getElementById('how-it-works')?.style.setProperty('display', 'block');
+    document.getElementById('video-guide')?.style.setProperty('display', 'block');
     document.getElementById('jobs')?.style.setProperty('display', 'block');
     document.getElementById('pricing')?.style.setProperty('display', 'block');
     document.querySelector('.why-99-section')?.style.setProperty('display', 'block');

@@ -155,7 +155,10 @@ export class JobService {
     ]);
 
     return {
-      data: jobs,
+      data: jobs.map(({ JobSkill, ...rest }) => ({
+        ...rest,
+        skills: JobSkill,
+      })),
       meta: {
         page: page || 1,
         limit: limit || 10,
@@ -194,7 +197,8 @@ export class JobService {
       throw new NotFoundException('Job not found');
     }
 
-    return job;
+    const { JobSkill, ...rest } = job;
+    return { ...rest, skills: JobSkill };
   }
 
   // Update job
@@ -218,11 +222,13 @@ export class JobService {
       throw new ForbiddenException('Only admin can update admin-created jobs');
     }
 
-    return this.prisma.job.update({
+    const updated = await this.prisma.job.update({
       where: { id: jobId },
       data: dto,
       include: { JobSkill: true },
     });
+    const { JobSkill, ...rest } = updated;
+    return { ...rest, skills: JobSkill };
   }
 
   // Apply for job
@@ -415,7 +421,7 @@ export class JobService {
       throw new NotFoundException('HR profile not found');
     }
 
-    return this.prisma.job.findMany({
+    const jobs = await this.prisma.job.findMany({
       where: {
         hrId: hr.id,
         ...(status && { status }),
@@ -428,6 +434,10 @@ export class JobService {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return jobs.map(({ JobSkill, ...rest }) => ({
+      ...rest,
+      skills: JobSkill,
+    }));
   }
 
   /**

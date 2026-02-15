@@ -494,7 +494,10 @@ let HRService = class HRService {
             })
         ]);
         return {
-            jobs,
+            jobs: jobs.map(({ JobSkill, ...rest })=>({
+                    ...rest,
+                    skills: JobSkill
+                })),
             pagination: {
                 page,
                 limit,
@@ -697,7 +700,11 @@ let HRService = class HRService {
         if (job.hrId !== user.HR.id) {
             throw new _common.ForbiddenException('You can only view your own jobs');
         }
-        return job;
+        const { JobSkill, ...rest } = job;
+        return {
+            ...rest,
+            skills: JobSkill
+        };
     }
     /**
    * Update a job (full edit)
@@ -791,7 +798,11 @@ let HRService = class HRService {
             });
             return updated;
         });
-        return updatedJob;
+        const { JobSkill, ...rest } = updatedJob;
+        return {
+            ...rest,
+            skills: JobSkill
+        };
     }
     /**
    * Delete a job

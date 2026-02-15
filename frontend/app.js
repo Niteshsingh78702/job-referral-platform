@@ -3537,6 +3537,13 @@ async function loadApplications() {
             cancelButton = `<button class="btn btn-danger btn-sm" onclick="cancelApplication('${app.id}')" style="margin-left: 8px;">Cancel</button>`;
         }
 
+        // Delete button (show for terminal/withdrawn statuses)
+        let deleteButton = '';
+        const deletableStatuses = ['WITHDRAWN', 'TEST_FAILED', 'REJECTED', 'EXPIRED', 'INTERVIEW_REJECTED', 'CANDIDATE_NO_SHOW', 'HR_NO_SHOW'];
+        if (deletableStatuses.includes(app.status)) {
+            deleteButton = `<button class="btn btn-sm" onclick="deleteApplication('${app.id}')" style="margin-left: 8px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-size: 12px;" title="Delete permanently">🗑️ Delete</button>`;
+        }
+
         return `
             <div class="table-row" id="app-row-${app.id}">
                 <span class="company-cell">
@@ -3546,7 +3553,7 @@ async function loadApplications() {
                 <span>${app.jobTitle}</span>
                 <span>${appliedDate}</span>
                 <span class="status-badge ${statusClass}">${statusLabel}</span>
-                <span style="display: flex; gap: 8px;">${actionButton}${cancelButton}</span>
+                <span style="display: flex; gap: 8px; flex-wrap: wrap;">${actionButton}${cancelButton}${deleteButton}</span>
             </div>
         `;
     }).join('');
@@ -3695,6 +3702,73 @@ async function cancelApplication(appId) {
     }
 }
 
+// Delete an application permanently
+async function deleteApplication(appId) {
+    const confirmed = await showConfirmModal({
+        icon: '🗑️',
+        title: 'Delete Application',
+        message: 'Are you sure you want to permanently delete this application? This action cannot be undone and all related data (test results, etc.) will be removed.',
+        confirmText: 'Yes, Delete',
+        cancelText: 'No, Keep It',
+        variant: 'danger'
+    });
+
+    if (!confirmed) return;
+
+    // Check if this is a demo application (localStorage)
+    const demoApps = JSON.parse(localStorage.getItem('demoApplications') || '[]');
+    const demoAppIndex = demoApps.findIndex(a => a.id === appId);
+
+    if (demoAppIndex !== -1) {
+        const app = demoApps[demoAppIndex];
+        demoApps.splice(demoAppIndex, 1);
+        localStorage.setItem('demoApplications', JSON.stringify(demoApps));
+        showToast('success', `Application for ${app.jobTitle} at ${app.company} has been deleted.`);
+        loadApplications();
+        loadUserStats();
+        renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
+        return;
+    }
+
+    // Real API application - call backend
+    if (!state.token) {
+        showToast('error', 'Please login to delete applications.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/candidates/applications/${appId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${state.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 401) {
+            handleExpiredToken();
+            return;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            const errorMessage = data.message || 'Failed to delete application';
+            showToast('error', errorMessage);
+            return;
+        }
+
+        showToast('success', data.message || 'Application deleted successfully.');
+        loadApplications();
+        loadUserStats();
+        renderJobs(state.jobs.length > 0 ? state.jobs : demoJobs);
+
+    } catch (error) {
+        console.error('Error deleting application:', error);
+        showToast('error', 'Network error. Please try again.');
+    }
+}
+
 function filterApplications(status) {
     // Update active filter button
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -3790,6 +3864,20 @@ function renderApplicationRows(applications, tableBody) {
             actionButton = `<button class="btn btn-outline btn-sm" onclick="showApplicationDetails('${app.id}')">View Details</button>`;
         }
 
+        // Cancel button (only show for cancellable statuses)
+        let cancelButton = '';
+        const cancellableStatuses = ['TEST_PENDING', 'APPLIED', 'REFERRAL_PENDING'];
+        if (cancellableStatuses.includes(app.status)) {
+            cancelButton = `<button class="btn btn-danger btn-sm" onclick="cancelApplication('${app.id}')" style="margin-left: 8px;">Cancel</button>`;
+        }
+
+        // Delete button (show for terminal/withdrawn statuses)
+        let deleteButton = '';
+        const deletableStatuses = ['WITHDRAWN', 'TEST_FAILED', 'REJECTED', 'EXPIRED', 'INTERVIEW_REJECTED', 'CANDIDATE_NO_SHOW', 'HR_NO_SHOW'];
+        if (deletableStatuses.includes(app.status)) {
+            deleteButton = `<button class="btn btn-sm" onclick="deleteApplication('${app.id}')" style="margin-left: 8px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-size: 12px;" title="Delete permanently">🗑️ Delete</button>`;
+        }
+
         return `
             <div class="table-row">
                 <span class="company-cell">
@@ -3799,7 +3887,7 @@ function renderApplicationRows(applications, tableBody) {
                 <span>${app.jobTitle}</span>
                 <span>${appliedDate}</span>
                 <span class="status-badge ${statusClass}">${statusLabel}</span>
-                <span>${actionButton}</span>
+                <span style="display: flex; gap: 8px; flex-wrap: wrap;">${actionButton}${cancelButton}${deleteButton}</span>
             </div>
         `;
     }).join('');

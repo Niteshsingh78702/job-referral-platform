@@ -170,6 +170,14 @@ export class CandidateController {
     return this.candidateService.withdrawApplication(userId, applicationId);
   }
 
+  @Delete('applications/:id')
+  async deleteApplication(
+    @CurrentUser('sub') userId: string,
+    @Param('id') applicationId: string,
+  ) {
+    return this.candidateService.deleteApplication(userId, applicationId);
+  }
+
   @Get('tests')
   async getTestHistory(@CurrentUser('sub') userId: string) {
     return this.candidateService.getTestHistory(userId);

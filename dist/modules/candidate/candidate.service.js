@@ -467,6 +467,152 @@ let CandidateService = class CandidateService {
             withdrawnAt: new Date().toISOString()
         };
     }
+    // Delete an application permanently
+    async deleteApplication(userId, applicationId) {
+        const candidate = await this.prisma.candidate.findUnique({
+            where: {
+                userId
+            }
+        });
+        if (!candidate) {
+            throw new _common.NotFoundException('Candidate profile not found');
+        }
+        // Find the application and verify ownership
+        const application = await this.prisma.jobApplication.findUnique({
+            where: {
+                id: applicationId
+            },
+            include: {
+                Job: {
+                    select: {
+                        title: true,
+                        companyName: true
+                    }
+                },
+                Payment: {
+                    select: {
+                        id: true,
+                        status: true
+                    }
+                }
+            }
+        });
+        if (!application) {
+            throw new _common.NotFoundException('Application not found');
+        }
+        if (application.candidateId !== candidate.id) {
+            throw new _common.BadRequestException('You can only delete your own applications');
+        }
+        // Block deletion if payment was successful (financial records must be preserved)
+        const hasSuccessfulPayment = application.Payment?.some((p)=>p.status === 'SUCCESS');
+        if (hasSuccessfulPayment) {
+            throw new _common.BadRequestException('Cannot delete application with successful payment. Please contact support.');
+        }
+        const jobTitle = application.Job?.title || 'Unknown';
+        const companyName = application.Job?.companyName || 'Unknown';
+        // Delete application and all related records in a transaction
+        await this.prisma.$transaction(async (tx)=>{
+            // Delete test answers for test sessions of this application
+            const testSessions = await tx.testSession.findMany({
+                where: {
+                    applicationId
+                },
+                select: {
+                    id: true
+                }
+            });
+            const sessionIds = testSessions.map((s)=>s.id);
+            if (sessionIds.length > 0) {
+                await tx.testAnswer.deleteMany({
+                    where: {
+                        sessionId: {
+                            in: sessionIds
+                        }
+                    }
+                });
+                await tx.testEvent.deleteMany({
+                    where: {
+                        sessionId: {
+                            in: sessionIds
+                        }
+                    }
+                });
+                // Delete candidate test attempts linked to these sessions
+                await tx.candidateTestAttempt.deleteMany({
+                    where: {
+                        testSessionId: {
+                            in: sessionIds
+                        }
+                    }
+                });
+                await tx.testSession.deleteMany({
+                    where: {
+                        applicationId
+                    }
+                });
+            }
+            // Delete interview if exists
+            await tx.interview.deleteMany({
+                where: {
+                    applicationId
+                }
+            });
+            // Delete referral and its earnings if exists
+            const referral = await tx.referral.findUnique({
+                where: {
+                    applicationId
+                }
+            });
+            if (referral) {
+                await tx.employeeEarning.deleteMany({
+                    where: {
+                        referralId: referral.id
+                    }
+                });
+                await tx.referral.delete({
+                    where: {
+                        applicationId
+                    }
+                });
+            }
+            // Delete payments (and their refunds)
+            const payments = await tx.payment.findMany({
+                where: {
+                    applicationId
+                },
+                select: {
+                    id: true
+                }
+            });
+            if (payments.length > 0) {
+                const paymentIds = payments.map((p)=>p.id);
+                await tx.refund.deleteMany({
+                    where: {
+                        paymentId: {
+                            in: paymentIds
+                        }
+                    }
+                });
+                await tx.payment.deleteMany({
+                    where: {
+                        applicationId
+                    }
+                });
+            }
+            // Finally delete the application itself
+            await tx.jobApplication.delete({
+                where: {
+                    id: applicationId
+                }
+            });
+        });
+        console.log(`Application deleted: ${applicationId} for job ${jobTitle} at ${companyName}`);
+        return {
+            success: true,
+            message: `Application for ${jobTitle} at ${companyName} has been permanently deleted.`,
+            applicationId
+        };
+    }
     // Get test history
     async getTestHistory(userId) {
         const candidate = await this.prisma.candidate.findUnique({

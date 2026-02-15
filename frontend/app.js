@@ -1036,14 +1036,23 @@ async function loadJobs() {
 }
 
 function useDemoJobs() {
-    state.allJobs = demoJobs;
-    state.jobs = demoJobs.slice(0, 9);
+    state.allJobs = [];
+    state.jobs = [];
     usingSampleJobs = false;
     const sampleJobsEl = document.getElementById('sampleJobs');
-    sampleJobsEl.style.display = 'none';
-    renderJobs(state.jobs);
-    updateViewAllButton(demoJobs.length);
-    console.log('📦 Using demo jobs (API unavailable)');
+    if (sampleJobsEl) sampleJobsEl.style.display = 'none';
+    const jobsGridEl = document.getElementById('jobsGrid');
+    if (jobsGridEl) {
+        jobsGridEl.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                <h3 style="color: var(--text-primary, #1e293b); margin-bottom: 8px;">No Jobs Available Yet</h3>
+                <p style="color: var(--text-secondary, #64748b);">New opportunities will appear here soon. Check back later!</p>
+            </div>
+        `;
+    }
+    updateViewAllButton(0);
+    console.log('📋 No jobs available');
 }
 
 // Update View All Jobs button with count

@@ -213,4 +213,15 @@ export class HRController {
   ) {
     return this.hrService.shortlistApplication(userId, applicationId);
   }
+
+  @Delete('applications/:applicationId')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.HR)
+  @HttpCode(HttpStatus.OK)
+  async deleteApplication(
+    @CurrentUser('sub') userId: string,
+    @Param('applicationId') applicationId: string,
+  ) {
+    return this.hrService.deleteApplication(userId, applicationId);
+  }
 }

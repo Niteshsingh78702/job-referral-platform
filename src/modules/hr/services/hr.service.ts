@@ -1113,4 +1113,98 @@ export class HRService {
       status: 'INTERVIEW_CONFIRMED',
     };
   }
+
+  /**
+   * Delete an application and all related records
+   */
+  async deleteApplication(userId: string, applicationId: string) {
+    const hr = await this.prisma.hR.findUnique({
+      where: { userId },
+    });
+
+    if (!hr) {
+      throw new NotFoundException('HR profile not found');
+    }
+
+    const application = await this.prisma.jobApplication.findUnique({
+      where: { id: applicationId },
+      include: {
+        Job: true,
+        Interview: true,
+        Payment: { include: { Refund: true } },
+        Referral: { include: { EmployeeEarning: true } },
+        TestSession: true,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    if (application.Job.hrId !== hr.id) {
+      throw new ForbiddenException(
+        'You do not have access to this application',
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      // Delete Interview if exists
+      if (application.Interview) {
+        await tx.interview.delete({
+          where: { id: application.Interview.id },
+        });
+      }
+
+      // Delete TestSession related records (TestAnswer, TestEvent have onDelete: Cascade)
+      if (application.TestSession.length > 0) {
+        const sessionIds = application.TestSession.map((s) => s.id);
+        await tx.testAnswer.deleteMany({ where: { sessionId: { in: sessionIds } } });
+        await tx.testEvent.deleteMany({ where: { sessionId: { in: sessionIds } } });
+        await tx.testSession.deleteMany({ where: { id: { in: sessionIds } } });
+      }
+
+      // Delete Payment refunds first, then payments
+      for (const payment of application.Payment) {
+        if (payment.Refund) {
+          await tx.refund.delete({ where: { id: payment.Refund.id } });
+        }
+      }
+      await tx.payment.deleteMany({ where: { applicationId } });
+
+      // Delete Referral earnings first, then referral
+      if (application.Referral) {
+        if (application.Referral.EmployeeEarning) {
+          await tx.employeeEarning.delete({
+            where: { id: application.Referral.EmployeeEarning.id },
+          });
+        }
+        await tx.referral.delete({
+          where: { id: application.Referral.id },
+        });
+      }
+
+      // Delete the application itself
+      await tx.jobApplication.delete({
+        where: { id: applicationId },
+      });
+
+      // Audit log
+      await tx.auditLog.create({
+        data: {
+          id: crypto.randomUUID(),
+          userId: userId,
+          action: AuditAction.DELETE,
+          entityType: 'JobApplication',
+          entityId: applicationId,
+          oldValue: {
+            candidateId: application.candidateId,
+            jobId: application.jobId,
+            status: application.status,
+          },
+        },
+      });
+    });
+
+    return { message: 'Application deleted successfully' };
+  }
 }

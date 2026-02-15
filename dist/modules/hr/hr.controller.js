@@ -108,6 +108,9 @@ let HRController = class HRController {
     async shortlistApplication(userId, applicationId) {
         return this.hrService.shortlistApplication(userId, applicationId);
     }
+    async deleteApplication(userId, applicationId) {
+        return this.hrService.deleteApplication(userId, applicationId);
+    }
     constructor(hrService){
         this.hrService = hrService;
     }
@@ -323,6 +326,20 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], HRController.prototype, "shortlistApplication", null);
+_ts_decorate([
+    (0, _common.Delete)('applications/:applicationId'),
+    (0, _common.UseGuards)(_guards.RolesGuard),
+    (0, _decorators.Roles)(_constants.UserRole.HR),
+    (0, _common.HttpCode)(_common.HttpStatus.OK),
+    _ts_param(0, (0, _decorators.CurrentUser)('sub')),
+    _ts_param(1, (0, _common.Param)('applicationId')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String,
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], HRController.prototype, "deleteApplication", null);
 HRController = _ts_decorate([
     (0, _common.Controller)('hr'),
     _ts_metadata("design:type", Function),

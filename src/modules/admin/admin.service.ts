@@ -392,21 +392,60 @@ export class AdminService {
   async deleteJob(jobId: string, adminId: string) {
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      include: { _count: { select: { JobApplication: true } } },
+      include: {
+        JobApplication: {
+          include: {
+            Interview: true,
+            Payment: { include: { Refund: true } },
+            Referral: { include: { EmployeeEarning: true } },
+            TestSession: true,
+          },
+        },
+      },
     });
 
     if (!job) throw new NotFoundException('Job not found');
 
-    // Check if there are applications
-    if (job._count.JobApplication > 0) {
-      throw new BadRequestException(
-        `Cannot delete job with ${job._count.JobApplication} applications. Please expire the job instead.`,
-      );
-    }
-
     await this.prisma.$transaction(async (tx) => {
+      // Cascade-delete all application-related records
+      for (const app of job.JobApplication) {
+        // Delete Interview
+        if (app.Interview) {
+          await tx.interview.delete({ where: { id: app.Interview.id } });
+        }
+        // Delete TestSession records (answers and events)
+        if (app.TestSession.length > 0) {
+          const sessionIds = app.TestSession.map((s) => s.id);
+          await tx.testAnswer.deleteMany({ where: { sessionId: { in: sessionIds } } });
+          await tx.testEvent.deleteMany({ where: { sessionId: { in: sessionIds } } });
+          await tx.testSession.deleteMany({ where: { id: { in: sessionIds } } });
+        }
+        // Delete Payment refunds, then payments
+        for (const payment of app.Payment) {
+          if (payment.Refund) {
+            await tx.refund.delete({ where: { id: payment.Refund.id } });
+          }
+        }
+        await tx.payment.deleteMany({ where: { applicationId: app.id } });
+        // Delete Referral earnings, then referral
+        if (app.Referral) {
+          if (app.Referral.EmployeeEarning) {
+            await tx.employeeEarning.delete({ where: { id: app.Referral.EmployeeEarning.id } });
+          }
+          await tx.referral.delete({ where: { id: app.Referral.id } });
+        }
+      }
+
+      // Delete all applications for this job
+      await tx.jobApplication.deleteMany({ where: { jobId } });
+
+      // Delete job skills
+      await tx.jobSkill.deleteMany({ where: { jobId } });
+
+      // Delete the job itself
       await tx.job.delete({ where: { id: jobId } });
 
+      // Audit log
       await tx.auditLog.create({
         data: {
           id: crypto.randomUUID(),

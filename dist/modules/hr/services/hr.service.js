@@ -810,6 +810,24 @@ let HRService = class HRService {
         const job = await this.prisma.job.findUnique({
             where: {
                 id: jobId
+            },
+            include: {
+                JobApplication: {
+                    include: {
+                        Interview: true,
+                        Payment: {
+                            include: {
+                                Refund: true
+                            }
+                        },
+                        Referral: {
+                            include: {
+                                EmployeeEarning: true
+                            }
+                        },
+                        TestSession: true
+                    }
+                }
             }
         });
         if (!job) {
@@ -819,13 +837,76 @@ let HRService = class HRService {
             throw new _common.ForbiddenException('You can only delete your own jobs');
         }
         await this.prisma.$transaction(async (tx)=>{
-            // Delete related records first
-            await tx.jobSkill.deleteMany({
+            // Cascade-delete all application-related records
+            for (const app of job.JobApplication){
+                if (app.Interview) {
+                    await tx.interview.delete({
+                        where: {
+                            id: app.Interview.id
+                        }
+                    });
+                }
+                if (app.TestSession.length > 0) {
+                    const sessionIds = app.TestSession.map((s)=>s.id);
+                    await tx.testAnswer.deleteMany({
+                        where: {
+                            sessionId: {
+                                in: sessionIds
+                            }
+                        }
+                    });
+                    await tx.testEvent.deleteMany({
+                        where: {
+                            sessionId: {
+                                in: sessionIds
+                            }
+                        }
+                    });
+                    await tx.testSession.deleteMany({
+                        where: {
+                            id: {
+                                in: sessionIds
+                            }
+                        }
+                    });
+                }
+                for (const payment of app.Payment){
+                    if (payment.Refund) {
+                        await tx.refund.delete({
+                            where: {
+                                id: payment.Refund.id
+                            }
+                        });
+                    }
+                }
+                await tx.payment.deleteMany({
+                    where: {
+                        applicationId: app.id
+                    }
+                });
+                if (app.Referral) {
+                    if (app.Referral.EmployeeEarning) {
+                        await tx.employeeEarning.delete({
+                            where: {
+                                id: app.Referral.EmployeeEarning.id
+                            }
+                        });
+                    }
+                    await tx.referral.delete({
+                        where: {
+                            id: app.Referral.id
+                        }
+                    });
+                }
+            }
+            // Delete all applications for this job
+            await tx.jobApplication.deleteMany({
                 where: {
                     jobId
                 }
             });
-            await tx.jobApplication.deleteMany({
+            // Delete job skills
+            await tx.jobSkill.deleteMany({
                 where: {
                     jobId
                 }

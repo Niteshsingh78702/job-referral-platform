@@ -1091,7 +1091,7 @@ a:hover {
    ============================================= */
 .jobs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
     gap: 24px;
 }
 
@@ -1373,6 +1373,28 @@ a:hover {
     grid-template-columns: 2fr repeat(3, 1fr);
     gap: 48px;
     margin-bottom: 48px;
+}
+
+@media (max-width: 1024px) {
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px;
+    }
+}
+
+@media (max-width: 640px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .footer {
+        padding: 48px 0 32px;
+    }
+
+    .footer-desc {
+        max-width: 100%;
+    }
 }
 
 .footer-brand .logo {
@@ -4283,7 +4305,7 @@ html.modal-open body {
     }
 
     .jobs-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
     }
 }
 
@@ -4311,7 +4333,8 @@ html.modal-open body {
         height: 32px;
     }
 
-    /* Hide floating cards on tablet — they overlap text */
+    /* Hide floating cards and hero-visual on tablet — they overlap text */
+    .hero-visual,
     .floating-card {
         display: none;
     }

@@ -216,17 +216,10 @@
                 font-size: 1.5rem;
             }
 
-            .nav-links {
-                display: none;
-            }
-
-            .nav-auth {
-                gap: 8px;
-            }
-
-            .nav-auth .btn {
-                padding: 8px 12px;
-                font-size: 12px;
+            .nav-links,
+            .nav-auth,
+            .nav-user {
+                display: none !important;
             }
 
             .search-bar {
@@ -398,6 +391,50 @@
                         <a href="#" onclick="logoutFromJobs()" class="menu-item menu-item-danger">🚪 Logout</a>
                     </div>
                 </div>
+            </div>
+            <!-- Hamburger Menu Button (Mobile) -->
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+        <!-- Mobile Drawer -->
+        <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="closeMobileMenu()"></div>
+        <div class="mobile-drawer" id="mobileDrawer">
+            <div class="mobile-drawer-header">
+                <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="mobile-drawer-logo">
+                <button class="mobile-drawer-close" onclick="closeMobileMenu()">✕</button>
+            </div>
+            <div class="mobile-drawer-body">
+                <!-- Logged-in user info (hidden by default) -->
+                <div class="mobile-user-info" id="mobileUserInfo" style="display: none;">
+                    <div class="mobile-user-avatar" id="mobileUserAvatar">U</div>
+                    <div>
+                        <div class="mobile-user-name" id="mobileUserName">User</div>
+                    </div>
+                </div>
+                <div class="mobile-drawer-links">
+                    <a href="/" class="mobile-drawer-link">🏠 Home</a>
+                    <a href="/#how-it-works" class="mobile-drawer-link">📋 How It Works</a>
+                    <a href="/#pricing" class="mobile-drawer-link">💰 Pricing</a>
+                    <hr class="mobile-drawer-divider">
+                    <!-- Logged-in only links -->
+                    <div class="mobile-logged-in-links" id="mobileLoggedInLinks" style="display: none;">
+                        <a href="/" class="mobile-drawer-link">📊 Dashboard</a>
+                        <a href="/#applications" class="mobile-drawer-link">📋 Applications</a>
+                        <hr class="mobile-drawer-divider">
+                    </div>
+                </div>
+            </div>
+            <div class="mobile-drawer-footer" id="mobileDrawerFooter">
+                <button class="btn btn-outline btn-block" onclick="window.location.href='/'">Login</button>
+                <button class="btn btn-primary btn-block" onclick="window.location.href='/'">Register</button>
+            </div>
+            <!-- Logout button (hidden by default) -->
+            <div class="mobile-drawer-footer mobile-logout-footer" id="mobileLogoutFooter" style="display: none;">
+                <button class="btn btn-outline btn-block" onclick="logoutFromJobs()"
+                    style="color: #ef4444; border-color: #ef4444;">🚪 Logout</button>
             </div>
         </div>
     </nav>
@@ -1342,6 +1379,60 @@
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
+
+        // =============================================
+        // Mobile Menu
+        // =============================================
+        function toggleMobileMenu() {
+            const drawer = document.getElementById('mobileDrawer');
+            const overlay = document.getElementById('mobileDrawerOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+            if (drawer && overlay && hamburger) {
+                drawer.classList.toggle('active');
+                overlay.classList.toggle('active');
+                hamburger.classList.toggle('active');
+                document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : '';
+            }
+        }
+
+        function closeMobileMenu() {
+            const drawer = document.getElementById('mobileDrawer');
+            const overlay = document.getElementById('mobileDrawerOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+            if (drawer) drawer.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            if (hamburger) hamburger.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Update mobile drawer based on login state
+        function updateMobileDrawerAuth() {
+            const token = localStorage.getItem('token') || localStorage.getItem('candidateToken');
+            const userName = localStorage.getItem('userName') || localStorage.getItem('candidateName');
+            const mobileUserInfo = document.getElementById('mobileUserInfo');
+            const mobileLoggedInLinks = document.getElementById('mobileLoggedInLinks');
+            const mobileDrawerFooter = document.getElementById('mobileDrawerFooter');
+            const mobileLogoutFooter = document.getElementById('mobileLogoutFooter');
+
+            if (token && mobileUserInfo) {
+                mobileUserInfo.style.display = 'flex';
+                if (userName) {
+                    const firstName = userName.split(' ')[0];
+                    const avatar = document.getElementById('mobileUserAvatar');
+                    const nameEl = document.getElementById('mobileUserName');
+                    if (avatar) avatar.textContent = firstName.charAt(0).toUpperCase();
+                    if (nameEl) nameEl.textContent = firstName;
+                }
+                if (mobileLoggedInLinks) mobileLoggedInLinks.style.display = 'block';
+                if (mobileDrawerFooter) mobileDrawerFooter.style.display = 'none';
+                if (mobileLogoutFooter) mobileLogoutFooter.style.display = 'block';
+            }
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            updateMobileDrawerAuth();
+        });
     </script>
 </body>
 

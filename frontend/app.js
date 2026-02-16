@@ -995,7 +995,7 @@ async function loadJobs() {
     const jobsGridEl = document.getElementById('jobsGrid');
 
     try {
-        const response = await fetch(`${API_BASE_URL}/jobs?limit=100`, {
+        const response = await fetch(`${API_BASE_URL}/jobs?limit=50`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

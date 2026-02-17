@@ -526,6 +526,7 @@ a:hover {
     padding: 120px 24px 80px;
     position: relative;
     overflow: hidden;
+    /* NOTE: overflow:hidden is overridden to visible on mobile (<=768px) to prevent scroll blocking */
 }
 
 .hero-bg {
@@ -1589,19 +1590,31 @@ html.modal-open body {
     /* Chrome, Firefox, Edge, Opera */
     backdrop-filter: blur(8px);
     z-index: 2000;
+    /* FIXED: Use display:none instead of visibility:hidden to completely remove from render tree */
+    /* This prevents hidden overlays from intercepting touch events on mobile */
+    display: none;
     opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    /* Prevent scroll chaining on all mobile browsers */
-    overscroll-behavior: contain;
-    -ms-scroll-chaining: none;
 }
 
 .modal-overlay.active {
+    display: block;
     opacity: 1;
-    visibility: visible;
     pointer-events: auto;
+    /* Prevent scroll chaining only when overlay is active */
+    overscroll-behavior: contain;
+    -ms-scroll-chaining: none;
+    /* Fade-in animation since display:none->block can't use transitions */
+    animation: overlayFadeIn 0.3s ease;
+}
+
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal {
@@ -4350,6 +4363,8 @@ html.modal-open body {
     .hero {
         padding: 100px 16px 60px;
         min-height: auto;
+        /* FIXED: Allow vertical scrolling past hero on mobile */
+        overflow: visible;
     }
 
     .hero-title {
@@ -4594,6 +4609,8 @@ html.modal-open body {
     /* Hero */
     .hero {
         padding: 90px 12px 50px;
+        /* FIXED: Allow vertical scrolling past hero on mobile */
+        overflow: visible;
     }
 
     .hero-badge {
@@ -4798,6 +4815,8 @@ html.modal-open body {
     .hero {
         min-height: auto;
         padding: 80px 16px 40px;
+        /* FIXED: Allow vertical scrolling past hero on mobile */
+        overflow: visible;
     }
 
     .modal-content {

@@ -122,27 +122,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cross-device: Prevent scroll on overlay while allowing scroll inside modal
-    const setupModalTouchPrevention = () => {
-        const overlays = document.querySelectorAll('.modal-overlay');
-        overlays.forEach(overlay => {
-            overlay.addEventListener('touchmove', (e) => {
-                // Only prevent if not inside a scrollable modal
-                const modal = overlay.querySelector('.modal');
-                if (modal && !modal.contains(e.target)) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-        });
-    };
+    // FIXED: Use a single delegated listener on document instead of attaching to each overlay,
+    // to avoid { passive: false } listeners on inactive overlays blocking mobile scroll
+    document.addEventListener('touchmove', (e) => {
+        // Only intercept if an active modal overlay is present
+        const activeOverlay = document.querySelector('.modal-overlay.active');
+        if (!activeOverlay) return; // No active overlay = allow normal scrolling
 
-    // Setup after initial load
-    setupModalTouchPrevention();
+        // Check if the touch is inside a scrollable modal content area
+        const modalContent = activeOverlay.nextElementSibling;
+        if (modalContent && modalContent.classList.contains('active') && modalContent.contains(e.target)) {
+            return; // Allow scrolling inside the modal
+        }
 
-    // Also setup after any dynamic modal creation (MutationObserver fallback)
-    const observer = new MutationObserver(() => {
-        setupModalTouchPrevention();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+        // If touching the overlay background (not modal content), prevent scroll
+        if (activeOverlay.contains(e.target)) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 
     // Handle hash-based routing on page load and hash changes
     handleHashRoute();

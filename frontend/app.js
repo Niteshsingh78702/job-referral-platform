@@ -97,6 +97,55 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
     document.body.style.position = '';
 
+    // NUCLEAR MOBILE SCROLL FIX: Force touch-action on all elements
+    // This ensures Chrome Android never blocks scroll gestures
+    function fixMobileScroll() {
+        if (window.innerWidth > 768) return; // Only on mobile
+
+        // Force touch-action on body and html
+        document.documentElement.style.touchAction = 'auto';
+        document.body.style.touchAction = 'auto';
+
+        // Find and neutralize any runtime-injected overlays (e.g., Google GIS iframes)
+        // that might be capturing touch events
+        const allElements = document.querySelectorAll('body > *');
+        allElements.forEach(el => {
+            const style = window.getComputedStyle(el);
+            const zIndex = parseInt(style.zIndex) || 0;
+            const position = style.position;
+
+            // If it's a fixed/absolute element with high z-index that's not our UI
+            if ((position === 'fixed' || position === 'absolute') &&
+                zIndex > 100 &&
+                !el.classList.contains('navbar') &&
+                !el.classList.contains('mobile-drawer') &&
+                !el.classList.contains('mobile-drawer-overlay') &&
+                !el.classList.contains('modal-overlay') &&
+                !el.classList.contains('modal') &&
+                !el.id.includes('toast') &&
+                el.tagName !== 'NAV') {
+
+                // Make it not intercept touches
+                el.style.pointerEvents = 'none';
+                console.log('[ScrollFix] Neutralized overlay:', el.tagName, el.className, el.id);
+            }
+        });
+
+        // Also handle any iframes injected by third-party scripts
+        document.querySelectorAll('iframe').forEach(iframe => {
+            const style = window.getComputedStyle(iframe);
+            if (style.position === 'fixed' || style.position === 'absolute') {
+                iframe.style.pointerEvents = 'none';
+                console.log('[ScrollFix] Neutralized iframe:', iframe.src);
+            }
+        });
+    }
+
+    // Run immediately and again after scripts load
+    fixMobileScroll();
+    setTimeout(fixMobileScroll, 2000);
+    setTimeout(fixMobileScroll, 5000);
+
     checkAuthStatus();
     loadJobs();
 

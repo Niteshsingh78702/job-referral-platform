@@ -4383,6 +4383,13 @@ html.modal-open body {
         min-height: auto;
         /* FIXED: Allow vertical scrolling past hero on mobile */
         overflow: visible;
+        /* CRITICAL FIX: Explicitly allow vertical scroll gestures from within hero */
+        touch-action: pan-y pinch-zoom;
+    }
+
+    /* Ensure ALL children of hero allow scroll-through on mobile */
+    .hero * {
+        touch-action: pan-y pinch-zoom;
     }
 
     .hero-title {
@@ -6518,6 +6525,8 @@ main,
         padding: 12px;
         gap: 0;
         max-width: 100%;
+        /* CRITICAL FIX: Allow touch scrolling when swiping on the search bar area */
+        touch-action: manipulation;
     }
 
     .hero-search-input-wrapper {

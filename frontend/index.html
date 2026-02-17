@@ -1539,52 +1539,6 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- VISIBLE DIAGNOSTIC - TEMPORARY - shows computed styles on page -->
-    <script>
-        window.addEventListener('load', function () {
-            var div = document.createElement('div');
-            div.id = 'scrollDiag';
-            div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font:11px monospace;padding:8px;z-index:99999;max-height:50vh;overflow-y:auto;';
-
-            var hs = getComputedStyle(document.documentElement);
-            var bs = getComputedStyle(document.body);
-            var hero = document.querySelector('.hero');
-            var heroS = hero ? getComputedStyle(hero) : null;
-
-            var lines = [];
-            lines.push('HTML: of=' + hs.overflow + ' ofx=' + hs.overflowX + ' ofy=' + hs.overflowY + ' pos=' + hs.position + ' h=' + hs.height + ' ta=' + hs.touchAction + ' cls=' + document.documentElement.className);
-            lines.push('BODY: of=' + bs.overflow + ' ofx=' + bs.overflowX + ' ofy=' + bs.overflowY + ' pos=' + bs.position + ' h=' + bs.height + ' ta=' + bs.touchAction + ' cls=' + document.body.className);
-            if (heroS) {
-                lines.push('HERO: of=' + heroS.overflow + ' pos=' + heroS.position + ' ta=' + heroS.touchAction + ' mh=' + heroS.minHeight + ' h=' + heroS.height);
-            }
-            lines.push('SCROLL: docH=' + document.documentElement.scrollHeight + ' clientH=' + document.documentElement.clientHeight + ' bodyH=' + document.body.scrollHeight);
-            lines.push('VP: ' + window.innerWidth + 'x' + window.innerHeight);
-
-            // Check all fixed/absolute elements that are large and visible
-            var all = document.querySelectorAll('*');
-            for (var i = 0; i < all.length; i++) {
-                var el = all[i];
-                var s = getComputedStyle(el);
-                if ((s.position === 'fixed' || s.position === 'absolute') && s.display !== 'none' && s.visibility !== 'hidden') {
-                    var r = el.getBoundingClientRect();
-                    if (r.width > 300 && r.height > 300) {
-                        lines.push('BIG: ' + el.tagName + '.' + (el.className || '').substring(0, 20) + '#' + (el.id || '') + ' ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' z=' + s.zIndex + ' pe=' + s.pointerEvents + ' op=' + s.opacity);
-                    }
-                }
-            }
-
-            // Check iframes
-            var iframes = document.querySelectorAll('iframe');
-            for (var j = 0; j < iframes.length; j++) {
-                var iframe = iframes[j];
-                var ir = iframe.getBoundingClientRect();
-                lines.push('IFRAME: ' + iframe.src.substring(0, 40) + ' ' + Math.round(ir.width) + 'x' + Math.round(ir.height));
-            }
-
-            div.textContent = lines.join('\n');
-            document.body.appendChild(div);
-        });
-    </script>
 
     <script src="app.js?v=20260217"></script>
 </body>

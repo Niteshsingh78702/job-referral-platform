@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+    <title>Contact Us - NaukriShetu</title>
+    <meta name="description"
+        content="Get in touch with NaukriShetu. We're here to help with your job search, employer queries, payment issues, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .legal-page {
+            padding: 120px 0 80px;
+            min-height: 100vh;
+            background: var(--bg-dark);
+        }
+
+        .legal-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .legal-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .legal-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .legal-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .legal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 48px;
+        }
+
+        .legal-content h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 32px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .legal-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .legal-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .legal-content p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        .legal-content ul,
+        .legal-content ol {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 16px;
+            padding-left: 24px;
+        }
+
+        .legal-content li {
+            margin-bottom: 8px;
+        }
+
+        .legal-content strong {
+            color: var(--text-primary);
+        }
+
+        .legal-content a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .legal-content a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .contact-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .contact-card .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .contact-card h3 {
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            margin-top: 0;
+        }
+
+        .contact-card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 0;
+            line-height: 1.6;
+        }
+
+        .contact-card a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-card a:hover {
+            text-decoration: underline;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .legal-content {
+                padding: 24px;
+            }
+
+            .legal-header h1 {
+                font-size: 28px;
+            }
+
+            .contact-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="logo-img">
+            </a>
+            <div class="nav-links">
+                <a href="jobs.html" class="nav-link">Jobs</a>
+                <a href="/#how-it-works" class="nav-link">How It Works</a>
+                <a href="/#pricing" class="nav-link">Pricing</a>
+            </div>
+            <div class="nav-auth">
+                <button class="btn btn-outline" onclick="location.href='index.html'">Back to Home</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contact Content -->
+    <section class="legal-page">
+        <div class="legal-container">
+            <a href="index.html" class="back-link">← Back to Home</a>
+
+            <div class="legal-header">
+                <h1>Contact Us</h1>
+                <p>Have questions? We're here to help you with your job search and hiring needs</p>
+            </div>
+
+            <div class="legal-content">
+                <div class="contact-cards">
+                    <div class="contact-card">
+                        <div class="icon">📧</div>
+                        <h3>Email Support</h3>
+                        <p><a href="mailto:support@naukrishetu.com">support@naukrishetu.com</a></p>
+                    </div>
+                    <div class="contact-card">
+                        <div class="icon">💼</div>
+                        <h3>Business Inquiries</h3>
+                        <p><a href="mailto:business@naukrishetu.com">business@naukrishetu.com</a></p>
+                    </div>
+                    <div class="contact-card">
+                        <div class="icon">🌐</div>
+                        <h3>Website</h3>
+                        <p><a href="https://www.naukrishetu.com">www.naukrishetu.com</a></p>
+                    </div>
+                </div>
+
+                <h2>How Can We Help?</h2>
+
+                <h3>For Job Seekers</h3>
+                <ul>
+                    <li>Issues with job applications or skill assessments</li>
+                    <li>Payment or refund inquiries</li>
+                    <li>Account access or profile issues</li>
+                    <li>Technical problems on the platform</li>
+                </ul>
+
+                <h3>For Employers / HR</h3>
+                <ul>
+                    <li>Job posting and candidate management</li>
+                    <li>Account setup and verification</li>
+                    <li>Interview scheduling support</li>
+                    <li>Partnership and bulk hiring inquiries</li>
+                </ul>
+
+                <h3>For Employees</h3>
+                <ul>
+                    <li>Referral program questions</li>
+                    <li>Reward tracking and payouts</li>
+                    <li>Account-related queries</li>
+                </ul>
+
+                <h2>Response Time</h2>
+                <p>We strive to respond to all queries within <strong>24–48 business hours</strong>. For urgent
+                    payment-related issues, please include your registered email and transaction ID in the subject line
+                    for faster resolution.</p>
+
+                <h2>Registered Address</h2>
+                <p><strong>NaukriShetu</strong><br>
+                    India<br>
+                    Email: <a href="mailto:support@naukrishetu.com">support@naukrishetu.com</a></p>
+
+                <h2>Grievance Officer</h2>
+                <p>In accordance with the Information Technology Act, 2000, if you have any grievance regarding the
+                    platform, you may contact our Grievance Officer:</p>
+                <p><strong>Email:</strong> <a href="mailto:support@naukrishetu.com">support@naukrishetu.com</a><br>
+                    <strong>Response Time:</strong> Within 48 hours of receiving the complaint
+                </p>
+
+                <div class="last-updated">
+                    <p>Last Updated: February 2026</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="/" class="logo">
+                        <img src="assets/images/naukrishetu-logo.png" alt="NaukriShetu" class="logo-img">
+                    </a>
+                    <p class="footer-desc">A skill-based job platform. Apply for jobs free, pay only after your
+                        interview is scheduled. No fake guarantees.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>For Candidates</h4>
+                    <a href="jobs.html">Jobs</a>
+                    <a href="index.html#how-it-works">How It Works</a>
+                    <a href="index.html#pricing">Pricing</a>
+                </div>
+                <div class="footer-links">
+                    <h4>For Companies</h4>
+                    <a href="hr-login.html">Post Jobs</a>
+                    <a href="hr-dashboard.html">HR Dashboard</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <a href="contact-us.html">Contact Us</a>
+                    <a href="terms-and-conditions.html">Terms & Conditions</a>
+                    <a href="privacy-policy.html">Privacy Policy</a>
+                    <a href="refund-policy.html">Refund Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 NaukriShetu. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

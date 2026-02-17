@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
     <link rel="icon" type="image/png" href="assets/images/fab.png">
     <!-- CRITICAL: Force all touch/wheel listeners to be passive to prevent scroll blocking on mobile -->
     <script>
@@ -1538,6 +1538,90 @@
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- NUCLEAR SCROLL FIX + DIAGNOSTICS -->
+    <script>
+        (function () {
+            let attempts = 0;
+            function nukeScrollBlockers() {
+                attempts++;
+                console.log(`[SCROLL FIX ${attempts}] Running diagnostics...`);
+
+                // Log viewport and scroll info
+                console.log('Viewport:', window.innerWidth + 'x' + window.innerHeight);
+                console.log('Document scroll:', document.documentElement.scrollHeight, 'vs client:', document.documentElement.clientHeight);
+                console.log('Body scroll:', document.body.scrollHeight, 'vs client:', document.body.clientHeight);
+
+                // Log computed styles
+                const htmlStyles = window.getComputedStyle(document.documentElement);
+                const bodyStyles = window.getComputedStyle(document.body);
+                console.log('HTML:', {
+                    overflow: htmlStyles.overflow,
+                    overflowX: htmlStyles.overflowX,
+                    overflowY: htmlStyles.overflowY,
+                    position: htmlStyles.position,
+                    height: htmlStyles.height,
+                    touchAction: htmlStyles.touchAction
+                });
+                console.log('BODY:', {
+                    overflow: bodyStyles.overflow,
+                    overflowX: bodyStyles.overflowX,
+                    overflowY: bodyStyles.overflowY,
+                    position: bodyStyles.position,
+                    height: bodyStyles.height,
+                    touchAction: bodyStyles.touchAction
+                });
+
+                // FORCE FIX: Remove ALL blocking properties
+                document.documentElement.style.overflow = '';
+                document.documentElement.style.overflowX = '';
+                document.documentElement.style.overflowY = '';
+                document.documentElement.style.position = '';
+                document.documentElement.style.height = '';
+                document.documentElement.style.touchAction = '';
+                document.documentElement.classList.remove('modal-open');
+
+                document.body.style.overflow = '';
+                document.body.style.overflowX = '';
+                document.body.style.overflowY = '';
+                document.body.style.position = '';
+                document.body.style.height = '';
+                document.body.style.touchAction = '';
+                document.body.style.top = '';
+                document.body.classList.remove('modal-open');
+
+                // Find and log/remove any suspicious overlays
+                const allDivs = document.querySelectorAll('body > div, body > iframe');
+                allDivs.forEach(el => {
+                    const style = window.getComputedStyle(el);
+                    const isFixed = style.position === 'fixed' || style.position === 'absolute';
+                    const zIndex = parseInt(style.zIndex) || 0;
+                    const isFullScreen = (style.top === '0px' || style.inset === '0px') &&
+                        (style.width === '100%' || parseInt(style.width) >= window.innerWidth - 100);
+
+                    if (isFixed && isFullScreen && !el.classList.contains('navbar')) {
+                        console.log('[SCROLL FIX] Found suspicious overlay:', el.tagName, el.className, el.id, 'z-index:', zIndex);
+                        // Don't remove it, just make it not block touches
+                        el.style.pointerEvents = 'none';
+                    }
+                });
+            }
+
+            // Run immediately
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', nukeScrollBlockers);
+            } else {
+                nukeScrollBlockers();
+            }
+
+            // Run repeatedly for 10 seconds to catch dynamically added blockers
+            const interval = setInterval(nukeScrollBlockers, 500);
+            setTimeout(() => {
+                clearInterval(interval);
+                console.log('[SCROLL FIX] Stopped monitoring. Check console logs above for diagnostics.');
+            }, 10000);
+        })();
+    </script>
 
     <script src="app.js?v=20260217"></script>
 </body>

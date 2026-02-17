@@ -379,6 +379,8 @@ a:hover {
     width: 280px;
     max-width: 85vw;
     height: 100vh;
+    height: 100dvh;
+    /* Dynamic viewport height — accounts for mobile browser address bar */
     background: #ffffff;
     z-index: 2000;
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);

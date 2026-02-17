@@ -5253,9 +5253,11 @@ a:hover {
    ============================================= */
 
 /* Fix for all mobile devices - prevent horizontal scroll */
+/* CRITICAL: Do NOT use overflow-x:hidden on html/body — it forces overflow-y:auto
+   which creates a scroll container that breaks touch scrolling on Chrome Android.
+   Instead, just clip overflowing children at their own level. */
 html,
 body {
-    overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
 }

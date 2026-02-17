@@ -43,15 +43,7 @@ let VerifyPaymentDto = class VerifyPaymentDto {
 _ts_decorate([
     (0, _classvalidator.IsString)(),
     _ts_metadata("design:type", String)
-], VerifyPaymentDto.prototype, "razorpayOrderId", void 0);
-_ts_decorate([
-    (0, _classvalidator.IsString)(),
-    _ts_metadata("design:type", String)
-], VerifyPaymentDto.prototype, "razorpayPaymentId", void 0);
-_ts_decorate([
-    (0, _classvalidator.IsString)(),
-    _ts_metadata("design:type", String)
-], VerifyPaymentDto.prototype, "razorpaySignature", void 0);
+], VerifyPaymentDto.prototype, "orderId", void 0);
 let RequestRefundDto = class RequestRefundDto {
 };
 _ts_decorate([

@@ -7,13 +7,7 @@ export class CreatePaymentOrderDto {
 
 export class VerifyPaymentDto {
   @IsString()
-  razorpayOrderId: string;
-
-  @IsString()
-  razorpayPaymentId: string;
-
-  @IsString()
-  razorpaySignature: string;
+  orderId: string;
 }
 
 export class RequestRefundDto {

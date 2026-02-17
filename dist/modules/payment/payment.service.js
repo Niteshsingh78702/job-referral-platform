@@ -11,14 +11,9 @@ Object.defineProperty(exports, "PaymentService", {
 const _common = require("@nestjs/common");
 const _config = require("@nestjs/config");
 const _crypto = /*#__PURE__*/ _interop_require_wildcard(require("crypto"));
-const _razorpay = /*#__PURE__*/ _interop_require_default(require("razorpay"));
+const _cashfreepg = require("cashfree-pg");
 const _prismaservice = require("../../prisma/prisma.service");
 const _constants = require("../../common/constants");
-function _interop_require_default(obj) {
-    return obj && obj.__esModule ? obj : {
-        default: obj
-    };
-}
 function _getRequireWildcardCache(nodeInterop) {
     if (typeof WeakMap !== "function") return null;
     var cacheBabelInterop = new WeakMap();
@@ -70,11 +65,11 @@ function _ts_metadata(k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 }
 let PaymentService = class PaymentService {
-    ensureRazorpay() {
-        if (!this.razorpay) {
-            throw new _common.BadRequestException('Payment service is not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+    ensureCashfree() {
+        if (!this.cashfree) {
+            throw new _common.BadRequestException('Payment service is not configured. Please set CASHFREE_APP_ID and CASHFREE_SECRET_KEY.');
         }
-        return this.razorpay;
+        return this.cashfree;
     }
     // Create payment order
     async createOrder(userId, dto) {
@@ -96,8 +91,7 @@ let PaymentService = class PaymentService {
         if (application.Candidate.userId !== userId) {
             throw new _common.ForbiddenException('Not authorized');
         }
-        // Verify eligibility - now uses INTERVIEW_CONFIRMED for interview payments
-        // or APPLIED for old referral payments
+        // Verify eligibility
         if (application.status !== _constants.ApplicationStatus.APPLIED && application.status !== _constants.ApplicationStatus.INTERVIEW_CONFIRMED) {
             throw new _common.BadRequestException('Payment not available for this application status.');
         }
@@ -112,7 +106,7 @@ let PaymentService = class PaymentService {
         // Check for pending payment
         const pendingPayment = application.Payment.find((p)=>p.status === _constants.PaymentStatus.ORDER_CREATED || p.status === _constants.PaymentStatus.PENDING);
         if (pendingPayment && pendingPayment.razorpayOrderId) {
-            // Return existing order
+            // Return existing order — re-fetch session from Cashfree
             return {
                 orderId: pendingPayment.razorpayOrderId,
                 amount: pendingPayment.amount,
@@ -120,25 +114,31 @@ let PaymentService = class PaymentService {
                 paymentId: pendingPayment.id
             };
         }
-        const amount = application.Job.referralFee * 100; // Razorpay expects paise
-        // Create Razorpay order
-        const razorpay = this.ensureRazorpay();
-        const order = await razorpay.orders.create({
-            amount,
-            currency: 'INR',
-            receipt: `app_${application.id.slice(0, 20)}`,
-            notes: {
-                applicationId: application.id,
-                candidateId: application.candidateId,
-                jobId: application.jobId
-            }
-        });
+        const amount = application.Job.referralFee;
+        // Create Cashfree order
+        const cashfree = this.ensureCashfree();
+        const cfOrderId = `order_${_crypto.randomUUID().replace(/-/g, '').slice(0, 20)}`;
+        const request = {
+            order_amount: amount,
+            order_currency: 'INR',
+            order_id: cfOrderId,
+            customer_details: {
+                customer_id: userId.slice(0, 50),
+                customer_phone: '9999999999'
+            },
+            order_meta: {
+                return_url: `${this.configService.get('FRONTEND_URL') || 'https://www.naukrishetu.com'}/index.html?payment_status=success&order_id=${cfOrderId}`
+            },
+            order_note: `Payment for application ${application.id}`
+        };
+        const response = await cashfree.PGCreateOrder(request);
+        const orderData = response.data;
         // Create payment record
         const payment = await this.prisma.payment.create({
             data: {
                 id: _crypto.randomUUID(),
                 applicationId: application.id,
-                razorpayOrderId: order.id,
+                razorpayOrderId: cfOrderId,
                 amount: application.Job.referralFee,
                 currency: 'INR',
                 status: _constants.PaymentStatus.ORDER_CREATED,
@@ -173,30 +173,37 @@ let PaymentService = class PaymentService {
                 entityType: 'Payment',
                 entityId: payment.id,
                 metadata: {
-                    orderId: order.id,
+                    orderId: cfOrderId,
                     amount: application.Job.referralFee
                 }
             }
         });
         return {
-            orderId: order.id,
+            orderId: cfOrderId,
             amount: application.Job.referralFee,
             currency: 'INR',
             paymentId: payment.id,
-            keyId: this.configService.get('RAZORPAY_KEY_ID')
+            paymentSessionId: orderData.payment_session_id
         };
     }
-    // Verify payment (client-side callback)
+    // Verify payment (called when user returns from Cashfree checkout)
     async verifyPayment(userId, dto) {
-        // Verify signature
-        const isValid = this.verifySignature(dto.razorpayOrderId, dto.razorpayPaymentId, dto.razorpaySignature);
-        if (!isValid) {
-            throw new _common.BadRequestException('Invalid payment signature');
+        const cashfree = this.ensureCashfree();
+        // Fetch order status from Cashfree
+        const response = await cashfree.PGOrderFetchPayments(dto.orderId);
+        const payments = response.data;
+        if (!payments || payments.length === 0) {
+            throw new _common.BadRequestException('No payments found for this order');
         }
-        // Get payment
+        // Find the successful payment
+        const successfulCfPayment = payments.find((p)=>p.payment_status === 'SUCCESS');
+        if (!successfulCfPayment) {
+            throw new _common.BadRequestException('Payment not successful');
+        }
+        // Get payment from DB
         const payment = await this.prisma.payment.findUnique({
             where: {
-                razorpayOrderId: dto.razorpayOrderId
+                razorpayOrderId: dto.orderId
             },
             include: {
                 JobApplication: {
@@ -224,31 +231,39 @@ let PaymentService = class PaymentService {
                 id: payment.id
             },
             data: {
-                razorpayPaymentId: dto.razorpayPaymentId,
-                razorpaySignature: dto.razorpaySignature,
-                status: _constants.PaymentStatus.PENDING
+                razorpayPaymentId: successfulCfPayment.cf_payment_id?.toString(),
+                status: _constants.PaymentStatus.SUCCESS,
+                paidAt: new Date()
             }
         });
         return {
             success: true,
-            message: 'Payment verification initiated'
+            message: 'Payment verified successfully'
         };
     }
     // Webhook handler (source of truth)
     async handleWebhook(payload, signature) {
         // Verify webhook signature
+        const timestamp = payload?.data?.payment?.payment_time || '';
         const isValid = this.verifyWebhookSignature(payload, signature);
         if (!isValid) {
             throw new _common.BadRequestException('Invalid webhook signature');
         }
-        const event = payload.event;
-        const paymentData = payload.payload?.Payment?.entity;
-        if (!paymentData) {
+        const eventType = payload.type;
+        const paymentData = payload.data?.payment;
+        const orderData = payload.data?.order;
+        if (!paymentData && !orderData) {
             return {
                 success: true
             };
         }
-        const orderId = paymentData.order_id;
+        const orderId = orderData?.order_id || paymentData?.order?.order_id;
+        if (!orderId) {
+            return {
+                success: true,
+                message: 'No order ID in webhook'
+            };
+        }
         // Idempotency check
         const payment = await this.prisma.payment.findUnique({
             where: {
@@ -271,9 +286,9 @@ let PaymentService = class PaymentService {
                 message: 'Already processed'
             };
         }
-        if (event === 'payment.captured' || event === 'payment.authorized') {
+        if (eventType === 'PAYMENT_SUCCESS_WEBHOOK' || eventType === 'PAYMENT_SUCCESS') {
             await this.processSuccessfulPayment(payment, paymentData);
-        } else if (event === 'payment.failed') {
+        } else if (eventType === 'PAYMENT_FAILED_WEBHOOK' || eventType === 'PAYMENT_FAILED') {
             await this.processFailedPayment(payment, paymentData);
         }
         return {
@@ -288,7 +303,7 @@ let PaymentService = class PaymentService {
                     id: payment.id
                 },
                 data: {
-                    razorpayPaymentId: paymentData.id,
+                    razorpayPaymentId: paymentData?.cf_payment_id?.toString(),
                     status: _constants.PaymentStatus.SUCCESS,
                     paidAt: new Date(),
                     webhookPayload: paymentData
@@ -312,7 +327,6 @@ let PaymentService = class PaymentService {
                         paidAt: new Date()
                     }
                 });
-            // Note: Interview payment confirmation email will be sent separately
             } else {
                 // This is a referral/legacy payment - update to PAYMENT_SUCCESS
                 await tx.jobApplication.update({
@@ -342,7 +356,7 @@ let PaymentService = class PaymentService {
                     entityType: 'Payment',
                     entityId: payment.id,
                     metadata: {
-                        razorpayPaymentId: paymentData.id
+                        cfPaymentId: paymentData?.cf_payment_id
                     }
                 }
             });
@@ -355,7 +369,7 @@ let PaymentService = class PaymentService {
             },
             data: {
                 status: _constants.PaymentStatus.FAILED,
-                failureReason: paymentData.error_description || 'Payment failed',
+                failureReason: paymentData?.payment_message || 'Payment failed',
                 webhookPayload: paymentData
             }
         });
@@ -367,7 +381,7 @@ let PaymentService = class PaymentService {
                 entityType: 'Payment',
                 entityId: payment.id,
                 metadata: {
-                    error: paymentData.error_description
+                    error: paymentData?.payment_message
                 }
             }
         });
@@ -514,8 +528,7 @@ let PaymentService = class PaymentService {
         if (!application.Interview) {
             throw new _common.BadRequestException('No interview request found for this application');
         }
-        // Allow payment when interview is INTERVIEW_CONFIRMED (HR confirmed, awaiting payment)
-        // or PAYMENT_PENDING (legacy flow)
+        // Allow payment when interview is INTERVIEW_CONFIRMED or PAYMENT_PENDING
         const allowedStatuses = [
             'INTERVIEW_CONFIRMED',
             'PAYMENT_PENDING'
@@ -523,7 +536,7 @@ let PaymentService = class PaymentService {
         if (!allowedStatuses.includes(application.Interview.status)) {
             throw new _common.BadRequestException(`Interview is in ${application.Interview.status} status. Payment not available.`);
         }
-        // Check for existing successful payment for this interview
+        // Check for existing successful payment
         const existingPayment = await this.prisma.payment.findFirst({
             where: {
                 applicationId,
@@ -548,16 +561,25 @@ let PaymentService = class PaymentService {
             }
         });
         if (pendingPayment && pendingPayment.razorpayOrderId) {
-            return {
-                orderId: pendingPayment.razorpayOrderId,
-                amount: 99,
-                currency: 'INR',
-                paymentId: pendingPayment.id,
-                keyId: this.configService.get('RAZORPAY_KEY_ID')
-            };
+            // Re-create order with Cashfree to get fresh session
+            try {
+                const cashfree = this.ensureCashfree();
+                const response = await cashfree.PGFetchOrder(pendingPayment.razorpayOrderId);
+                if (response.data?.payment_session_id) {
+                    return {
+                        orderId: pendingPayment.razorpayOrderId,
+                        amount: 99,
+                        currency: 'INR',
+                        paymentId: pendingPayment.id,
+                        paymentSessionId: response.data.payment_session_id
+                    };
+                }
+            } catch (e) {
+            // If fetching existing order fails, create a new one below
+            }
         }
-        const amount = 9900; // ₹99 in paise
-        // Check for test mode - bypasses Razorpay and directly creates successful payment
+        const amount = 99; // ₹99
+        // Check for test mode - bypasses Cashfree and directly creates successful payment
         const testMode = this.configService.get('PAYMENT_TEST_MODE') === 'true';
         if (testMode) {
             // TEST MODE: Directly create successful payment and update interview
@@ -603,7 +625,7 @@ let PaymentService = class PaymentService {
                     }
                 });
             });
-            // Return test mode response - frontend will show success directly
+            // Return test mode response
             return {
                 testMode: true,
                 success: true,
@@ -612,25 +634,30 @@ let PaymentService = class PaymentService {
                 paymentId: paymentId
             };
         }
-        // PRODUCTION MODE: Create Razorpay order
-        const razorpay = this.ensureRazorpay();
-        const order = await razorpay.orders.create({
-            amount,
-            currency: 'INR',
-            receipt: `int_${application.id.slice(0, 18)}`,
-            notes: {
-                applicationId: application.id,
-                interviewId: application.Interview.id,
-                candidateId: application.candidateId,
-                type: 'INTERVIEW'
-            }
-        });
+        // PRODUCTION MODE: Create Cashfree order
+        const cashfree = this.ensureCashfree();
+        const cfOrderId = `int_${_crypto.randomUUID().replace(/-/g, '').slice(0, 22)}`;
+        const request = {
+            order_amount: amount,
+            order_currency: 'INR',
+            order_id: cfOrderId,
+            customer_details: {
+                customer_id: userId.slice(0, 50),
+                customer_phone: '9999999999'
+            },
+            order_meta: {
+                return_url: `${this.configService.get('FRONTEND_URL') || 'https://www.naukrishetu.com'}/index.html?payment_status=success&order_id=${cfOrderId}`
+            },
+            order_note: `Interview payment for application ${application.id}`
+        };
+        const response = await cashfree.PGCreateOrder(request);
+        const orderData = response.data;
         // Create payment record
         const payment = await this.prisma.payment.create({
             data: {
                 id: _crypto.randomUUID(),
                 applicationId: application.id,
-                razorpayOrderId: order.id,
+                razorpayOrderId: cfOrderId,
                 amount: 99,
                 currency: 'INR',
                 status: _constants.PaymentStatus.ORDER_CREATED,
@@ -647,32 +674,39 @@ let PaymentService = class PaymentService {
                 entityType: 'InterviewPayment',
                 entityId: payment.id,
                 metadata: {
-                    orderId: order.id,
+                    orderId: cfOrderId,
                     amount: 99,
                     interviewId: application.Interview.id
                 }
             }
         });
         return {
-            orderId: order.id,
+            orderId: cfOrderId,
             amount: 99,
             currency: 'INR',
             paymentId: payment.id,
-            keyId: this.configService.get('RAZORPAY_KEY_ID')
+            paymentSessionId: orderData.payment_session_id
         };
     }
     /**
-   * Verify interview payment and update interview status
+   * Verify interview payment (called when user returns from Cashfree checkout)
    */ async verifyInterviewPayment(userId, dto) {
-        // Verify signature
-        const isValid = this.verifySignature(dto.razorpayOrderId, dto.razorpayPaymentId, dto.razorpaySignature);
-        if (!isValid) {
-            throw new _common.BadRequestException('Invalid payment signature');
+        const cashfree = this.ensureCashfree();
+        // Fetch payment status from Cashfree
+        const response = await cashfree.PGOrderFetchPayments(dto.orderId);
+        const cfPayments = response.data;
+        if (!cfPayments || cfPayments.length === 0) {
+            throw new _common.BadRequestException('No payments found for this order. Payment may still be processing.');
         }
-        // Get payment
+        // Find the successful payment
+        const successfulCfPayment = cfPayments.find((p)=>p.payment_status === 'SUCCESS');
+        if (!successfulCfPayment) {
+            throw new _common.BadRequestException('Payment not yet successful. Please try again.');
+        }
+        // Get payment from DB
         const payment = await this.prisma.payment.findUnique({
             where: {
-                razorpayOrderId: dto.razorpayOrderId
+                razorpayOrderId: dto.orderId
             },
             include: {
                 JobApplication: {
@@ -720,7 +754,7 @@ let PaymentService = class PaymentService {
                     id: payment.id
                 },
                 data: {
-                    razorpayPaymentId: dto.razorpayPaymentId,
+                    razorpayPaymentId: successfulCfPayment.cf_payment_id?.toString(),
                     status: _constants.PaymentStatus.SUCCESS,
                     paidAt: new Date()
                 }
@@ -736,7 +770,7 @@ let PaymentService = class PaymentService {
                     paidAt: new Date()
                 }
             });
-            // CRITICAL: Also update application status to PAYMENT_SUCCESS
+            // Update application status to PAYMENT_SUCCESS
             await tx.jobApplication.update({
                 where: {
                     id: payment.applicationId
@@ -755,45 +789,40 @@ let PaymentService = class PaymentService {
                     entityType: 'InterviewPayment',
                     entityId: payment.id,
                     metadata: {
-                        razorpayPaymentId: dto.razorpayPaymentId,
+                        cfPaymentId: successfulCfPayment.cf_payment_id,
                         interviewId: interview.id
                     }
                 }
             });
         });
-        // TODO: Send email notification to HR that payment is complete
-        // this.emailService.sendInterviewPaymentConfirmation(...)
         return {
             success: true,
             message: 'Interview payment verified. HR will schedule your interview soon.'
         };
     }
-    // Signature verification helpers
-    verifySignature(orderId, paymentId, signature) {
-        const secret = this.configService.get('RAZORPAY_KEY_SECRET');
-        const body = `${orderId}|${paymentId}`;
-        const expectedSignature = _crypto.createHmac('sha256', secret).update(body).digest('hex');
-        return expectedSignature === signature;
-    }
+    // Webhook signature verification
     verifyWebhookSignature(payload, signature) {
-        const secret = this.configService.get('RAZORPAY_WEBHOOK_SECRET');
-        const body = JSON.stringify(payload);
-        const expectedSignature = _crypto.createHmac('sha256', secret).update(body).digest('hex');
-        return expectedSignature === signature;
+        try {
+            const secretKey = this.configService.get('CASHFREE_SECRET_KEY');
+            if (!secretKey) return false;
+            const body = JSON.stringify(payload);
+            const expectedSignature = _crypto.createHmac('sha256', secretKey).update(body).digest('base64');
+            return expectedSignature === signature;
+        } catch (e) {
+            return false;
+        }
     }
     constructor(prisma, configService){
         this.prisma = prisma;
         this.configService = configService;
-        this.razorpay = null;
-        const keyId = this.configService.get('RAZORPAY_KEY_ID');
-        const keySecret = this.configService.get('RAZORPAY_KEY_SECRET');
-        if (keyId && keySecret && keyId !== 'rzp_test_your_key_id') {
-            this.razorpay = new _razorpay.default({
-                key_id: keyId,
-                key_secret: keySecret
-            });
+        this.cashfree = null;
+        const appId = this.configService.get('CASHFREE_APP_ID');
+        const secretKey = this.configService.get('CASHFREE_SECRET_KEY');
+        const env = this.configService.get('CASHFREE_ENV') || 'PRODUCTION';
+        if (appId && secretKey && appId !== 'your_cashfree_app_id') {
+            this.cashfree = new _cashfreepg.Cashfree(env === 'PRODUCTION' ? _cashfreepg.Cashfree.PRODUCTION : _cashfreepg.Cashfree.SANDBOX, appId, secretKey);
         } else {
-            console.warn('⚠️ Razorpay credentials not configured. Payment features will be disabled.');
+            console.warn('⚠️ Cashfree credentials not configured. Payment features will be disabled.');
         }
     }
 };

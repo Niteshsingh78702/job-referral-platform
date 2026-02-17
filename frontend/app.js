@@ -4245,15 +4245,11 @@ async function initiatePayment(applicationId, interviewId) {
 
         const order = data.data || data;
 
-        // Initialize Razorpay
-        if (typeof Razorpay === 'undefined') {
-            // Load Razorpay script if not loaded
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.onload = () => openRazorpayForInterview(order, applicationId);
-            document.head.appendChild(script);
+        // Open Cashfree checkout
+        if (order.paymentSessionId) {
+            openCashfreeCheckout(order.paymentSessionId, order.orderId);
         } else {
-            openRazorpayForInterview(order, applicationId);
+            showToast('error', 'Failed to initialize payment. Please try again.');
         }
     } catch (error) {
         console.error('Payment error:', error);
@@ -4261,62 +4257,36 @@ async function initiatePayment(applicationId, interviewId) {
     }
 }
 
-function openRazorpayCheckout(order, applicationId) {
-    const options = {
-        key: order.razorpayKeyId || 'rzp_test_placeholder',
-        amount: order.amount || 9900,
-        currency: order.currency || 'INR',
-        name: 'NaukriShetu',
-        description: 'Interview Details Unlock Fee',
-        order_id: order.razorpayOrderId,
-        handler: async function (response) {
-            try {
-                // Verify payment on backend
-                const verifyResponse = await fetch(`${API_BASE_URL}/payments/verify`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${state.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        applicationId,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature
-                    })
-                });
+/**
+ * Open Cashfree checkout (redirect mode)
+ */
+function openCashfreeCheckout(paymentSessionId, orderId) {
+    // Store orderId for verification on return
+    localStorage.setItem('pendingPaymentOrderId', orderId);
 
-                if (!verifyResponse.ok) {
-                    throw new Error('Payment verification failed');
-                }
+    // Load Cashfree JS SDK if not loaded
+    if (typeof Cashfree === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+        script.onload = () => launchCashfreeCheckout(paymentSessionId);
+        script.onerror = () => showToast('error', 'Could not load payment service. Please try again.');
+        document.head.appendChild(script);
+    } else {
+        launchCashfreeCheckout(paymentSessionId);
+    }
+}
 
-                showToast('success', '🎉 Payment successful! Interview details unlocked!');
-                closeApplicationModal();
-
-                // Force reload the page to get fresh data from server
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } catch (error) {
-                showToast('error', 'Payment verification failed. Please contact support.');
-            }
-        },
-        prefill: {
-            email: state.user?.email || '',
-            name: state.user?.firstName ? `${state.user.firstName} ${state.user.lastName || ''}` : ''
-        },
-        theme: {
-            color: '#2563eb'
-        },
-        modal: {
-            ondismiss: function () {
-                showToast('info', 'Payment cancelled');
-            }
-        }
-    };
-
-    const rzp = new Razorpay(options);
-    rzp.open();
+function launchCashfreeCheckout(paymentSessionId) {
+    try {
+        const cashfree = new Cashfree({ mode: 'production' });
+        cashfree.checkout({
+            paymentSessionId: paymentSessionId,
+            redirectTarget: '_self'
+        });
+    } catch (error) {
+        console.error('Cashfree checkout error:', error);
+        showToast('error', 'Could not open payment page. Please try again.');
+    }
 }
 
 function saveApplicationNote() {
@@ -5249,7 +5219,7 @@ async function payForInterview(applicationId) {
         const data = await response.json();
 
         if (data.success && data.data) {
-            // Check if test mode (Razorpay bypassed on backend)
+            // Check if test mode (payment bypassed on backend)
             if (data.data.testMode) {
                 console.log('TEST MODE: Payment completed on backend');
                 showToast('success', '✅ Payment successful! Interview details unlocked.');
@@ -5257,9 +5227,9 @@ async function payForInterview(applicationId) {
                 return;
             }
 
-            // Production mode - open Razorpay checkout
-            if (data.data.orderId) {
-                openRazorpayForInterview(data.data, applicationId);
+            // Production mode - open Cashfree checkout
+            if (data.data.paymentSessionId) {
+                openCashfreeCheckout(data.data.paymentSessionId, data.data.orderId);
             } else {
                 showToast('error', 'Failed to create payment order. Please try again.');
             }
@@ -5426,63 +5396,61 @@ async function simulateInterviewPaymentSuccess(applicationId) {
 }
 
 /**
- * Open Razorpay checkout for interview payment
+ * Check if user is returning from Cashfree payment
+ * Called on page load to handle payment return redirect
  */
-function openRazorpayForInterview(orderData, applicationId) {
-    const options = {
-        key: orderData.keyId,
-        amount: 9900, // ₹99 in paise
-        currency: 'INR',
-        name: 'NaukriShetu',
-        description: 'Interview Confirmation Fee',
-        order_id: orderData.orderId,
-        handler: async function (response) {
-            // Verify payment
-            try {
-                const verifyResponse = await fetch(`${API_BASE_URL}/payments/interview/verify`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${state.token}`
-                    },
-                    body: JSON.stringify({
-                        applicationId,
-                        razorpayOrderId: response.razorpay_order_id,
-                        razorpayPaymentId: response.razorpay_payment_id,
-                        razorpaySignature: response.razorpay_signature
-                    })
-                });
+async function checkCashfreePaymentReturn() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('order_id');
+    const paymentStatus = urlParams.get('payment_status');
 
-                const data = await verifyResponse.json();
-                if (data.success) {
-                    showToast('success', '✅ Payment successful! Interview details unlocked.');
+    if (!orderId) return;
 
-                    // Force refresh applications list and stay on page
-                    await loadApplications();
-                    console.log('✅ Payment successful - applications refreshed');
-                } else {
-                    showToast('error', data.message || 'Payment verification failed.');
-                }
-            } catch (error) {
-                console.error('Payment verification error:', error);
-                showToast('error', 'Could not verify payment. Please contact support.');
-            }
-        },
-        prefill: {
-            name: state.user?.firstName || '',
-            email: state.user?.email || ''
-        },
-        theme: {
-            color: '#6366f1'
-        }
-    };
+    // Clean URL parameters
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
 
-    if (typeof Razorpay !== 'undefined') {
-        const rzp = new Razorpay(options);
-        rzp.open();
-    } else {
-        showToast('error', 'Payment service unavailable. Please try again later.');
+    // Check if we have a token (user must be logged in)
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showToast('info', 'Please login to verify your payment.');
+        return;
     }
+
+    try {
+        showToast('info', 'Verifying your payment...');
+
+        // Verify payment with backend
+        const verifyResponse = await fetch(`${API_BASE_URL}/payments/interview/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ orderId })
+        });
+
+        const data = await verifyResponse.json();
+        if (data.success) {
+            showToast('success', '✅ Payment successful! Interview details unlocked.');
+            // Refresh applications
+            if (typeof loadApplications === 'function') {
+                await loadApplications();
+            }
+            // Navigate to applications view
+            if (typeof showApplications === 'function') {
+                showApplications();
+            }
+        } else {
+            showToast('error', data.message || 'Payment verification failed. Please contact support.');
+        }
+    } catch (error) {
+        console.error('Payment verification error:', error);
+        showToast('error', 'Could not verify payment. Please contact support at support@naukrishetu.com');
+    }
+
+    // Clear pending order ID
+    localStorage.removeItem('pendingPaymentOrderId');
 }
 
 // Note: viewInterviewDetails is defined earlier in the file (around line 3938)
@@ -5710,6 +5678,9 @@ function closeTestimonialModal() {
 
 // Setup testimonial section on page load
 document.addEventListener('DOMContentLoaded', function () {
+    // Check if returning from Cashfree payment
+    checkCashfreePaymentReturn();
+
     // Load testimonials from API
     loadPublicTestimonials();
 

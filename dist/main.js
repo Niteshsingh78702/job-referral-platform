@@ -73,7 +73,7 @@ async function bootstrap() {
             'Content-Type',
             'Authorization',
             'x-device-id',
-            'x-razorpay-signature'
+            'x-webhook-signature'
         ]
     });
     // Start server

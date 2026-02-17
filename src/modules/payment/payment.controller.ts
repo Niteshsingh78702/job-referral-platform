@@ -21,7 +21,7 @@ import { UserRole } from '../../common/constants';
 
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
 
   @Post('create-order')
   @Roles(UserRole.CANDIDATE)
@@ -46,7 +46,7 @@ export class PaymentController {
   @HttpCode(HttpStatus.OK)
   async handleWebhook(
     @Body() payload: any,
-    @Headers('x-razorpay-signature') signature: string,
+    @Headers('x-webhook-signature') signature: string,
   ) {
     return this.paymentService.handleWebhook(payload, signature);
   }

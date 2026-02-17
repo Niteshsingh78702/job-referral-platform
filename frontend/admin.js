@@ -1229,7 +1229,7 @@ function renderPaymentsTable() {
         const app = payment.application;
         return `
                         <tr>
-                            <td>${payment.razorpayPaymentId || 'N/A'}</td>
+                            <td>${payment.razorpayPaymentId || payment.id || 'N/A'}</td>
                             <td>₹${payment.amount}</td>
                             <td>${app?.candidate?.firstName || ''} ${app?.candidate?.lastName || ''}</td>
                             <td>${app?.job?.title || 'N/A'}</td>

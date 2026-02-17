@@ -96,7 +96,7 @@ _ts_decorate([
     (0, _common.Post)('webhook'),
     (0, _common.HttpCode)(_common.HttpStatus.OK),
     _ts_param(0, (0, _common.Body)()),
-    _ts_param(1, (0, _common.Headers)('x-razorpay-signature')),
+    _ts_param(1, (0, _common.Headers)('x-webhook-signature')),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
         Object,

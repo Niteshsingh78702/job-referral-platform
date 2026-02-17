@@ -49,6 +49,15 @@
 
 html {
     scroll-behavior: smooth;
+    /* CRITICAL: Ensure page is always scrollable on mobile.
+       This is overridden by body.modal-open when a modal is shown. */
+    overflow-y: auto !important;
+    height: auto !important;
+}
+
+html.modal-open {
+    overflow: hidden !important;
+    height: 100% !important;
 }
 
 body {
@@ -56,7 +65,16 @@ body {
     background: var(--bg-dark);
     color: var(--text-primary);
     line-height: 1.6;
-    overflow-x: hidden;
+    /* FIXED: Use clip instead of hidden — hidden creates a scroll container
+       that blocks vertical scrolling on Chrome Android */
+    overflow-x: clip;
+    /* CRITICAL: Allow vertical scrolling always */
+    position: static !important;
+    min-height: 100vh;
+}
+
+body.modal-open {
+    position: fixed !important;
 }
 
 /* =============================================
@@ -525,8 +543,8 @@ a:hover {
     justify-content: center;
     padding: 120px 24px 80px;
     position: relative;
-    overflow: hidden;
-    /* NOTE: overflow:hidden is overridden to visible on mobile (<=768px) to prevent scroll blocking */
+    /* FIXED: Removed overflow:hidden — it blocked vertical scrolling on mobile.
+       hero-bg already has pointer-events:none so no interaction issues */
 }
 
 .hero-bg {

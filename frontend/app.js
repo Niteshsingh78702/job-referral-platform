@@ -90,6 +90,13 @@ function closeMobileMenu() {
 // Initialize App
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {
+    // SAFETY NET: Clear any stuck modal-open state from previous session
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+
     checkAuthStatus();
     loadJobs();
 

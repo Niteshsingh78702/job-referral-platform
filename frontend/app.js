@@ -121,25 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Cross-device: Prevent scroll on overlay while allowing scroll inside modal
-    // FIXED: Use a single delegated listener on document instead of attaching to each overlay,
-    // to avoid { passive: false } listeners on inactive overlays blocking mobile scroll
-    document.addEventListener('touchmove', (e) => {
-        // Only intercept if an active modal overlay is present
-        const activeOverlay = document.querySelector('.modal-overlay.active');
-        if (!activeOverlay) return; // No active overlay = allow normal scrolling
-
-        // Check if the touch is inside a scrollable modal content area
-        const modalContent = activeOverlay.nextElementSibling;
-        if (modalContent && modalContent.classList.contains('active') && modalContent.contains(e.target)) {
-            return; // Allow scrolling inside the modal
-        }
-
-        // If touching the overlay background (not modal content), prevent scroll
-        if (activeOverlay.contains(e.target)) {
-            e.preventDefault();
-        }
-    }, { passive: false });
+    // NOTE: Background scroll prevention when modals are open is handled by CSS:
+    // body.modal-open { touch-action: none; overflow: hidden; position: fixed; }
+    // No JS touchmove listener needed — it was blocking mobile scroll.
 
     // Handle hash-based routing on page load and hash changes
     handleHashRoute();

@@ -1539,88 +1539,51 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- NUCLEAR SCROLL FIX + DIAGNOSTICS -->
+    <!-- VISIBLE DIAGNOSTIC - TEMPORARY - shows computed styles on page -->
     <script>
-        (function () {
-            let attempts = 0;
-            function nukeScrollBlockers() {
-                attempts++;
-                console.log(`[SCROLL FIX ${attempts}] Running diagnostics...`);
+        window.addEventListener('load', function () {
+            var div = document.createElement('div');
+            div.id = 'scrollDiag';
+            div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font:11px monospace;padding:8px;z-index:99999;max-height:50vh;overflow-y:auto;';
 
-                // Log viewport and scroll info
-                console.log('Viewport:', window.innerWidth + 'x' + window.innerHeight);
-                console.log('Document scroll:', document.documentElement.scrollHeight, 'vs client:', document.documentElement.clientHeight);
-                console.log('Body scroll:', document.body.scrollHeight, 'vs client:', document.body.clientHeight);
+            var hs = getComputedStyle(document.documentElement);
+            var bs = getComputedStyle(document.body);
+            var hero = document.querySelector('.hero');
+            var heroS = hero ? getComputedStyle(hero) : null;
 
-                // Log computed styles
-                const htmlStyles = window.getComputedStyle(document.documentElement);
-                const bodyStyles = window.getComputedStyle(document.body);
-                console.log('HTML:', {
-                    overflow: htmlStyles.overflow,
-                    overflowX: htmlStyles.overflowX,
-                    overflowY: htmlStyles.overflowY,
-                    position: htmlStyles.position,
-                    height: htmlStyles.height,
-                    touchAction: htmlStyles.touchAction
-                });
-                console.log('BODY:', {
-                    overflow: bodyStyles.overflow,
-                    overflowX: bodyStyles.overflowX,
-                    overflowY: bodyStyles.overflowY,
-                    position: bodyStyles.position,
-                    height: bodyStyles.height,
-                    touchAction: bodyStyles.touchAction
-                });
+            var lines = [];
+            lines.push('HTML: of=' + hs.overflow + ' ofx=' + hs.overflowX + ' ofy=' + hs.overflowY + ' pos=' + hs.position + ' h=' + hs.height + ' ta=' + hs.touchAction + ' cls=' + document.documentElement.className);
+            lines.push('BODY: of=' + bs.overflow + ' ofx=' + bs.overflowX + ' ofy=' + bs.overflowY + ' pos=' + bs.position + ' h=' + bs.height + ' ta=' + bs.touchAction + ' cls=' + document.body.className);
+            if (heroS) {
+                lines.push('HERO: of=' + heroS.overflow + ' pos=' + heroS.position + ' ta=' + heroS.touchAction + ' mh=' + heroS.minHeight + ' h=' + heroS.height);
+            }
+            lines.push('SCROLL: docH=' + document.documentElement.scrollHeight + ' clientH=' + document.documentElement.clientHeight + ' bodyH=' + document.body.scrollHeight);
+            lines.push('VP: ' + window.innerWidth + 'x' + window.innerHeight);
 
-                // FORCE FIX: Remove ALL blocking properties
-                document.documentElement.style.overflow = '';
-                document.documentElement.style.overflowX = '';
-                document.documentElement.style.overflowY = '';
-                document.documentElement.style.position = '';
-                document.documentElement.style.height = '';
-                document.documentElement.style.touchAction = '';
-                document.documentElement.classList.remove('modal-open');
-
-                document.body.style.overflow = '';
-                document.body.style.overflowX = '';
-                document.body.style.overflowY = '';
-                document.body.style.position = '';
-                document.body.style.height = '';
-                document.body.style.touchAction = '';
-                document.body.style.top = '';
-                document.body.classList.remove('modal-open');
-
-                // Find and log/remove any suspicious overlays
-                const allDivs = document.querySelectorAll('body > div, body > iframe');
-                allDivs.forEach(el => {
-                    const style = window.getComputedStyle(el);
-                    const isFixed = style.position === 'fixed' || style.position === 'absolute';
-                    const zIndex = parseInt(style.zIndex) || 0;
-                    const isFullScreen = (style.top === '0px' || style.inset === '0px') &&
-                        (style.width === '100%' || parseInt(style.width) >= window.innerWidth - 100);
-
-                    if (isFixed && isFullScreen && !el.classList.contains('navbar')) {
-                        console.log('[SCROLL FIX] Found suspicious overlay:', el.tagName, el.className, el.id, 'z-index:', zIndex);
-                        // Don't remove it, just make it not block touches
-                        el.style.pointerEvents = 'none';
+            // Check all fixed/absolute elements that are large and visible
+            var all = document.querySelectorAll('*');
+            for (var i = 0; i < all.length; i++) {
+                var el = all[i];
+                var s = getComputedStyle(el);
+                if ((s.position === 'fixed' || s.position === 'absolute') && s.display !== 'none' && s.visibility !== 'hidden') {
+                    var r = el.getBoundingClientRect();
+                    if (r.width > 300 && r.height > 300) {
+                        lines.push('BIG: ' + el.tagName + '.' + (el.className || '').substring(0, 20) + '#' + (el.id || '') + ' ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' z=' + s.zIndex + ' pe=' + s.pointerEvents + ' op=' + s.opacity);
                     }
-                });
+                }
             }
 
-            // Run immediately
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', nukeScrollBlockers);
-            } else {
-                nukeScrollBlockers();
+            // Check iframes
+            var iframes = document.querySelectorAll('iframe');
+            for (var j = 0; j < iframes.length; j++) {
+                var iframe = iframes[j];
+                var ir = iframe.getBoundingClientRect();
+                lines.push('IFRAME: ' + iframe.src.substring(0, 40) + ' ' + Math.round(ir.width) + 'x' + Math.round(ir.height));
             }
 
-            // Run repeatedly for 10 seconds to catch dynamically added blockers
-            const interval = setInterval(nukeScrollBlockers, 500);
-            setTimeout(() => {
-                clearInterval(interval);
-                console.log('[SCROLL FIX] Stopped monitoring. Check console logs above for diagnostics.');
-            }, 10000);
-        })();
+            div.textContent = lines.join('\n');
+            document.body.appendChild(div);
+        });
     </script>
 
     <script src="app.js?v=20260217"></script>

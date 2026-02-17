@@ -49,15 +49,6 @@
 
 html {
     scroll-behavior: smooth;
-    /* CRITICAL: Ensure page is always scrollable on mobile.
-       This is overridden by body.modal-open when a modal is shown. */
-    overflow-y: auto !important;
-    height: auto !important;
-}
-
-html.modal-open {
-    overflow: hidden !important;
-    height: 100% !important;
 }
 
 body {
@@ -65,16 +56,18 @@ body {
     background: var(--bg-dark);
     color: var(--text-primary);
     line-height: 1.6;
-    /* FIXED: Use clip instead of hidden — hidden creates a scroll container
-       that blocks vertical scrolling on Chrome Android */
-    overflow-x: clip;
-    /* CRITICAL: Allow vertical scrolling always */
-    position: static !important;
-    min-height: 100vh;
+    /* No overflow-x set — setting it causes overflow-y to compute as 'auto',
+       making body a scroll container that breaks Chrome Android scrolling */
 }
 
-body.modal-open {
-    position: fixed !important;
+/* Modal scroll lock — only applied when a modal is open */
+html.modal-open,
+html.modal-open body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
 }
 
 /* =============================================
@@ -1571,28 +1564,8 @@ a:hover {
    Edge, Desktop browsers (Windows, Mac, Linux)
    ============================================= */
 
-/* Body lock state for modal - prevents background scroll on ALL devices */
-body.modal-open {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    /* Mobile browsers (Android, iOS) */
-    -webkit-overflow-scrolling: none;
-    /* Standard - Chrome, Firefox, Edge */
-    overscroll-behavior: none;
-    touch-action: none;
-}
 
-/* Ensures complete scroll lock on all mobile browsers */
-html.modal-open,
-html.modal-open body {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    touch-action: none;
-}
+/* Body lock state for modal - rules are consolidated at top of file */
 
 .modal-overlay {
     position: fixed;

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            color: #1a1a2e;
+        }
+
+        .section {
+            padding: 80px 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .section:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        .section:nth-child(even) {
+            background: #e8f0fe;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #555;
+            max-width: 400px;
+        }
+
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 300px;
+            margin: 16px 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        select {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        a {
+            color: #1a73e8;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <strong>Scroll Test Page</strong> — Can you scroll past this?
+    </div>
+
+    <div class="section" style="padding-top: 120px;">
+        <h1>Section 1: Hero (with inputs)</h1>
+        <p>This section has form inputs like your homepage. Try scrolling down by swiping on different elements.</p>
+        <input type="text" placeholder="Type something here...">
+        <select>
+            <option>Option 1</option>
+            <option>Option 2</option>
+        </select>
+        <button onclick="alert('clicked')">Search Button</button>
+        <p style="margin-top: 16px;"><a onclick="alert('tag clicked')">Popular Tag 1</a> , <a
+                onclick="alert('tag 2')">Popular Tag 2</a></p>
+    </div>
+
+    <div class="section">
+        <h1>Section 2: Content</h1>
+        <p>If you can see this, you successfully scrolled past section 1! 🎉</p>
+    </div>
+
+    <div class="section">
+        <h1>Section 3: More Content</h1>
+        <p>Keep scrolling! Almost at the footer.</p>
+    </div>
+
+    <div class="section">
+        <h1>Section 4: Footer</h1>
+        <p>You can scroll! The issue is not with basic HTML/CSS. It must be caused by a script on the main page.</p>
+    </div>
+</body>
+
+</html>

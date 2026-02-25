@@ -1,0 +1,49 @@
+Abhishek Kumar
+Full Stack Developer
+9354381009  —  abhishekra213@gmail.com  —  LinkedIn  —  GitHub
+Experience
+Keen and Able Computer Pvt. LtdOct 2023 – Oct 2025
+Full Stack Developer
+–Engineered aData Control Panel (DCP)for the National Portal of India,configuration file generation, backend data migration,Api
+Level and record-level Updation data, reducing manual workload by 70%.
+–Integrated JWT authentication, RBAC,and permission-based workflows for multiple user roles,improving security and access control.
+–full-stack features usingNext.js, React.js, Nest.js, TypeScript, PostgreSQL, enabling scalable, maintainable, and
+high-performance applications.
+–Optimized search functionality and complex forms withGraphQL queries and mutations, improving data retrieval.
+–Developed responsive and accessible UIs fully compliant with government design and accessibility guidelines.
+Fino Payments Bank Project
+Backend Developer
+–Developed and maintained 50+microserviceshandling requests and responses for financial and non-financial banking services,
+improving PostgreSQL data processing by 30%.
+–Built backend integrations usingREST APIsfor structured data exchange with frontend and third-party systems.
+–ImplementedActiveMQ for asynchronous processing, CI/CD pipelines, retries, and timeout handling, achieving 99.9% system
+uptime.
+–Collaborated with frontend and business logic teams to ensure reliable execution of high-priority financial workflows with zero critical
+downtime.
+Projects
+XAKWA – Mining Approval System— React.js, Node.js, MongoDB, Redux, REST APIs, JWT
+–Engineered workflow-based approval system connecting multiple government departments for end-to-end document verification.
+–ImplementedJWT authentication, protected routes, RBAC, and Redux Toolkit for real-time UI state synchronization.
+–Integrated REST APIs, Micro365 document storage, and Nodemailer notifications for automated workflow processing.
+–Optimized MongoDB schema and queries to efficiently handle 1000+ concurrent approval requests.
+Customizable Gifts E-commerce Platform— React.js, Node.js, MongoDB, Redux Toolkit, AWS EC2/S3, Razorpay, JWT, Tailwind CSS
+–Built full-stack e-commerce platform supporting 500+ concurrent users with authentication, role-based admin panel, cart, orders, and
+product personalization.
+–Implemented secureJWT authentication and session managementfor user login, session tracking, and admin authorization.
+–IntegratedRazorpay payment gatewaywith success/failure handling and Notification sent via e-mail .
+–Designed REST APIs, MongoDB schema, and optimized queries; deployed backend onAWS EC2and managed 1000+ S3 assets
+efficiently.
+Technical Skills
+Languages:JavaScript (ES6+), TypeScript, C++
+Frontend:React.js, Next.js, Redux, Tailwind CSS, HTML5, CSS3
+Backend:Node.js, Express.js, Nest.js, Quarkus, REST APIs, GraphQL
+Databases:PostgreSQL, MongoDB
+DevOps / Cloud:AWS (EC2, S3), Docker, CI/CD (Jenkins)
+Tools:Git, GitHub, GitLab, Postman, GraphQL
+Education
+G.L. Bajaj Institute of Technology and Management, Greater Noida2020 – 2024
+B.Tech, CSE
+Jai Hind Public School, Gaya2017 – 2019
+Intermediate
+P.P.M School, Jehanabad2017
+Matriculation

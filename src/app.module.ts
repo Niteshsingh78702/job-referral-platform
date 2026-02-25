@@ -30,6 +30,7 @@ import { RapidFireModule } from './modules/rapid-fire/rapid-fire.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { ResumeParserModule } from './modules/resume-parser/resume-parser.module';
 import { InterviewModule } from './modules/interview/interview.module';
+import { AtsResumeModule } from './modules/ats-resume/ats-resume.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -95,6 +96,9 @@ import { AppService } from './app.service';
 
     // Interview System
     InterviewModule,
+
+    // ATS Resume Converter
+    AtsResumeModule,
   ],
 
   controllers: [AppController],

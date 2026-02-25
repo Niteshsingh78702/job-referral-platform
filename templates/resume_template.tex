@@ -1,0 +1,76 @@
+\documentclass[11pt,a4paper]{article}
+
+% =============================================
+% ATS-Friendly Resume Template
+% Clean, single-column, no tables/graphics
+% =============================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+% Colors
+\definecolor{headercolor}{RGB}{44, 62, 80}
+\definecolor{linkcolor}{RGB}{41, 128, 185}
+
+% Section formatting
+\titleformat{\section}{\large\bfseries\color{headercolor}}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+% Remove page numbers
+\pagestyle{empty}
+
+% Hyperlink setup
+\hypersetup{
+  colorlinks=true,
+  urlcolor=linkcolor,
+  linkcolor=linkcolor,
+}
+
+% Reduce list spacing
+\setlist[itemize]{nosep, left=0pt..1.5em}
+
+\begin{document}
+
+% =============================================
+% HEADER
+% =============================================
+\begin{center}
+  {\LARGE\bfseries\color{headercolor} {{NAME}}} \\[4pt]
+  {{EMAIL}} \enspace | \enspace {{PHONE}} \enspace | \enspace {{LOCATION}} \\[2pt]
+  {{LINKEDIN}}
+\end{center}
+
+\vspace{6pt}
+
+% =============================================
+% PROFESSIONAL SUMMARY
+% =============================================
+{{SUMMARY_SECTION}}
+
+% =============================================
+% SKILLS
+% =============================================
+{{SKILLS_SECTION}}
+
+% =============================================
+% EXPERIENCE
+% =============================================
+{{EXPERIENCE_SECTION}}
+
+% =============================================
+% EDUCATION
+% =============================================
+{{EDUCATION_SECTION}}
+
+% =============================================
+% CERTIFICATIONS
+% =============================================
+{{CERTIFICATIONS_SECTION}}
+
+\end{document}

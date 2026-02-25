@@ -34,6 +34,7 @@ const _rapidfiremodule = require("./modules/rapid-fire/rapid-fire.module");
 const _cloudinarymodule = require("./modules/cloudinary/cloudinary.module");
 const _resumeparsermodule = require("./modules/resume-parser/resume-parser.module");
 const _interviewmodule = require("./modules/interview/interview.module");
+const _atsresumemodule = require("./modules/ats-resume/ats-resume.module");
 const _appcontroller = require("./app.controller");
 const _appservice = require("./app.service");
 function _ts_decorate(decorators, target, key, desc) {
@@ -107,7 +108,9 @@ AppModule = _ts_decorate([
             _cloudinarymodule.CloudinaryModule,
             _resumeparsermodule.ResumeParserModule,
             // Interview System
-            _interviewmodule.InterviewModule
+            _interviewmodule.InterviewModule,
+            // ATS Resume Converter
+            _atsresumemodule.AtsResumeModule
         ],
         controllers: [
             _appcontroller.AppController

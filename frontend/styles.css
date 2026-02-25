@@ -6589,3 +6589,687 @@ main,
         display: block;
     }
 }
+
+/* =============================================
+   ATS Resume Builder Page
+   ============================================= */
+
+/* Main layout */
+.ats-main {
+    padding-top: 70px;
+    min-height: 100vh;
+    background: var(--bg-primary);
+}
+
+/* Hero */
+.ats-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    padding: 60px 0 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.ats-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, .15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.ats-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.ats-badge {
+    display: inline-block;
+    background: rgba(99, 102, 241, .15);
+    color: #818cf8;
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+}
+
+.ats-hero-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin-bottom: 12px;
+    letter-spacing: -1px;
+}
+
+.ats-hero-subtitle {
+    font-size: 16px;
+    color: #94a3b8;
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Sections */
+.ats-section {
+    padding: 32px 0;
+}
+
+/* Cards */
+.ats-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 28px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, .06);
+}
+
+.ats-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+/* Upload Area */
+.ats-upload-card {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.ats-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    transition: border-color .3s, background .3s;
+    cursor: pointer;
+}
+
+.ats-upload-area:hover,
+.ats-upload-area.ats-drag-over {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, .04);
+}
+
+.ats-upload-icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+}
+
+.ats-upload-area h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.ats-upload-area p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+.ats-upload-hint {
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Upload Progress */
+.ats-upload-progress {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.ats-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #1e293b;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.ats-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #818cf8);
+    border-radius: 8px;
+    transition: width .3s ease;
+    width: 0%;
+}
+
+.ats-progress-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Score Row */
+.ats-score-row {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+/* Score Gauge */
+.ats-score-card {
+    text-align: center;
+}
+
+.ats-score-gauge {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 12px;
+}
+
+.ats-gauge-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.ats-gauge-circle {
+    stroke: #6366f1;
+    transition: stroke-dashoffset 1.5s ease-out;
+}
+
+.ats-score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.ats-score-label {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Suggestions */
+.ats-suggestions-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.ats-suggestions-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: 260px;
+    padding-right: 8px;
+}
+
+.ats-suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(99, 102, 241, .06);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.ats-suggestion-good {
+    background: rgba(34, 197, 94, .08);
+    color: #16a34a;
+}
+
+.ats-suggestion-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+    margin-top: 1px;
+}
+
+.ats-suggestion-text {
+    flex: 1;
+}
+
+.ats-fix-btn {
+    flex-shrink: 0;
+    padding: 4px 14px;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+    align-self: center;
+}
+
+.ats-fix-btn:hover {
+    background: #4f46e5;
+    transform: scale(1.05);
+}
+
+/* Editor + Preview Row */
+.ats-editor-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* Editor */
+.ats-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ats-editor-header .ats-card-title {
+    margin-bottom: 0;
+}
+
+.ats-editor-section {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+
+.ats-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: rgba(99, 102, 241, .04);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    transition: background .2s;
+    user-select: none;
+}
+
+.ats-section-title:hover {
+    background: rgba(99, 102, 241, .08);
+}
+
+.ats-section-toggle {
+    font-size: 11px;
+    color: var(--text-secondary);
+    transition: transform .2s;
+}
+
+.ats-section-body {
+    padding: 16px 18px;
+}
+
+/* Form Grid */
+.ats-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.ats-form-full {
+    grid-column: 1 / -1;
+}
+
+.ats-form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ats-form-group input,
+.ats-form-group textarea,
+.ats-section-body>textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: border-color .2s;
+    box-sizing: border-box;
+}
+
+.ats-form-group input:focus,
+.ats-form-group textarea:focus,
+.ats-section-body>textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, .12);
+}
+
+/* Tags Input */
+.ats-tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 44px;
+    align-items: center;
+}
+
+.ats-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ats-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, .12), rgba(139, 92, 246, .12));
+    border: 1px solid rgba(99, 102, 241, .2);
+    border-radius: 50px;
+    font-size: 13px;
+    color: #818cf8;
+    font-weight: 500;
+}
+
+.ats-tag-remove {
+    background: none;
+    border: none;
+    color: #818cf8;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+}
+
+.ats-tags-input input {
+    flex: 1;
+    min-width: 120px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    padding: 4px;
+}
+
+/* Entry Cards */
+.ats-entry-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: rgba(99, 102, 241, .02);
+}
+
+.ats-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.ats-entry-remove {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.ats-add-btn {
+    margin-top: 8px;
+}
+
+/* Preview Card */
+.ats-preview-card {
+    position: sticky;
+    top: 90px;
+}
+
+.ats-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.ats-preview-header .ats-card-title {
+    margin-bottom: 0;
+}
+
+.ats-preview-frame {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 32px 28px;
+    min-height: 400px;
+    overflow-y: auto;
+    max-height: 70vh;
+    color: #1e293b;
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.ats-preview-placeholder {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+}
+
+.ats-preview-icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+}
+
+/* Preview Resume Styles */
+.ats-preview-resume {
+    font-family: 'Inter', 'Georgia', serif;
+}
+
+.ats-pv-header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #1e293b;
+    padding-bottom: 14px;
+}
+
+.ats-pv-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px;
+}
+
+.ats-pv-contact {
+    font-size: 12px;
+    color: #475569;
+}
+
+.ats-pv-contact a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.ats-pv-section {
+    margin-bottom: 16px;
+}
+
+.ats-pv-section h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+}
+
+.ats-pv-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ats-pv-skill {
+    padding: 3px 10px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #334155;
+}
+
+.ats-pv-entry {
+    margin-bottom: 10px;
+    color: #334155;
+    font-size: 13px;
+}
+
+.ats-pv-entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ats-pv-dates {
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.ats-pv-entry ul {
+    margin: 4px 0 0 18px;
+    padding: 0;
+}
+
+.ats-pv-entry li {
+    margin-bottom: 3px;
+}
+
+/* Toast */
+.ats-toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .2);
+    animation: atsToastIn .3s ease-out;
+}
+
+.ats-toast-success {
+    background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.ats-toast-error {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.ats-toast-info {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+@keyframes atsToastIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---- ATS Page Responsive ---- */
+@media (max-width: 1024px) {
+    .ats-editor-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ats-preview-card {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .ats-score-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ats-hero-title {
+        font-size: 28px;
+    }
+
+    .ats-hero-subtitle {
+        font-size: 14px;
+    }
+
+    .ats-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ats-editor-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .ats-toast {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ats-hero {
+        padding: 40px 0 28px;
+    }
+
+    .ats-hero-title {
+        font-size: 24px;
+    }
+
+    .ats-card {
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .ats-preview-frame {
+        padding: 18px 14px;
+    }
+
+    .ats-upload-area {
+        padding: 32px 16px;
+    }
+}

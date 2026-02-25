@@ -942,3 +942,18 @@ model SiteSettings {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ATS Resume Converter & Editor
+model AtsResume {
+  id               String   @id @default(uuid())
+  userId           String
+  originalFilePath String?
+  parsedData       Json
+  atsScore         Int      @default(0)
+  suggestions      Json?
+  generatedPdfPath String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+}

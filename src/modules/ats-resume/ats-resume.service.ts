@@ -5,6 +5,8 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PDFDocument = require('pdfkit');
 
 const execAsync = promisify(exec);
 
@@ -82,12 +84,23 @@ export class AtsResumeService {
     }
 
     async generatePdfFromData(data: ParsedResumeJson): Promise<Buffer> {
+        // Tier 1: LaTeX (best quality, needs pdflatex installed)
         try {
             return await this.generateLatexPdf(data);
         } catch (err) {
-            this.logger.warn('LaTeX failed, using HTML fallback: ' + err.message);
-            return await this.generateHtmlPdf(data);
+            this.logger.warn('LaTeX PDF failed: ' + err.message);
         }
+
+        // Tier 2: Puppeteer/HTML (good quality, needs Chrome/Chromium)
+        try {
+            return await this.generateHtmlPdf(data);
+        } catch (err) {
+            this.logger.warn('Puppeteer PDF failed: ' + err.message);
+        }
+
+        // Tier 3: PDFKit (always works, pure Node.js, no system deps)
+        this.logger.log('Using PDFKit fallback for PDF generation');
+        return await this.generatePdfKitPdf(data);
     }
 
     // ═══════════════════════════════════════════════
@@ -669,73 +682,79 @@ export class AtsResumeService {
         const suggestions: string[] = [];
 
         // 1. Contact info (max 15)
-        if (data.name?.trim()) score += 4; else suggestions.push('Add your full name.');
-        if (data.email?.trim()) score += 4; else suggestions.push('Include a professional email address.');
+        if (data.name?.trim()) score += 5; else suggestions.push('Add your full name.');
+        if (data.email?.trim()) score += 5; else suggestions.push('Include a professional email address.');
         if (data.phone?.trim()) score += 3; else suggestions.push('Add a phone number.');
-        if (data.linkedin?.trim()) score += 2; else suggestions.push('Add your LinkedIn profile URL.');
-        if (data.location?.trim()) score += 2; else suggestions.push('Add your location (City, State).');
+        if (data.linkedin?.trim()) score += 1; else suggestions.push('Add your LinkedIn profile URL for better visibility.');
+        if (data.location?.trim()) score += 1; else suggestions.push('Consider adding your location (City, State).');
 
         // 2. Summary (max 12)
         const summaryLen = data.summary?.trim().length || 0;
-        if (summaryLen > 150) score += 12;
-        else if (summaryLen > 80) { score += 9; suggestions.push('Expand your professional summary to 3-5 sentences.'); }
-        else if (summaryLen > 30) { score += 5; suggestions.push('Your professional summary is too short. Aim for 150+ characters.'); }
+        if (summaryLen > 100) score += 12;
+        else if (summaryLen > 50) { score += 9; suggestions.push('Expand your professional summary to 3-5 sentences.'); }
+        else if (summaryLen > 20) { score += 5; suggestions.push('Your professional summary is too short. Aim for 100+ characters.'); }
         else { score += 0; suggestions.push('Add a professional summary (3-5 sentences highlighting key strengths).'); }
 
         // 3. Skills (max 12)
         const skillCount = data.skills?.length || 0;
-        if (skillCount >= 10) score += 12;
-        else if (skillCount >= 6) { score += 8; suggestions.push('Add more skills (aim for 10+ relevant skills).'); }
-        else if (skillCount > 0) { score += 4; suggestions.push('Add more relevant technical and domain skills.'); }
-        else suggestions.push('Add a skills section with 10+ relevant skills.');
+        if (skillCount >= 8) score += 12;
+        else if (skillCount >= 5) { score += 9; suggestions.push('Add more skills (aim for 8+ relevant skills).'); }
+        else if (skillCount > 0) { score += 5; suggestions.push('Add more relevant technical and domain skills.'); }
+        else suggestions.push('Add a skills section with 8+ relevant skills.');
 
         // 4. Experience (max 35)
         if (data.experience?.length > 0) {
             let expScore = 0;
 
             // Has entries
-            if (data.experience.length >= 3) expScore += 5;
-            else if (data.experience.length >= 2) expScore += 4;
-            else expScore += 2;
+            if (data.experience.length >= 3) expScore += 6;
+            else if (data.experience.length >= 2) expScore += 5;
+            else expScore += 3;
 
             // Bullets
             const totalBullets = data.experience.reduce((s, e) => s + (e.bullets?.length || 0), 0);
-            if (totalBullets >= 12) expScore += 8;
-            else if (totalBullets >= 6) { expScore += 5; suggestions.push('Add more bullet points (3-5 per role) to describe achievements.'); }
-            else { expScore += 2; suggestions.push('Add bullet points describing your achievements and responsibilities.'); }
+            if (totalBullets >= 8) expScore += 8;
+            else if (totalBullets >= 4) { expScore += 6; suggestions.push('Add more bullet points (3-5 per role) to describe achievements.'); }
+            else if (totalBullets > 0) { expScore += 3; suggestions.push('Add bullet points describing your achievements and responsibilities.'); }
+            else { expScore += 0; suggestions.push('Add bullet points describing your achievements and responsibilities.'); }
 
             // Action verbs in bullets
-            const actionVerbs = /^(developed|built|implemented|designed|led|managed|created|improved|optimized|engineered|configured|deployed|maintained|integrated|automated|established|achieved|delivered|spearheaded|collaborated|streamlined|reduced|increased|launched|mentored|architected)/i;
+            const actionVerbs = /^(developed|built|implemented|designed|led|managed|created|improved|optimized|engineered|configured|deployed|maintained|integrated|automated|established|achieved|delivered|spearheaded|collaborated|streamlined|reduced|increased|launched|mentored|architected|utilized|handled|executed|coordinated|contributed|worked|supported|assisted|analyzed|conducted|prepared|resolved|addressed|ensured|provided|performed)/i;
             const allBullets = data.experience.flatMap(e => e.bullets || []);
             const actionCount = allBullets.filter(b => actionVerbs.test(b.trim())).length;
             if (allBullets.length > 0) {
                 const actionRatio = actionCount / allBullets.length;
-                if (actionRatio >= 0.5) expScore += 5;
-                else if (actionRatio >= 0.25) { expScore += 3; suggestions.push('Start more bullet points with strong action verbs (e.g., Developed, Implemented, Led).'); }
+                if (actionRatio >= 0.3) expScore += 5;
+                else if (actionRatio >= 0.15) { expScore += 3; suggestions.push('Start more bullet points with strong action verbs (e.g., Developed, Implemented, Led).'); }
                 else { expScore += 1; suggestions.push('Use action verbs to start each bullet point (e.g., Developed, Built, Led).'); }
             }
 
             // Quantified achievements (numbers, percentages)
-            const quantifiedCount = allBullets.filter(b => /\d+[%+]|\d+\s*(users|customers|people|team|members|projects|requests|transactions|endpoints|services|queries|months|years)|\b\d+x\b/i.test(b)).length;
+            const quantifiedCount = allBullets.filter(b => /\d+[%+]|\d+\s*(users|customers|people|team|members|projects|requests|transactions|endpoints|services|queries|months|years|clients|applications|modules|apis|microservices|servers|databases|tables|reports|tickets|issues|features|pages|screens|components)|\b\d+x\b/i.test(b)).length;
             if (allBullets.length > 0) {
                 const quantRatio = quantifiedCount / allBullets.length;
-                if (quantRatio >= 0.4) expScore += 5;
-                else if (quantRatio >= 0.2) { expScore += 3; suggestions.push('Quantify more achievements with numbers (e.g., "improved performance by 30%").'); }
+                if (quantRatio >= 0.25) expScore += 5;
+                else if (quantRatio >= 0.1) { expScore += 3; suggestions.push('Quantify more achievements with numbers (e.g., "improved performance by 30%").'); }
                 else { expScore += 1; suggestions.push('Add measurable results to your bullet points (e.g., "reduced load time by 40%", "served 1000+ users").'); }
             }
 
             // Dates
+            const hasAnyDates = data.experience.some(e => e.startDate);
             if (data.experience.every(e => e.startDate)) expScore += 4;
+            else if (hasAnyDates) { expScore += 2; suggestions.push('Add dates for all positions.'); }
             else suggestions.push('Add dates for all positions.');
 
             // Company names
+            const hasAnyCompany = data.experience.some(e => e.company?.trim());
             if (data.experience.every(e => e.company?.trim())) expScore += 4;
+            else if (hasAnyCompany) { expScore += 2; suggestions.push('Add company names for all positions.'); }
             else suggestions.push('Add company names for all positions.');
 
-            // Roles
-            const hasRoles = data.experience.filter(e => e.role?.trim()).length;
-            if (hasRoles < data.experience.length) expScore += 2;
-            else expScore += 4;
+            // Roles — award points based on how many have roles
+            const rolesFilledCount = data.experience.filter(e => e.role?.trim()).length;
+            if (rolesFilledCount === data.experience.length) expScore += 3;
+            else if (rolesFilledCount > 0) { expScore += 2; suggestions.push('Add job titles for all positions.'); }
+            else suggestions.push('Add job titles for all positions.');
 
             score += Math.min(expScore, 35);
         } else {
@@ -755,15 +774,17 @@ export class AtsResumeService {
             suggestions.push('Add education details.');
         }
 
-        // 6. Certifications (max 5)
+        // 6. Certifications (max 5) — bonus, not mandatory
         if (data.certifications?.length > 0) score += 5;
+        else suggestions.push('Consider adding certifications to strengthen your profile.');
 
-        // 7. Content richness (max 8)
+        // 7. Content richness (max 10)
         const totalContent = (data.summary?.length || 0) +
             (data.skills?.length || 0) * 10 +
             (data.experience?.reduce((s, e) => s + (e.bullets?.join(' ').length || 0), 0) || 0);
-        if (totalContent > 800) score += 8;
-        else if (totalContent > 400) { score += 5; suggestions.push('Add more detail to your resume content.'); }
+        if (totalContent > 600) score += 10;
+        else if (totalContent > 300) { score += 7; suggestions.push('Add more detail to your resume content.'); }
+        else if (totalContent > 100) { score += 4; suggestions.push('Your resume needs more content to pass ATS filters.'); }
         else { score += 2; suggestions.push('Your resume needs significantly more content to pass ATS filters.'); }
 
         return { score: Math.min(score, 100), suggestions };
@@ -777,10 +798,19 @@ export class AtsResumeService {
         const esc = (str: string): string => {
             if (!str) return '';
             return str
+                .replace(/\r\n/g, ' ')     // Remove Windows line breaks
+                .replace(/\r/g, ' ')        // Remove CR
+                .replace(/\n/g, ' ')        // Remove LF
                 .replace(/\\/g, '\\textbackslash{}')
                 .replace(/[&%$#_{}]/g, (m) => `\\${m}`)
                 .replace(/~/g, '\\textasciitilde{}')
-                .replace(/\^/g, '\\textasciicircum{}');
+                .replace(/\^/g, '\\textasciicircum{}')
+                .replace(/[\u2018\u2019]/g, "'")   // Smart single quotes
+                .replace(/[\u201C\u201D]/g, '"')    // Smart double quotes
+                .replace(/[\u2013]/g, '--')          // En-dash
+                .replace(/[\u2014]/g, '---')         // Em-dash
+                .replace(/[\u2022\u2023\u25E6\u2043\u2219]/g, '') // Bullet chars
+                .replace(/[^\x00-\x7F]/g, '');      // Strip remaining non-ASCII
         };
 
         let tex = `\\documentclass[a4paper,10pt]{article}
@@ -1100,9 +1130,167 @@ li{margin-bottom:2px;font-size:10pt}
             const pdfBuffer = await page.pdf({ format: 'A4', margin: { top: '0.75in', right: '0.85in', bottom: '0.75in', left: '0.55in' }, printBackground: true });
             await browser.close();
             return Buffer.from(pdfBuffer);
-        } catch {
-            this.logger.warn('Puppeteer not available, returning HTML buffer');
-            return Buffer.from(html, 'utf-8');
+        } catch (err) {
+            this.logger.error('Puppeteer PDF generation failed: ' + (err?.message || err));
+            throw new Error('Puppeteer PDF generation failed: ' + (err?.message || err));
         }
+    }
+
+    // ═══════════════════════════════════════════════
+    // PDFKIT FALLBACK — Pure Node.js, no system deps
+    // ═══════════════════════════════════════════════
+
+    private async generatePdfKitPdf(data: ParsedResumeJson): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            try {
+                const doc = new PDFDocument({
+                    size: 'A4',
+                    margins: { top: 54, bottom: 54, left: 40, right: 60 },
+                });
+
+                const chunks: Buffer[] = [];
+                doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+                doc.on('end', () => resolve(Buffer.concat(chunks)));
+                doc.on('error', reject);
+
+                const GREY = '#bfbfbf';
+                const BLACK = '#000000';
+                const BLUE = '#0000ff';
+                const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
+                const sectionHeading = (title: string) => {
+                    doc.moveDown(0.4);
+                    const y = doc.y;
+                    doc.save();
+                    doc.rect(doc.page.margins.left, y, pageWidth, 16).fill(GREY);
+                    doc.restore();
+                    doc.font('Helvetica-Bold').fontSize(10).fillColor(BLACK)
+                        .text(title, doc.page.margins.left + 4, y + 3, { width: pageWidth - 8 });
+                    doc.y = y + 20;
+                };
+
+                // ── Header ──
+                doc.font('Helvetica-Bold').fontSize(18).fillColor(BLACK)
+                    .text(data.name || 'Resume', { align: 'left' });
+                doc.moveDown(0.2);
+
+                doc.font('Helvetica').fontSize(9).fillColor(BLACK);
+                if (data.email) doc.text(`Email: ${data.email}`);
+                if (data.phone) doc.text(`Mobile: ${data.phone}`);
+                if (data.location) doc.text(`Location: ${data.location}`);
+                if (data.linkedin) {
+                    const display = data.linkedin.replace('https://www.', '').replace('https://', '');
+                    doc.text('LinkedIn: ', { continued: true })
+                        .fillColor(BLUE).text(display, { link: data.linkedin, underline: true });
+                    doc.fillColor(BLACK);
+                }
+
+                // ── Summary ──
+                if (data.summary) {
+                    sectionHeading('PROFESSIONAL SUMMARY');
+                    const parts = data.summary.split(/[.!]/).map(s => s.trim()).filter(s => s.length > 10);
+                    doc.font('Helvetica').fontSize(9.5);
+                    for (const p of parts) {
+                        doc.text(`\u2022  ${p}.`, doc.page.margins.left + 14, doc.y, {
+                            width: pageWidth - 28, lineGap: 1,
+                        });
+                    }
+                }
+
+                // ── Skills ──
+                if (data.skills?.length > 0) {
+                    sectionHeading('KEY SKILLS');
+                    const cats = this.categorizeSkills(data.skills);
+                    for (const [cat, list] of Object.entries(cats)) {
+                        if (list.length > 0) {
+                            doc.font('Helvetica-Bold').fontSize(9.5)
+                                .text(`\u2022  ${cat}: `, doc.page.margins.left + 14, doc.y, { continued: true, width: pageWidth - 28 });
+                            doc.font('Helvetica').text(list.join(', '));
+                        }
+                    }
+                }
+
+                // ── Experience ──
+                if (data.experience?.length > 0) {
+                    sectionHeading('PROFESSIONAL EXPERIENCE');
+                    for (const exp of data.experience) {
+                        const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' \u2013 ');
+                        const hasRole = exp.role?.trim();
+                        const hasProject = exp.project?.trim();
+
+                        if (hasRole) {
+                            const roleText = exp.role + (exp.company ? ` \u2014 ${exp.company}` : '');
+                            doc.font('Helvetica-Bold').fontSize(9.5);
+                            if (dates) {
+                                // Role on left, dates on right
+                                const dateWidth = doc.widthOfString(dates) + 10;
+                                doc.text(roleText, doc.page.margins.left + 14, doc.y, { width: pageWidth - 28 - dateWidth, continued: false });
+                                doc.text(dates, doc.page.margins.left + pageWidth - dateWidth, doc.y - doc.currentLineHeight(), { width: dateWidth, align: 'right' });
+                            } else {
+                                doc.text(roleText, doc.page.margins.left + 14, doc.y, { width: pageWidth - 28 });
+                            }
+                            if (hasProject) {
+                                let projLine = `Project: ${exp.project}`;
+                                if (exp.projectDescription) projLine += ` \u2014 ${exp.projectDescription}`;
+                                doc.font('Helvetica-Bold').fontSize(9).text(projLine, doc.page.margins.left + 14, doc.y, { width: pageWidth - 28 });
+                            }
+                        } else if (hasProject) {
+                            let projLine = `Project: ${exp.project}`;
+                            if (exp.projectDescription) projLine += ` \u2014 ${exp.projectDescription}`;
+                            doc.font('Helvetica-Bold').fontSize(9.5).text(projLine, doc.page.margins.left + 14, doc.y, { width: pageWidth - 28 });
+                        }
+
+                        if (exp.bullets?.length > 0) {
+                            doc.font('Helvetica').fontSize(9);
+                            for (const b of exp.bullets) {
+                                doc.text(`\u2022  ${b}`, doc.page.margins.left + 28, doc.y, {
+                                    width: pageWidth - 42, lineGap: 1,
+                                });
+                            }
+                        }
+                        doc.moveDown(0.3);
+                    }
+                }
+
+                // ── Certifications ──
+                if (data.certifications?.length > 0) {
+                    sectionHeading('CERTIFICATIONS');
+                    doc.font('Helvetica').fontSize(9.5);
+                    for (const c of data.certifications) {
+                        let line = c.name;
+                        if (c.issuer) line += ` \u2013 ${c.issuer}`;
+                        if (c.year) line += ` (${c.year})`;
+                        doc.text(`\u2022  ${line}`, doc.page.margins.left + 14, doc.y, { width: pageWidth - 28 });
+                    }
+                }
+
+                // ── Education ──
+                if (data.education?.length > 0) {
+                    sectionHeading('EDUCATION');
+                    doc.font('Helvetica').fontSize(9.5);
+                    for (const edu of data.education) {
+                        const parts: string[] = [];
+                        if (edu.degree) {
+                            let d = edu.degree;
+                            if (edu.field) d += ` in ${edu.field}`;
+                            parts.push(d);
+                        }
+                        if (edu.institution) parts.push(edu.institution);
+                        let line = parts.join(', ');
+                        if (edu.grade) line += ` \u2014 ${edu.grade}`;
+                        if (edu.year) line += ` (${edu.year})`;
+                        if (line.trim()) {
+                            doc.font('Helvetica-Bold').fontSize(9.5)
+                                .text(`\u2022  `, doc.page.margins.left + 14, doc.y, { continued: true, width: pageWidth - 28 });
+                            doc.font('Helvetica').text(line);
+                        }
+                    }
+                }
+
+                doc.end();
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
 }

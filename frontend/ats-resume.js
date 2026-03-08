@@ -509,6 +509,17 @@ async function downloadPdf() {
 
     try {
         const data = collectFormData();
+
+        // Dynamically load jsPDF if not already available
+        if (!window.jspdf) {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('Failed to load PDF library. Check your internet connection.'));
+                document.head.appendChild(s);
+            });
+        }
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 

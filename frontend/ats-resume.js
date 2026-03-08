@@ -1,4 +1,4 @@
-﻿// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ATS Resume Builder — Frontend Logic (No Login Required)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -500,302 +500,107 @@ async function rescoreResume() {
 }
 
 // ─────────────────────────────────────────────
-// Download PDF — Client-side generation with jsPDF
-// Matches the Live Preview layout exactly
+// Download PDF — Captures the Live Preview as PDF
+// Uses html2canvas + jsPDF for pixel-perfect output
 // ─────────────────────────────────────────────
 async function downloadPdf() {
     const btn = document.getElementById('downloadBtn');
     btn.disabled = true;
-    btn.textContent = '⏳ Generating PDF...';
+    btn.textContent = '\u23F3 Generating PDF...';
 
     try {
-        const data = collectFormData();
-
-        // Dynamically load jsPDF if not already available
+        // Dynamically load html2canvas if needed
+        if (typeof html2canvas === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('Failed to load html2canvas library.'));
+                document.head.appendChild(s);
+            });
+        }
+        // Dynamically load jsPDF if needed
         if (!window.jspdf) {
             await new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
                 s.onload = resolve;
-                s.onerror = () => reject(new Error('Failed to load PDF library. Check your internet connection.'));
+                s.onerror = () => reject(new Error('Failed to load jsPDF library.'));
                 document.head.appendChild(s);
             });
         }
+
+        // Make sure the preview is up-to-date
+        updatePreview();
+
+        // Get the preview content
+        const previewFrame = document.getElementById('previewFrame');
+        if (!previewFrame || !previewFrame.innerHTML.trim()) {
+            throw new Error('No resume data to export. Please upload a resume first.');
+        }
+
+        // Create a hidden container that matches A4 proportions
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:40px 50px;box-sizing:border-box;z-index:-1;';
+        container.innerHTML = previewFrame.innerHTML;
+        document.body.appendChild(container);
+
+        // Render to canvas
+        const canvas = await html2canvas(container, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+        });
+
+        document.body.removeChild(container);
+
+        // Create PDF — fit canvas to A4 pages
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfW = 210;  // A4 width in mm
+        const pdfH = 297;  // A4 height in mm
+        const marginX = 0;
+        const marginY = 0;
+        const contentW = pdfW - marginX * 2;
 
-        const PAGE_W = 210, PAGE_H = 297;
-        const ML = 14, MR = 14, MT = 14, MB = 14;
-        const CW = PAGE_W - ML - MR;
-        let y = MT;
+        const imgW = canvas.width;
+        const imgH = canvas.height;
+        const ratio = contentW / imgW;
+        const scaledH = imgH * ratio;
 
-        function checkPage(needed) {
-            if (y + needed > PAGE_H - MB) { doc.addPage(); y = MT; }
-        }
+        // If content fits on one page
+        if (scaledH <= pdfH - marginY * 2) {
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', marginX, marginY, contentW, scaledH);
+        } else {
+            // Multi-page: slice the canvas into page-sized chunks
+            const pageContentH = (pdfH - marginY * 2) / ratio; // pixels per page
+            let yOffset = 0;
+            let page = 0;
 
-        function sectionHeading(title) {
-            checkPage(12);
-            y += 2;
-            doc.setFillColor(191, 191, 191);
-            doc.rect(ML, y - 1, CW, 5.5, 'F');
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9.5);
-            doc.setTextColor(0, 0, 0);
-            doc.text(title, ML + 2, y + 3);
-            y += 7;
-        }
+            while (yOffset < imgH) {
+                if (page > 0) pdf.addPage();
 
-        // ── Header: Name ──
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 0);
-        doc.text(data.name || 'Your Name', ML, y + 4);
-        y += 8;
+                const sliceH = Math.min(pageContentH, imgH - yOffset);
+                const pageCanvas = document.createElement('canvas');
+                pageCanvas.width = imgW;
+                pageCanvas.height = sliceH;
+                const ctx = pageCanvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, imgW, sliceH);
+                ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
 
-        // ── Contact Info ──
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-        if (data.email) {
-            doc.text('Email: ', ML, y);
-            const ew = doc.getTextWidth('Email: ');
-            doc.setTextColor(0, 0, 255);
-            doc.textWithLink(data.email, ML + ew, y, { url: 'mailto:' + data.email });
-            doc.setTextColor(0, 0, 0);
-            y += 3.5;
-        }
-        if (data.phone) { doc.text('Mobile: ' + data.phone, ML, y); y += 3.5; }
-        if (data.location) { doc.text('Location: ' + data.location, ML, y); y += 3.5; }
-        if (data.linkedin) {
-            doc.text('LinkedIn: ', ML, y);
-            const lw = doc.getTextWidth('LinkedIn: ');
-            const display = data.linkedin.replace('https://www.', '').replace('https://', '');
-            doc.setTextColor(0, 0, 255);
-            doc.textWithLink(display, ML + lw, y, { url: data.linkedin });
-            doc.setTextColor(0, 0, 0);
-            y += 3.5;
-        }
-        y += 1;
+                const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+                const pageScaledH = sliceH * ratio;
+                pdf.addImage(pageImgData, 'JPEG', marginX, marginY, contentW, pageScaledH);
 
-        // ── Professional Summary (split into bullet points) ──
-        if (data.summary && data.summary.trim()) {
-            sectionHeading('PROFESSIONAL SUMMARY');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8.5);
-            const sentences = data.summary.split(/[.!]/).map(s => s.trim()).filter(s => s.length > 10);
-            for (const sentence of sentences) {
-                const lines = doc.splitTextToSize(sentence + '.', CW - 12);
-                checkPage(lines.length * 3.5 + 1);
-                doc.text('\u2022', ML + 4, y);
-                doc.text(lines, ML + 8, y);
-                y += lines.length * 3.5 + 0.5;
-            }
-            y += 1;
-        }
-
-        // ── Skills (categorized like preview) ──
-        if (data.skills && data.skills.length > 0) {
-            sectionHeading('KEY SKILLS');
-            doc.setFontSize(8.5);
-
-            const skillCategories = {
-                'Languages': ['java', 'python', 'javascript', 'typescript', 'c++', 'c#', 'c', 'ruby', 'php', 'swift', 'kotlin', 'sql', 'html', 'css', 'go', 'rust', 'scala', 'r', 'perl', 'dart', 'html5', 'css3', 'sass', 'less'],
-                'Core Backend': ['spring boot', 'spring', 'rest api', 'rest apis', 'microservices', 'oauth2', 'oauth', 'redis', 'kafka', 'mysql', 'postgresql', 'mongodb', 'elasticsearch', 'node.js', 'node', 'express', 'nestjs', 'graphql', 'jwt', 'rabbitmq', 'django', 'flask', 'fastapi', 'laravel', 'rails', 'asp.net', 'hibernate', 'jpa'],
-                'Frontend': ['react', 'react.js', 'angular', 'vue', 'vue.js', 'next.js', 'nextjs', 'nuxt.js', 'svelte', 'redux', 'tailwind', 'tailwind css', 'bootstrap', 'material ui', 'chakra ui', 'jquery', 'webpack', 'vite'],
-                'DevOps & Tools': ['jenkins', 'docker', 'kubernetes', 'git', 'github', 'gitlab', 'postman', 'swagger', 'log4j2', 'aws', 'azure', 'gcp', 'linux', 'terraform', 'ansible', 'ci/cd', 'maven', 'gradle', 'nginx', 'vercel', 'heroku', 'netlify', 'firebase', 'cd (jenkins)', 'ci'],
-                'Testing': ['junit', 'mockito', 'jest', 'pytest', 'selenium', 'cypress', 'mocha', 'chai', 'testing library'],
-                'Practices': ['agile', 'scrum', 'debugging', 'exception handling', 'api documentation', 'devops', 'performance optimization', 'tdd', 'bdd', 'oop', 'design patterns', 'solid'],
-            };
-
-            const categorized = {};
-            const uncategorized = [];
-            for (const skill of data.skills) {
-                const lower = skill.toLowerCase().trim();
-                let found = false;
-                for (const [cat, keywords] of Object.entries(skillCategories)) {
-                    if (keywords.includes(lower)) {
-                        if (!categorized[cat]) categorized[cat] = [];
-                        if (!categorized[cat].some(s => s.toLowerCase() === lower)) {
-                            categorized[cat].push(skill);
-                        }
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) uncategorized.push(skill);
-            }
-
-            for (const [cat, list] of Object.entries(categorized)) {
-                if (list.length > 0) {
-                    const label = cat + ': ';
-                    const skillLine = list.join(', ');
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('\u2022', ML + 4, y);
-                    const labelW = doc.getTextWidth(label);
-                    doc.text(label, ML + 8, y);
-                    doc.setFont('helvetica', 'normal');
-                    const remaining = doc.splitTextToSize(skillLine, CW - 12 - labelW);
-                    if (remaining.length === 1) {
-                        doc.text(remaining[0], ML + 8 + labelW, y);
-                        y += 3.5;
-                    } else {
-                        doc.text(remaining[0], ML + 8 + labelW, y);
-                        y += 3.5;
-                        for (let i = 1; i < remaining.length; i++) {
-                            checkPage(4);
-                            doc.text(remaining[i], ML + 8, y);
-                            y += 3.5;
-                        }
-                    }
-                }
-            }
-            if (uncategorized.length > 0) {
-                doc.setFont('helvetica', 'bold');
-                doc.text('\u2022', ML + 4, y);
-                const label = 'Other: ';
-                const labelW = doc.getTextWidth(label);
-                doc.text(label, ML + 8, y);
-                doc.setFont('helvetica', 'normal');
-                const lines = doc.splitTextToSize(uncategorized.join(', '), CW - 12 - labelW);
-                doc.text(lines[0], ML + 8 + labelW, y);
-                y += 3.5;
-                for (let i = 1; i < lines.length; i++) {
-                    checkPage(4);
-                    doc.text(lines[i], ML + 8, y);
-                    y += 3.5;
-                }
-            }
-            y += 1;
-        }
-
-        // ── Professional Experience ──
-        if (data.experience && data.experience.length > 0) {
-            sectionHeading('PROFESSIONAL EXPERIENCE');
-            for (const exp of data.experience) {
-                checkPage(15);
-                const hasRole = exp.role && exp.role.trim();
-                const hasProject = exp.project && exp.project.trim();
-                const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' \u2013 ');
-
-                if (hasRole) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(9);
-                    doc.text(exp.role, ML + 4, y);
-                    let roleW = doc.getTextWidth(exp.role);
-
-                    if (exp.company) {
-                        doc.text(' \u2014 ', ML + 4 + roleW, y);
-                        const dashW = doc.getTextWidth(' \u2014 ');
-                        doc.setFont('helvetica', 'italic');
-                        doc.text(exp.company, ML + 4 + roleW + dashW, y);
-                    }
-
-                    if (dates) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(8.5);
-                        const dw = doc.getTextWidth(dates);
-                        doc.text(dates, ML + CW - dw, y);
-                    }
-                    y += 4.5;
-
-                    if (hasProject) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(8.5);
-                        let projLine = 'Project: ' + exp.project;
-                        if (exp.projectDescription) projLine += ' \u2014 ' + exp.projectDescription;
-                        const pLines = doc.splitTextToSize(projLine, CW - 12);
-                        checkPage(pLines.length * 3.5);
-                        doc.text(pLines, ML + 8, y);
-                        y += pLines.length * 3.5 + 0.5;
-                    }
-                } else if (hasProject) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(9);
-                    let projLine = 'Project: ' + exp.project;
-                    if (exp.projectDescription) projLine += ' \u2014 ' + exp.projectDescription;
-                    const pLines = doc.splitTextToSize(projLine, CW - 8);
-                    checkPage(pLines.length * 3.5);
-                    doc.text(pLines, ML + 4, y);
-                    y += pLines.length * 3.5 + 0.5;
-                }
-
-                if (exp.bullets && exp.bullets.length > 0) {
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(8.5);
-                    for (const b of exp.bullets) {
-                        const bLines = doc.splitTextToSize(b, CW - 16);
-                        checkPage(bLines.length * 3.5 + 1);
-                        doc.text('\u2022', ML + 8, y);
-                        doc.text(bLines, ML + 12, y);
-                        y += bLines.length * 3.5 + 0.5;
-                    }
-                }
-                y += 1.5;
+                yOffset += sliceH;
+                page++;
             }
         }
 
-        // ── Certifications ──
-        if (data.certifications && data.certifications.length > 0) {
-            sectionHeading('CERTIFICATIONS');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8.5);
-            for (const c of data.certifications) {
-                let line = c.name || '';
-                if (c.issuer) line += ' \u2013 ' + c.issuer;
-                if (c.year) line += ' (' + c.year + ')';
-                const cLines = doc.splitTextToSize(line, CW - 12);
-                checkPage(cLines.length * 3.5 + 1);
-                doc.text('\u2022', ML + 4, y);
-                doc.text(cLines, ML + 8, y);
-                y += cLines.length * 3.5 + 0.5;
-            }
-            y += 1;
-        }
-
-        // ── Education ──
-        if (data.education && data.education.length > 0) {
-            sectionHeading('EDUCATION');
-            doc.setFontSize(8.5);
-            for (const edu of data.education) {
-                const parts = [];
-                if (edu.degree) {
-                    let d = edu.degree;
-                    if (edu.field) d += ' in ' + edu.field;
-                    parts.push(d);
-                }
-                if (edu.institution) parts.push(edu.institution);
-                let line = parts.join(', ');
-                if (edu.grade) line += ' \u2014 ' + edu.grade;
-                if (edu.year) line += ' (' + edu.year + ')';
-                if (line.trim()) {
-                    const eLines = doc.splitTextToSize(line, CW - 12);
-                    checkPage(eLines.length * 3.5 + 1);
-                    doc.text('\u2022', ML + 4, y);
-                    if (edu.degree) {
-                        doc.setFont('helvetica', 'bold');
-                        let boldPart = edu.degree;
-                        if (edu.field) boldPart += ' in ' + edu.field;
-                        const bw = doc.getTextWidth(boldPart);
-                        doc.text(boldPart, ML + 8, y);
-                        doc.setFont('helvetica', 'normal');
-                        const rest = line.substring(boldPart.length);
-                        if (rest) doc.text(rest, ML + 8 + bw, y);
-                        y += 3.5;
-                        for (let i = 1; i < eLines.length; i++) {
-                            checkPage(4);
-                            doc.text(eLines[i], ML + 8, y);
-                            y += 3.5;
-                        }
-                    } else {
-                        doc.setFont('helvetica', 'normal');
-                        doc.text(eLines, ML + 8, y);
-                        y += eLines.length * 3.5;
-                    }
-                    y += 0.5;
-                }
-            }
-        }
-
-        doc.save('ats_resume.pdf');
+        pdf.save('ats_resume.pdf');
         showToast('PDF downloaded successfully!', 'success');
     } catch (err) {
         console.error('PDF generation error:', err);
@@ -807,6 +612,7 @@ async function downloadPdf() {
 }
 
 // ─────────────────────────────────────────────
+
 // Live Preview — Matches LaTeX template style
 // ─────────────────────────────────────────────
 function updatePreview() {

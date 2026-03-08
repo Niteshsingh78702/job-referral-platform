@@ -43,17 +43,45 @@ export class AtsResumeController {
     }
 
     /**
-     * Generate ATS-optimized PDF from provided data
+     * Generate ATS-optimized PDF from provided data.
+     * 
+     * Uses @Res() to send binary PDF directly via Express,
+     * bypassing NestJS response handling and the global TransformInterceptor
+     * which would otherwise wrap the binary data in a JSON envelope.
+     * 
+     * Uses res.end() instead of res.send() to guarantee raw binary output.
      */
     @Post('generate-pdf')
     async generatePdf(@Body() dto: UpdateAtsResumeDto, @Res() res: Response) {
-        const pdfBuffer = await this.atsResumeService.generatePdfFromData(this.dtoToJson(dto));
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': 'attachment; filename="ats_resume.pdf"',
-            'Content-Length': pdfBuffer.length,
-        });
-        res.send(pdfBuffer);
+        try {
+            const pdfBuffer = await this.atsResumeService.generatePdfFromData(this.dtoToJson(dto));
+
+            // Validate that the buffer is actually a PDF
+            if (!pdfBuffer || pdfBuffer.length < 5 || pdfBuffer.toString('ascii', 0, 5) !== '%PDF-') {
+                res.status(500).json({
+                    success: false,
+                    message: 'Generated file is not a valid PDF. Please try again.',
+                });
+                return;
+            }
+
+            // Send raw binary PDF — use res.end() to avoid any Express transformations
+            res.writeHead(200, {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'attachment; filename="ats_resume.pdf"',
+                'Content-Length': pdfBuffer.length,
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+            });
+            res.end(pdfBuffer);
+        } catch (err) {
+            // Send error as JSON so frontend can display a toast
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: err.message || 'PDF generation failed',
+                });
+            }
+        }
     }
 
     // ── Map DTO → ParsedResumeJson ──

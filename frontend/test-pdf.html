@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PDF Test</title>
+</head>
+
+<body>
+    <h2>PDF Generation Test</h2>
+    <div id="previewFrame"></div>
+    <div id="atsToast" style="display:none;"><span id="atsToastMsg"></span></div>
+    <button id="downloadBtn" onclick="downloadPdf()">Download ATS PDF</button>
+    <div id="experienceEntries"></div>
+    <div id="educationEntries"></div>
+    <div id="certEntries"></div>
+    <div id="skillsContainer"></div>
+    <input id="edName" value="Nitesh Kumar">
+    <input id="edEmail" value="niteshsingh78702@gmail.com">
+    <input id="edPhone" value="+91 7870259851">
+    <input id="edLocation" value="Bangalore, India">
+    <input id="edLinkedin" value="https://www.linkedin.com/in/nitesh-singh-254904230">
+    <textarea
+        id="edSummary">Java Backend Developer with 2 years of experience in building scalable enterprise applications using Spring Boot, Microservices, and DevOps practices. Strong expertise in REST API development, database design (MySQL, Hibernate, JPA), and backend architecture with MVC and OOP principles. Hands-on experience in Kafka messaging, Redis caching, Docker containerization, and CI/CD pipelines using Jenkins. Proficient in secure authentication/authorization (OAuth2, JWT) and best practices for high-availability and low-latency applications. Experienced in Agile methodology, API documentation (Swagger), logging/monitoring (Log4j2), and unit testing (JUnit, Mockito). Actively seeking Java Backend/DevOps opportunities with immediate joining availability.</textarea>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script>
+        // Override skills for testing
+        var skills = ['Java', 'HTML', 'CSS', 'SQL', 'Spring Boot', 'Spring', 'Rest API', 'Rest APIS', 'Microservices', 'Kafka', 'Oauth2', 'JWT', 'Redis', 'MySQL', 'Hibernate', 'Jpa', 'Docker', 'Jenkins', 'Git', 'Github', 'Swagger', 'Postman', 'Log4j2', 'CI/CD', 'CI', 'Junit', 'Mockito', 'Agile', 'Devops', 'API Documentation', 'Debugging', 'Exception Handling', 'Performance Optimization', 'Mvc', 'MVC', 'J2EE', 'CD Pipelines', 'Containerization', 'Deployment Automation'];
+    </script>
+    <script src="ats-resume.js"></script>
+    <script>
+        // Add test experience entries
+        addExperience({
+            role: 'Java Backend Developer',
+            company: 'GlobalLogic (Hitachi Group)',
+            startDate: 'Mar 2024',
+            endDate: 'Aug 2025',
+            project: 'Claims Processing System',
+            projectDescription: 'Enterprise-grade insurance platform with microservices for claims lifecycle.',
+            bullets: [
+                'Designed and developed RESTful microservices for claim submission, policy verification, and status tracking using Spring Boot.',
+                'Implemented Kafka-based real-time processing pipelines and Redis caching to reduce latency.',
+                'Applied OAuth2 and JWT-based RBAC security for backend APIs.',
+                'Containerized services with Docker and integrated CI/CD pipelines using Jenkins.',
+                'Optimized SQL queries and applied async programming to improve system performance by 35%.',
+                'Maintained Swagger documentation and implemented test automation with JUnit and Mockito.'
+            ]
+        });
+        addExperience({
+            role: 'Java Backend Developer Intern',
+            company: 'AppNova Technologies',
+            startDate: 'June 2023',
+            endDate: 'Feb 2024',
+            project: 'InvoiceSync - Invoice & Billing Automation System',
+            projectDescription: 'SaaS platform for SMEs.',
+            bullets: [
+                'Developed REST APIs for invoice management, alerts, and customer notifications using Spring Boot.',
+                'Integrated MySQL with Hibernate ORM and designed scalable backend microservices.',
+                'Automated builds and deployments using Jenkins and GitHub.',
+                'Built internal reporting dashboards using HTML/CSS and backend integration.',
+                'Participated in Agile sprints, code reviews, and client discussions.'
+            ]
+        });
+        addCertification({ name: 'Java Programming Masterclass', issuer: 'Udemy', year: '2023' });
+        addCertification({ name: 'Amazon ML Summer School', issuer: 'Amazon', year: '2023' });
+        addEducation({ degree: 'B.Tech', field: 'Information Technology', institution: 'Graphic Era University, Dehradun', grade: '7.8 / 10', year: '2023' });
+        addEducation({ degree: 'Class XII (CBSE)', field: '', institution: 'O.P. Jindal School', grade: '64.66%', year: '2018' });
+        addEducation({ degree: 'Class X (CBSE)', field: '', institution: 'O.P. Jindal School', grade: '8.2 / 10', year: '2016' });
+    </script>
+</body>
+
+</html>

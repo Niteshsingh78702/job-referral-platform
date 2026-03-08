@@ -370,7 +370,7 @@ async function rescoreResume() {
 }
 
 // =============================================
-// Download PDF - Generates LaTeX-matching compact HTML, captures as PDF
+// Download PDF - jsPDF direct vector text (crisp like LaTeX)
 // =============================================
 async function downloadPdf() {
     var btn = document.getElementById('downloadBtn');
@@ -378,16 +378,7 @@ async function downloadPdf() {
     btn.textContent = 'Generating PDF...';
 
     try {
-        // Load libraries if needed
-        if (typeof html2canvas === 'undefined') {
-            await new Promise(function (resolve, reject) {
-                var s = document.createElement('script');
-                s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-                s.onload = resolve;
-                s.onerror = function () { reject(new Error('Failed to load html2canvas')); };
-                document.head.appendChild(s);
-            });
-        }
+        // Load jsPDF
         if (!window.jspdf) {
             await new Promise(function (resolve, reject) {
                 var s = document.createElement('script');
@@ -403,198 +394,283 @@ async function downloadPdf() {
             throw new Error('No resume data. Please upload a resume first.');
         }
 
-        // Helper functions
-        function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-        function secBox(t) { return '<div style="background:#bfbfbf;padding:1px 5px;font-weight:bold;font-size:10pt;margin:6px 0 2px 0;">' + t + '</div>'; }
+        var jsPDF = window.jspdf.jsPDF;
+        var doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        var PW = 210, PH = 297;
+        var ML = 14, MR = 14, MT = 19, MB = 19;
+        var CW = PW - ML - MR;
+        var y = MT;
 
-        // Skill categories
-        var cats = {
-            'Languages': ['java', 'python', 'javascript', 'typescript', 'c++', 'c#', 'c', 'ruby', 'php', 'swift', 'kotlin', 'sql', 'html', 'css', 'go', 'rust', 'scala', 'r', 'perl', 'dart', 'html5', 'css3', 'sass', 'less'],
-            'Core Backend': ['spring boot', 'spring', 'rest api', 'rest apis', 'microservices', 'oauth2', 'oauth', 'redis', 'kafka', 'mysql', 'postgresql', 'mongodb', 'elasticsearch', 'node.js', 'node', 'express', 'nestjs', 'graphql', 'jwt', 'rabbitmq', 'django', 'flask', 'fastapi', 'laravel', 'rails', 'asp.net', 'hibernate', 'jpa'],
-            'Frontend': ['react', 'react.js', 'angular', 'vue', 'vue.js', 'next.js', 'nextjs', 'nuxt.js', 'svelte', 'redux', 'tailwind', 'tailwind css', 'bootstrap', 'material ui', 'chakra ui', 'jquery', 'webpack', 'vite'],
-            'DevOps & Tools': ['jenkins', 'docker', 'kubernetes', 'git', 'github', 'gitlab', 'postman', 'swagger', 'log4j2', 'aws', 'azure', 'gcp', 'linux', 'terraform', 'ansible', 'ci/cd', 'maven', 'gradle', 'nginx', 'vercel', 'heroku', 'netlify', 'firebase', 'cd (jenkins)', 'ci'],
-            'Testing': ['junit', 'mockito', 'jest', 'pytest', 'selenium', 'cypress', 'mocha', 'chai', 'testing library'],
-            'Practices': ['agile', 'scrum', 'debugging', 'exception handling', 'api documentation', 'devops', 'performance optimization', 'tdd', 'bdd', 'oop', 'design patterns', 'solid']
-        };
+        // Check page break
+        function chk(need) { if (y + need > PH - MB) { doc.addPage(); y = MT; } }
 
-        // Build PDF HTML
-        var h = '';
+        // Section heading with grey background
+        function secH(title) {
+            chk(10);
+            y += 1;
+            doc.setFillColor(191, 191, 191);
+            doc.rect(ML, y - 0.5, CW, 5, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9.5);
+            doc.setTextColor(0, 0, 0);
+            doc.text(title, ML + 2, y + 3.2);
+            y += 6;
+        }
 
-        // Header
-        h += '<div style="font-size:17pt;font-weight:bold;margin-bottom:2px;">' + esc(data.name || 'Your Name') + '</div>';
-        if (data.email) h += '<div style="font-size:9pt;">Email: <a href="mailto:' + esc(data.email) + '" style="color:#0000EE;">' + esc(data.email) + '</a></div>';
-        if (data.phone) h += '<div style="font-size:9pt;">Mobile: ' + esc(data.phone) + '</div>';
+        // Bullet character
+        var bullet = String.fromCharCode(8226);
+
+        // ---- HEADER ----
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
+        doc.text(data.name || 'Your Name', ML, y);
+        y += 5;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        if (data.email) {
+            doc.text('Email: ', ML, y);
+            var ew = doc.getTextWidth('Email: ');
+            doc.setTextColor(0, 0, 238);
+            doc.textWithLink(data.email, ML + ew, y, { url: 'mailto:' + data.email });
+            doc.setTextColor(0, 0, 0);
+            y += 3.5;
+        }
+        if (data.phone) { doc.text('Mobile: ' + data.phone, ML, y); y += 3.5; }
+        if (data.location) { doc.text('Location: ' + data.location, ML, y); y += 3.5; }
         if (data.linkedin) {
-            var disp = data.linkedin.replace('https://www.', '').replace('https://', '');
-            h += '<div style="font-size:9pt;">LinkedIn: <a href="' + esc(data.linkedin) + '" style="color:#0000EE;">' + esc(disp) + '</a></div>';
+            doc.text('LinkedIn: ', ML, y);
+            var lw = doc.getTextWidth('LinkedIn: ');
+            var ldisp = data.linkedin.replace('https://www.', '').replace('https://', '');
+            doc.setTextColor(0, 0, 238);
+            doc.textWithLink(ldisp, ML + lw, y, { url: data.linkedin });
+            doc.setTextColor(0, 0, 0);
+            y += 3.5;
         }
+        y += 1;
 
-        // Summary
+        // ---- SUMMARY ----
         if (data.summary && data.summary.trim()) {
-            h += secBox('PROFESSIONAL SUMMARY');
-            h += '<ul style="padding-left:16px;margin:1px 0;">';
-            var parts = data.summary.split(/[.!]/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 10; });
-            for (var pi = 0; pi < parts.length; pi++) {
-                h += '<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;">' + esc(parts[pi]) + '.</li>';
+            secH('PROFESSIONAL SUMMARY');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.5);
+            var sentences = data.summary.split(/[.!]/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 10; });
+            for (var si = 0; si < sentences.length; si++) {
+                var sLines = doc.splitTextToSize(sentences[si] + '.', CW - 10);
+                chk(sLines.length * 3.5);
+                doc.text(bullet, ML + 3, y);
+                doc.text(sLines, ML + 7, y);
+                y += sLines.length * 3.5;
             }
-            h += '</ul>';
+            y += 1;
         }
 
-        // Skills
+        // ---- SKILLS ----
         if (data.skills && data.skills.length > 0) {
-            h += secBox('KEY SKILLS');
-            h += '<ul style="padding-left:16px;margin:1px 0;">';
+            secH('KEY SKILLS');
+            doc.setFontSize(8.5);
+
+            var cats = {
+                'Languages': ['java', 'python', 'javascript', 'typescript', 'c++', 'c#', 'c', 'ruby', 'php', 'swift', 'kotlin', 'sql', 'html', 'css', 'go', 'rust', 'scala', 'r', 'perl', 'dart', 'html5', 'css3', 'sass', 'less'],
+                'Core Backend': ['spring boot', 'spring', 'rest api', 'rest apis', 'microservices', 'oauth2', 'oauth', 'redis', 'kafka', 'mysql', 'postgresql', 'mongodb', 'elasticsearch', 'node.js', 'node', 'express', 'nestjs', 'graphql', 'jwt', 'rabbitmq', 'django', 'flask', 'fastapi', 'laravel', 'rails', 'asp.net', 'hibernate', 'jpa'],
+                'ORM & Frameworks': ['hibernate', 'jpa', 'mvc', 'j2ee'],
+                'Frontend': ['react', 'react.js', 'angular', 'vue', 'vue.js', 'next.js', 'nextjs', 'nuxt.js', 'svelte', 'redux', 'tailwind', 'tailwind css', 'bootstrap', 'material ui', 'chakra ui', 'jquery', 'webpack', 'vite'],
+                'DevOps & Tools': ['jenkins', 'docker', 'kubernetes', 'git', 'github', 'gitlab', 'postman', 'swagger', 'log4j2', 'aws', 'azure', 'gcp', 'linux', 'terraform', 'ansible', 'ci/cd', 'maven', 'gradle', 'nginx', 'vercel', 'heroku', 'netlify', 'firebase', 'cd (jenkins)', 'ci'],
+                'Cloud/CI-CD': ['ci/cd pipelines', 'cd pipelines', 'containerization', 'deployment automation'],
+                'Testing': ['junit', 'mockito', 'jest', 'pytest', 'selenium', 'cypress', 'mocha', 'chai', 'testing library'],
+                'Practices': ['agile', 'scrum', 'debugging', 'exception handling', 'api documentation', 'devops', 'performance optimization', 'tdd', 'bdd', 'oop', 'design patterns', 'solid']
+            };
             var categorized = {};
             var uncategorized = [];
-            for (var si = 0; si < data.skills.length; si++) {
-                var skill = data.skills[si];
-                var lower = skill.toLowerCase().trim();
+            for (var i = 0; i < data.skills.length; i++) {
+                var sk = data.skills[i];
+                var low = sk.toLowerCase().trim();
                 var found = false;
                 var catKeys = Object.keys(cats);
-                for (var ci = 0; ci < catKeys.length; ci++) {
-                    if (cats[catKeys[ci]].indexOf(lower) !== -1) {
-                        if (!categorized[catKeys[ci]]) categorized[catKeys[ci]] = [];
-                        var already = false;
-                        for (var x = 0; x < categorized[catKeys[ci]].length; x++) {
-                            if (categorized[catKeys[ci]][x].toLowerCase() === lower) already = true;
+                for (var j = 0; j < catKeys.length; j++) {
+                    if (cats[catKeys[j]].indexOf(low) !== -1) {
+                        if (!categorized[catKeys[j]]) categorized[catKeys[j]] = [];
+                        var dup = false;
+                        for (var dd = 0; dd < categorized[catKeys[j]].length; dd++) {
+                            if (categorized[catKeys[j]][dd].toLowerCase() === low) dup = true;
                         }
-                        if (!already) categorized[catKeys[ci]].push(skill);
+                        if (!dup) categorized[catKeys[j]].push(sk);
                         found = true;
                         break;
                     }
                 }
-                if (!found) uncategorized.push(skill);
+                if (!found) uncategorized.push(sk);
             }
-            var catKeys2 = Object.keys(categorized);
-            for (var ck = 0; ck < catKeys2.length; ck++) {
-                if (categorized[catKeys2[ck]].length > 0) {
-                    h += '<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;"><b>' + esc(catKeys2[ck]) + ':</b> ' + categorized[catKeys2[ck]].map(function (s) { return esc(s); }).join(', ') + '</li>';
+
+            var ck = Object.keys(categorized);
+            for (var ci = 0; ci < ck.length; ci++) {
+                var catName = ck[ci];
+                var catList = categorized[catName];
+                if (catList.length > 0) {
+                    var label = catName + ': ';
+                    var skLine = catList.join(', ');
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(bullet, ML + 3, y);
+                    var lbW = doc.getTextWidth(label);
+                    doc.text(label, ML + 7, y);
+                    doc.setFont('helvetica', 'normal');
+                    var rem = doc.splitTextToSize(skLine, CW - 10 - lbW);
+                    doc.text(rem[0], ML + 7 + lbW, y);
+                    y += 3.5;
+                    for (var ri = 1; ri < rem.length; ri++) {
+                        chk(4);
+                        doc.text(rem[ri], ML + 7, y);
+                        y += 3.5;
+                    }
                 }
             }
             if (uncategorized.length > 0) {
-                h += '<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;"><b>Other:</b> ' + uncategorized.map(function (s) { return esc(s); }).join(', ') + '</li>';
+                doc.setFont('helvetica', 'bold');
+                doc.text(bullet, ML + 3, y);
+                var oLabel = 'Other: ';
+                var oW = doc.getTextWidth(oLabel);
+                doc.text(oLabel, ML + 7, y);
+                doc.setFont('helvetica', 'normal');
+                var oRem = doc.splitTextToSize(uncategorized.join(', '), CW - 10 - oW);
+                doc.text(oRem[0], ML + 7 + oW, y);
+                y += 3.5;
+                for (var oi = 1; oi < oRem.length; oi++) {
+                    chk(4);
+                    doc.text(oRem[oi], ML + 7, y);
+                    y += 3.5;
+                }
             }
-            h += '</ul>';
+            y += 1;
         }
 
-        // Experience
+        // ---- EXPERIENCE ----
         if (data.experience && data.experience.length > 0) {
-            h += secBox('PROFESSIONAL EXPERIENCE');
-            h += '<ul style="padding-left:16px;margin:1px 0;">';
+            secH('PROFESSIONAL EXPERIENCE');
             for (var ei = 0; ei < data.experience.length; ei++) {
                 var exp = data.experience[ei];
                 var hasRole = exp.role && exp.role.trim();
-                var hasProject = exp.project && exp.project.trim();
-                var datesArr = [];
-                if (exp.startDate) datesArr.push(exp.startDate);
-                if (exp.endDate) datesArr.push(exp.endDate);
-                var dates = datesArr.join(' - ');
+                var hasProj = exp.project && exp.project.trim();
+                var dArr = [];
+                if (exp.startDate) dArr.push(exp.startDate);
+                if (exp.endDate) dArr.push(exp.endDate);
+                var dates = dArr.join(' - ');
+
+                chk(12);
 
                 if (hasRole) {
-                    h += '<li style="font-size:9pt;margin-bottom:0;line-height:1.3;">';
-                    h += '<b>' + esc(exp.role) + '</b>';
-                    if (exp.company) h += ' -- <i>' + esc(exp.company) + '</i>';
-                    if (dates) h += ' <span style="float:right;font-weight:bold;">' + esc(dates) + '</span>';
-                    h += '</li>';
-                }
-                if (hasProject) {
-                    var projLine = '<b>Project: ' + esc(exp.project) + '</b>';
-                    if (exp.projectDescription) projLine += ' -- ' + esc(exp.projectDescription);
-                    h += '<div style="font-size:9pt;margin-left:16px;line-height:1.3;">' + projLine + '</div>';
-                }
-                if (exp.bullets && exp.bullets.length > 0) {
-                    h += '<ul style="padding-left:16px;margin:0;">';
-                    for (var bi = 0; bi < exp.bullets.length; bi++) {
-                        h += '<li style="font-size:8.5pt;margin-bottom:-2px;line-height:1.3;">' + esc(exp.bullets[bi]) + '</li>';
+                    // Role -- Company ... Dates
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    doc.text(bullet, ML + 3, y);
+                    doc.text(exp.role, ML + 7, y);
+                    var rW = doc.getTextWidth(exp.role);
+
+                    if (exp.company) {
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(9);
+                        doc.text(' -- ', ML + 7 + rW, y);
+                        var dashW = doc.getTextWidth(' -- ');
+                        doc.setFont('helvetica', 'italic');
+                        doc.text(exp.company, ML + 7 + rW + dashW, y);
                     }
-                    h += '</ul>';
+
+                    if (dates) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8.5);
+                        var dW = doc.getTextWidth(dates);
+                        doc.text(dates, ML + CW - dW, y);
+                    }
+                    y += 4;
                 }
+
+                if (hasProj) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8.5);
+                    var pText = 'Project: ' + exp.project;
+                    if (exp.projectDescription) pText += ' -- ' + exp.projectDescription;
+                    var pLines = doc.splitTextToSize(pText, CW - 14);
+                    chk(pLines.length * 3.5);
+                    doc.text(pLines, ML + 7, y);
+                    y += pLines.length * 3.5;
+                }
+
+                if (exp.bullets && exp.bullets.length > 0) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8.5);
+                    for (var bi = 0; bi < exp.bullets.length; bi++) {
+                        var bLines = doc.splitTextToSize(exp.bullets[bi], CW - 18);
+                        chk(bLines.length * 3.5);
+                        doc.text(bullet, ML + 10, y);
+                        doc.text(bLines, ML + 14, y);
+                        y += bLines.length * 3.5;
+                    }
+                }
+                y += 1;
             }
-            h += '</ul>';
         }
 
-        // Certifications
+        // ---- CERTIFICATIONS ----
         if (data.certifications && data.certifications.length > 0) {
-            h += secBox('CERTIFICATIONS');
-            h += '<ul style="padding-left:16px;margin:1px 0;">';
+            secH('CERTIFICATIONS');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.5);
             for (var ci2 = 0; ci2 < data.certifications.length; ci2++) {
-                var c = data.certifications[ci2];
-                var line = esc(c.name || '');
-                if (c.issuer) line += ' - ' + esc(c.issuer);
-                if (c.year) line += ' (' + esc(c.year) + ')';
-                h += '<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;">' + line + '</li>';
+                var cert = data.certifications[ci2];
+                var cLine = cert.name || '';
+                if (cert.issuer) cLine += ' - ' + cert.issuer;
+                if (cert.year) cLine += ' (' + cert.year + ')';
+                var cLines = doc.splitTextToSize(cLine, CW - 10);
+                chk(cLines.length * 3.5);
+                doc.text(bullet, ML + 3, y);
+                doc.text(cLines, ML + 7, y);
+                y += cLines.length * 3.5;
             }
-            h += '</ul>';
+            y += 1;
         }
 
-        // Education
+        // ---- EDUCATION ----
         if (data.education && data.education.length > 0) {
-            h += secBox('EDUCATION');
-            h += '<ul style="padding-left:16px;margin:1px 0;">';
+            secH('EDUCATION');
+            doc.setFontSize(8.5);
             for (var edi = 0; edi < data.education.length; edi++) {
                 var edu = data.education[edi];
-                var eduParts = [];
+                chk(5);
+                doc.text(bullet, ML + 3, y);
+                var xPos = ML + 7;
+
                 if (edu.degree) {
-                    var dStr = '<b>' + esc(edu.degree) + '</b>';
-                    if (edu.field) dStr += ' in ' + esc(edu.field);
-                    eduParts.push(dStr);
+                    doc.setFont('helvetica', 'bold');
+                    var degText = edu.degree;
+                    if (edu.field) degText += ' in ' + edu.field;
+                    doc.text(degText, xPos, y);
+                    xPos += doc.getTextWidth(degText);
+                    doc.setFont('helvetica', 'normal');
                 }
-                if (edu.institution) eduParts.push(esc(edu.institution));
-                var eLine = eduParts.join(', ');
-                if (edu.grade) eLine += ' -- <b>' + esc(edu.grade) + '</b>';
-                if (edu.year) eLine += ' (' + esc(edu.year) + ')';
-                if (eLine.trim()) h += '<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;">' + eLine + '</li>';
-            }
-            h += '</ul>';
-        }
 
-        // Render to canvas
-        var container = document.createElement('div');
-        container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:auto;background:#fff;padding:54px 60px 54px 40px;box-sizing:border-box;z-index:-1;font-family:Palatino Linotype,Book Antiqua,Palatino,Times New Roman,serif;font-size:10pt;color:#000;line-height:1.25;';
-        container.innerHTML = h;
-        document.body.appendChild(container);
+                var restParts = [];
+                if (edu.institution) restParts.push(edu.institution);
+                var rest = '';
+                if (restParts.length > 0) rest += ', ' + restParts.join(', ');
+                if (edu.grade) rest += ' -- ' + edu.grade;
+                if (edu.year) rest += ' (' + edu.year + ')';
 
-        var canvas = await html2canvas(container, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false
-        });
-        document.body.removeChild(container);
-
-        // Create PDF
-        var jsPDF = window.jspdf.jsPDF;
-        var pdf = new jsPDF('p', 'mm', 'a4');
-        var pdfW = 210;
-        var pdfH = 297;
-        var imgW = canvas.width;
-        var imgH = canvas.height;
-        var ratio = pdfW / imgW;
-        var scaledH = imgH * ratio;
-
-        if (scaledH <= pdfH) {
-            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfW, scaledH);
-        } else {
-            var pageContentH = pdfH / ratio;
-            var yOffset = 0;
-            var page = 0;
-            while (yOffset < imgH) {
-                if (page > 0) pdf.addPage();
-                var sliceH = Math.min(pageContentH, imgH - yOffset);
-                var pc = document.createElement('canvas');
-                pc.width = imgW;
-                pc.height = sliceH;
-                var ctx = pc.getContext('2d');
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(0, 0, imgW, sliceH);
-                ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
-                pdf.addImage(pc.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfW, sliceH * ratio);
-                yOffset += sliceH;
-                page++;
+                if (rest) {
+                    var avail = ML + CW - xPos;
+                    if (doc.getTextWidth(rest) <= avail) {
+                        doc.text(rest, xPos, y);
+                    } else {
+                        // Wrap to next line
+                        doc.text(rest.substring(0, 40), xPos, y);
+                        y += 3.5;
+                        doc.text(rest.substring(40), ML + 7, y);
+                    }
+                }
+                y += 3.5;
             }
         }
 
-        pdf.save('ats_resume.pdf');
+        doc.save('ats_resume.pdf');
         showToast('PDF downloaded successfully!', 'success');
     } catch (err) {
         console.error('PDF generation error:', err);
@@ -605,7 +681,7 @@ async function downloadPdf() {
     }
 }
 
-// =============================================
+
 // Live Preview
 // =============================================
 function updatePreview() {

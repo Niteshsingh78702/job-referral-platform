@@ -1,4 +1,4 @@
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+﻿// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ATS Resume Builder — Frontend Logic (No Login Required)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -501,6 +501,7 @@ async function rescoreResume() {
 
 // ─────────────────────────────────────────────
 // Download PDF — Client-side generation with jsPDF
+// Matches the Live Preview layout exactly
 // ─────────────────────────────────────────────
 async function downloadPdf() {
     const btn = document.getElementById('downloadBtn');
@@ -524,7 +525,7 @@ async function downloadPdf() {
         const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
         const PAGE_W = 210, PAGE_H = 297;
-        const ML = 15, MR = 15, MT = 15, MB = 15;
+        const ML = 14, MR = 14, MT = 14, MB = 14;
         const CW = PAGE_W - ML - MR;
         let y = MT;
 
@@ -534,98 +535,201 @@ async function downloadPdf() {
 
         function sectionHeading(title) {
             checkPage(12);
-            y += 3;
-            doc.setFillColor(200, 200, 200);
-            doc.rect(ML, y - 1, CW, 6, 'F');
+            y += 2;
+            doc.setFillColor(191, 191, 191);
+            doc.rect(ML, y - 1, CW, 5.5, 'F');
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
+            doc.setFontSize(9.5);
             doc.setTextColor(0, 0, 0);
-            doc.text(title, ML + 2, y + 3.5);
-            y += 8;
+            doc.text(title, ML + 2, y + 3);
+            y += 7;
         }
 
-        // ── Header ──
+        // ── Header: Name ──
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(18);
+        doc.setFontSize(16);
         doc.setTextColor(0, 0, 0);
-        doc.text(data.name || 'Resume', ML, y + 5);
-        y += 10;
+        doc.text(data.name || 'Your Name', ML, y + 4);
+        y += 8;
 
-        // ── Contact ──
+        // ── Contact Info ──
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        const contact = [data.email, data.phone, data.location].filter(Boolean).join('  |  ');
-        if (contact) { doc.text(contact, ML, y); y += 4; }
-        if (data.linkedin) {
-            doc.setTextColor(0, 0, 200);
-            doc.textWithLink(data.linkedin, ML, y, { url: data.linkedin });
+        doc.setFontSize(8.5);
+        if (data.email) {
+            doc.text('Email: ', ML, y);
+            const ew = doc.getTextWidth('Email: ');
+            doc.setTextColor(0, 0, 255);
+            doc.textWithLink(data.email, ML + ew, y, { url: 'mailto:' + data.email });
             doc.setTextColor(0, 0, 0);
-            y += 4;
+            y += 3.5;
         }
-        y += 2;
+        if (data.phone) { doc.text('Mobile: ' + data.phone, ML, y); y += 3.5; }
+        if (data.location) { doc.text('Location: ' + data.location, ML, y); y += 3.5; }
+        if (data.linkedin) {
+            doc.text('LinkedIn: ', ML, y);
+            const lw = doc.getTextWidth('LinkedIn: ');
+            const display = data.linkedin.replace('https://www.', '').replace('https://', '');
+            doc.setTextColor(0, 0, 255);
+            doc.textWithLink(display, ML + lw, y, { url: data.linkedin });
+            doc.setTextColor(0, 0, 0);
+            y += 3.5;
+        }
+        y += 1;
 
-        // ── Summary ──
+        // ── Professional Summary (split into bullet points) ──
         if (data.summary && data.summary.trim()) {
             sectionHeading('PROFESSIONAL SUMMARY');
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            const lines = doc.splitTextToSize(data.summary, CW - 10);
-            checkPage(lines.length * 4);
-            doc.text(lines, ML + 5, y);
-            y += lines.length * 4 + 2;
+            doc.setFontSize(8.5);
+            const sentences = data.summary.split(/[.!]/).map(s => s.trim()).filter(s => s.length > 10);
+            for (const sentence of sentences) {
+                const lines = doc.splitTextToSize(sentence + '.', CW - 12);
+                checkPage(lines.length * 3.5 + 1);
+                doc.text('\u2022', ML + 4, y);
+                doc.text(lines, ML + 8, y);
+                y += lines.length * 3.5 + 0.5;
+            }
+            y += 1;
         }
 
-        // ── Skills ──
+        // ── Skills (categorized like preview) ──
         if (data.skills && data.skills.length > 0) {
             sectionHeading('KEY SKILLS');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            const lines = doc.splitTextToSize(data.skills.join('  •  '), CW - 10);
-            checkPage(lines.length * 4);
-            doc.text(lines, ML + 5, y);
-            y += lines.length * 4 + 2;
+            doc.setFontSize(8.5);
+
+            const skillCategories = {
+                'Languages': ['java', 'python', 'javascript', 'typescript', 'c++', 'c#', 'c', 'ruby', 'php', 'swift', 'kotlin', 'sql', 'html', 'css', 'go', 'rust', 'scala', 'r', 'perl', 'dart', 'html5', 'css3', 'sass', 'less'],
+                'Core Backend': ['spring boot', 'spring', 'rest api', 'rest apis', 'microservices', 'oauth2', 'oauth', 'redis', 'kafka', 'mysql', 'postgresql', 'mongodb', 'elasticsearch', 'node.js', 'node', 'express', 'nestjs', 'graphql', 'jwt', 'rabbitmq', 'django', 'flask', 'fastapi', 'laravel', 'rails', 'asp.net', 'hibernate', 'jpa'],
+                'Frontend': ['react', 'react.js', 'angular', 'vue', 'vue.js', 'next.js', 'nextjs', 'nuxt.js', 'svelte', 'redux', 'tailwind', 'tailwind css', 'bootstrap', 'material ui', 'chakra ui', 'jquery', 'webpack', 'vite'],
+                'DevOps & Tools': ['jenkins', 'docker', 'kubernetes', 'git', 'github', 'gitlab', 'postman', 'swagger', 'log4j2', 'aws', 'azure', 'gcp', 'linux', 'terraform', 'ansible', 'ci/cd', 'maven', 'gradle', 'nginx', 'vercel', 'heroku', 'netlify', 'firebase', 'cd (jenkins)', 'ci'],
+                'Testing': ['junit', 'mockito', 'jest', 'pytest', 'selenium', 'cypress', 'mocha', 'chai', 'testing library'],
+                'Practices': ['agile', 'scrum', 'debugging', 'exception handling', 'api documentation', 'devops', 'performance optimization', 'tdd', 'bdd', 'oop', 'design patterns', 'solid'],
+            };
+
+            const categorized = {};
+            const uncategorized = [];
+            for (const skill of data.skills) {
+                const lower = skill.toLowerCase().trim();
+                let found = false;
+                for (const [cat, keywords] of Object.entries(skillCategories)) {
+                    if (keywords.includes(lower)) {
+                        if (!categorized[cat]) categorized[cat] = [];
+                        if (!categorized[cat].some(s => s.toLowerCase() === lower)) {
+                            categorized[cat].push(skill);
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) uncategorized.push(skill);
+            }
+
+            for (const [cat, list] of Object.entries(categorized)) {
+                if (list.length > 0) {
+                    const label = cat + ': ';
+                    const skillLine = list.join(', ');
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('\u2022', ML + 4, y);
+                    const labelW = doc.getTextWidth(label);
+                    doc.text(label, ML + 8, y);
+                    doc.setFont('helvetica', 'normal');
+                    const remaining = doc.splitTextToSize(skillLine, CW - 12 - labelW);
+                    if (remaining.length === 1) {
+                        doc.text(remaining[0], ML + 8 + labelW, y);
+                        y += 3.5;
+                    } else {
+                        doc.text(remaining[0], ML + 8 + labelW, y);
+                        y += 3.5;
+                        for (let i = 1; i < remaining.length; i++) {
+                            checkPage(4);
+                            doc.text(remaining[i], ML + 8, y);
+                            y += 3.5;
+                        }
+                    }
+                }
+            }
+            if (uncategorized.length > 0) {
+                doc.setFont('helvetica', 'bold');
+                doc.text('\u2022', ML + 4, y);
+                const label = 'Other: ';
+                const labelW = doc.getTextWidth(label);
+                doc.text(label, ML + 8, y);
+                doc.setFont('helvetica', 'normal');
+                const lines = doc.splitTextToSize(uncategorized.join(', '), CW - 12 - labelW);
+                doc.text(lines[0], ML + 8 + labelW, y);
+                y += 3.5;
+                for (let i = 1; i < lines.length; i++) {
+                    checkPage(4);
+                    doc.text(lines[i], ML + 8, y);
+                    y += 3.5;
+                }
+            }
+            y += 1;
         }
 
-        // ── Experience ──
+        // ── Professional Experience ──
         if (data.experience && data.experience.length > 0) {
             sectionHeading('PROFESSIONAL EXPERIENCE');
             for (const exp of data.experience) {
-                checkPage(20);
-                if (exp.role) {
+                checkPage(15);
+                const hasRole = exp.role && exp.role.trim();
+                const hasProject = exp.project && exp.project.trim();
+                const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' \u2013 ');
+
+                if (hasRole) {
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(10);
-                    const roleText = exp.role + (exp.company ? '  —  ' + exp.company : '');
-                    doc.text(roleText, ML + 5, y);
-                    const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' – ');
+                    doc.setFontSize(9);
+                    doc.text(exp.role, ML + 4, y);
+                    let roleW = doc.getTextWidth(exp.role);
+
+                    if (exp.company) {
+                        doc.text(' \u2014 ', ML + 4 + roleW, y);
+                        const dashW = doc.getTextWidth(' \u2014 ');
+                        doc.setFont('helvetica', 'italic');
+                        doc.text(exp.company, ML + 4 + roleW + dashW, y);
+                    }
+
                     if (dates) {
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(8);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8.5);
                         const dw = doc.getTextWidth(dates);
                         doc.text(dates, ML + CW - dw, y);
                     }
-                    y += 5;
-                }
-                if (exp.project) {
+                    y += 4.5;
+
+                    if (hasProject) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8.5);
+                        let projLine = 'Project: ' + exp.project;
+                        if (exp.projectDescription) projLine += ' \u2014 ' + exp.projectDescription;
+                        const pLines = doc.splitTextToSize(projLine, CW - 12);
+                        checkPage(pLines.length * 3.5);
+                        doc.text(pLines, ML + 8, y);
+                        y += pLines.length * 3.5 + 0.5;
+                    }
+                } else if (hasProject) {
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(9);
-                    let pLine = 'Project: ' + exp.project;
-                    if (exp.projectDescription) pLine += ' — ' + exp.projectDescription;
-                    const pLines = doc.splitTextToSize(pLine, CW - 15);
-                    checkPage(pLines.length * 4);
-                    doc.text(pLines, ML + 10, y);
-                    y += pLines.length * 4 + 1;
+                    let projLine = 'Project: ' + exp.project;
+                    if (exp.projectDescription) projLine += ' \u2014 ' + exp.projectDescription;
+                    const pLines = doc.splitTextToSize(projLine, CW - 8);
+                    checkPage(pLines.length * 3.5);
+                    doc.text(pLines, ML + 4, y);
+                    y += pLines.length * 3.5 + 0.5;
                 }
+
                 if (exp.bullets && exp.bullets.length > 0) {
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
+                    doc.setFontSize(8.5);
                     for (const b of exp.bullets) {
-                        const bLines = doc.splitTextToSize('•  ' + b, CW - 15);
-                        checkPage(bLines.length * 4 + 1);
-                        doc.text(bLines, ML + 10, y);
-                        y += bLines.length * 4 + 1;
+                        const bLines = doc.splitTextToSize(b, CW - 16);
+                        checkPage(bLines.length * 3.5 + 1);
+                        doc.text('\u2022', ML + 8, y);
+                        doc.text(bLines, ML + 12, y);
+                        y += bLines.length * 3.5 + 0.5;
                     }
                 }
-                y += 2;
+                y += 1.5;
             }
         }
 
@@ -633,23 +737,24 @@ async function downloadPdf() {
         if (data.certifications && data.certifications.length > 0) {
             sectionHeading('CERTIFICATIONS');
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
+            doc.setFontSize(8.5);
             for (const c of data.certifications) {
                 let line = c.name || '';
-                if (c.issuer) line += ' – ' + c.issuer;
+                if (c.issuer) line += ' \u2013 ' + c.issuer;
                 if (c.year) line += ' (' + c.year + ')';
-                const cLines = doc.splitTextToSize('•  ' + line, CW - 10);
-                checkPage(cLines.length * 4 + 1);
-                doc.text(cLines, ML + 5, y);
-                y += cLines.length * 4 + 1;
+                const cLines = doc.splitTextToSize(line, CW - 12);
+                checkPage(cLines.length * 3.5 + 1);
+                doc.text('\u2022', ML + 4, y);
+                doc.text(cLines, ML + 8, y);
+                y += cLines.length * 3.5 + 0.5;
             }
+            y += 1;
         }
 
         // ── Education ──
         if (data.education && data.education.length > 0) {
             sectionHeading('EDUCATION');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
+            doc.setFontSize(8.5);
             for (const edu of data.education) {
                 const parts = [];
                 if (edu.degree) {
@@ -659,12 +764,34 @@ async function downloadPdf() {
                 }
                 if (edu.institution) parts.push(edu.institution);
                 let line = parts.join(', ');
-                if (edu.grade) line += ' — ' + edu.grade;
+                if (edu.grade) line += ' \u2014 ' + edu.grade;
                 if (edu.year) line += ' (' + edu.year + ')';
-                const eLines = doc.splitTextToSize('•  ' + line, CW - 10);
-                checkPage(eLines.length * 4 + 1);
-                doc.text(eLines, ML + 5, y);
-                y += eLines.length * 4 + 1;
+                if (line.trim()) {
+                    const eLines = doc.splitTextToSize(line, CW - 12);
+                    checkPage(eLines.length * 3.5 + 1);
+                    doc.text('\u2022', ML + 4, y);
+                    if (edu.degree) {
+                        doc.setFont('helvetica', 'bold');
+                        let boldPart = edu.degree;
+                        if (edu.field) boldPart += ' in ' + edu.field;
+                        const bw = doc.getTextWidth(boldPart);
+                        doc.text(boldPart, ML + 8, y);
+                        doc.setFont('helvetica', 'normal');
+                        const rest = line.substring(boldPart.length);
+                        if (rest) doc.text(rest, ML + 8 + bw, y);
+                        y += 3.5;
+                        for (let i = 1; i < eLines.length; i++) {
+                            checkPage(4);
+                            doc.text(eLines[i], ML + 8, y);
+                            y += 3.5;
+                        }
+                    } else {
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(eLines, ML + 8, y);
+                        y += eLines.length * 3.5;
+                    }
+                    y += 0.5;
+                }
             }
         }
 
@@ -675,7 +802,7 @@ async function downloadPdf() {
         showToast(err.message || 'PDF generation failed', 'error');
     } finally {
         btn.disabled = false;
-        btn.textContent = '📥 Download ATS PDF';
+        btn.textContent = '\uD83D\uDCE5 Download ATS PDF';
     }
 }
 
@@ -760,7 +887,7 @@ function updatePreview() {
     if (d.experience && d.experience.length > 0) {
         html += sectionHead('PROFESSIONAL EXPERIENCE');
         d.experience.forEach(exp => {
-            const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' – ');
+            const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' \u2013 ');
             const hasRole = exp.role && exp.role.trim();
             const hasProject = exp.project && exp.project.trim();
 
@@ -768,19 +895,19 @@ function updatePreview() {
                 // Work experience entry: Role — Company  Date
                 html += `<div style="margin:4px 0 2px 0;">
                     <b>${escapeHtml(exp.role)}</b>`;
-                if (exp.company) html += ` — <i>${escapeHtml(exp.company)}</i>`;
+                if (exp.company) html += ` \u2014 <i>${escapeHtml(exp.company)}</i>`;
                 if (dates) html += ` <span style="float:right;font-weight:bold;font-size:9pt;">${escapeHtml(dates)}</span>`;
                 html += `</div>`;
                 if (hasProject) {
                     html += `<div style="font-size:9pt;"><b>Project: ${escapeHtml(exp.project)}</b>`;
-                    if (exp.projectDescription) html += ` — ${escapeHtml(exp.projectDescription)}`;
+                    if (exp.projectDescription) html += ` \u2014 ${escapeHtml(exp.projectDescription)}`;
                     html += `</div>`;
                 }
             } else if (hasProject) {
                 // Project-only entry: Project Name — TechStack
                 html += `<div style="margin:4px 0 2px 0;">
                     <b>Project: ${escapeHtml(exp.project)}</b>`;
-                if (exp.projectDescription) html += ` — ${escapeHtml(exp.projectDescription)}`;
+                if (exp.projectDescription) html += ` \u2014 ${escapeHtml(exp.projectDescription)}`;
                 html += `</div>`;
             }
 
@@ -798,7 +925,7 @@ function updatePreview() {
         html += `<ul style="padding-left:18px;margin:2px 0;">`;
         d.certifications.forEach(c => {
             let line = escapeHtml(c.name || '');
-            if (c.issuer) line += ` – ${escapeHtml(c.issuer)}`;
+            if (c.issuer) line += ` \u2013 ${escapeHtml(c.issuer)}`;
             if (c.year) line += ` (${escapeHtml(c.year)})`;
             html += `<li style="font-size:9pt;">${line}</li>`;
         });
@@ -818,7 +945,7 @@ function updatePreview() {
             }
             if (edu.institution) parts.push(escapeHtml(edu.institution));
             let line = parts.join(', ');
-            if (edu.grade) line += ` — <b>${escapeHtml(edu.grade)}</b>`;
+            if (edu.grade) line += ` \u2014 <b>${escapeHtml(edu.grade)}</b>`;
             if (edu.year) line += ` (${escapeHtml(edu.year)})`;
             if (line.trim()) html += `<li style="font-size:9pt;">${line}</li>`;
         });

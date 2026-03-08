@@ -84,22 +84,8 @@ export class AtsResumeService {
     }
 
     async generatePdfFromData(data: ParsedResumeJson): Promise<Buffer> {
-        // Tier 1: LaTeX (best quality, needs pdflatex installed)
-        try {
-            return await this.generateLatexPdf(data);
-        } catch (err) {
-            this.logger.warn('LaTeX PDF failed: ' + err.message);
-        }
-
-        // Tier 2: Puppeteer/HTML (good quality, needs Chrome/Chromium)
-        try {
-            return await this.generateHtmlPdf(data);
-        } catch (err) {
-            this.logger.warn('Puppeteer PDF failed: ' + err.message);
-        }
-
-        // Tier 3: PDFKit (always works, pure Node.js, no system deps)
-        this.logger.log('Using PDFKit fallback for PDF generation');
+        // PDFKit — pure Node.js, works on all platforms, no system deps
+        this.logger.log('Generating PDF with PDFKit (primary)');
         return await this.generatePdfKitPdf(data);
     }
 

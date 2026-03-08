@@ -417,8 +417,8 @@ async function downloadPdf() {
             y += 6;
         }
 
-        // Bullet character
-        var bullet = String.fromCharCode(8226);
+        // Bullet character - using simple dash to avoid font issues
+        var bullet = '-';
 
         // ---- HEADER ----
         doc.setFont('helvetica', 'bold');
@@ -451,6 +451,7 @@ async function downloadPdf() {
         y += 1;
 
         // ---- SUMMARY ----
+        console.log('[PDF] Rendering SUMMARY, y=' + y);
         if (data.summary && data.summary.trim()) {
             secH('PROFESSIONAL SUMMARY');
             doc.setFont('helvetica', 'normal');
@@ -467,6 +468,7 @@ async function downloadPdf() {
         }
 
         // ---- SKILLS ----
+        console.log('[PDF] Rendering SKILLS, y=' + y + ', skills=' + data.skills.length);
         if (data.skills && data.skills.length > 0) {
             secH('KEY SKILLS');
             doc.setFontSize(8.5);
@@ -545,6 +547,7 @@ async function downloadPdf() {
         }
 
         // ---- EXPERIENCE ----
+        console.log('[PDF] Rendering EXPERIENCE, y=' + y + ', exp=' + (data.experience ? data.experience.length : 'null'));
         if (data.experience && data.experience.length > 0) {
             secH('PROFESSIONAL EXPERIENCE');
             for (var ei = 0; ei < data.experience.length; ei++) {
@@ -611,6 +614,7 @@ async function downloadPdf() {
         }
 
         // ---- CERTIFICATIONS ----
+        console.log('[PDF] Rendering CERTIFICATIONS, y=' + y + ', certs=' + (data.certifications ? data.certifications.length : 'null'));
         if (data.certifications && data.certifications.length > 0) {
             secH('CERTIFICATIONS');
             doc.setFont('helvetica', 'normal');
@@ -630,6 +634,7 @@ async function downloadPdf() {
         }
 
         // ---- EDUCATION ----
+        console.log('[PDF] Rendering EDUCATION, y=' + y + ', edu=' + (data.education ? data.education.length : 'null'));
         if (data.education && data.education.length > 0) {
             secH('EDUCATION');
             doc.setFontSize(8.5);

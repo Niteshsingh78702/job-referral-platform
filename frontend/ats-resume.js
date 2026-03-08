@@ -500,7 +500,7 @@ async function rescoreResume() {
 }
 
 // ─────────────────────────────────────────────
-// Download PDF — Captures the Live Preview as PDF
+// Download PDF — Generates LaTeX-matching compact HTML, then captures as PDF
 // Uses html2canvas + jsPDF for pixel-perfect output
 // ─────────────────────────────────────────────
 async function downloadPdf() {
@@ -519,7 +519,6 @@ async function downloadPdf() {
                 document.head.appendChild(s);
             });
         }
-        // Dynamically load jsPDF if needed
         if (!window.jspdf) {
             await new Promise((resolve, reject) => {
                 const s = document.createElement('script');
@@ -530,71 +529,176 @@ async function downloadPdf() {
             });
         }
 
-        // Make sure the preview is up-to-date
-        updatePreview();
-
-        // Get the preview content
-        const previewFrame = document.getElementById('previewFrame');
-        if (!previewFrame || !previewFrame.innerHTML.trim()) {
+        const data = collectFormData();
+        if (!data.name && !data.email) {
             throw new Error('No resume data to export. Please upload a resume first.');
         }
 
-        // Create a hidden container that matches A4 proportions
+        // ── Build compact LaTeX-matching HTML ──
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const sectionBox = (t) => `<div style="background:#bfbfbf;padding:1px 5px;font-weight:bold;font-size:10pt;margin:6px 0 2px 0;">${t}</div>`;
+
+        let h = '';
+        // Header
+        h += `<div style="font-size:17pt;font-weight:bold;margin-bottom:2px;">${esc(data.name || 'Your Name')}</div>`;
+        if (data.email) h += `<div style="font-size:9pt;">Email: <a href="mailto:${esc(data.email)}" style="color:#0000EE;">${esc(data.email)}</a></div>`;
+        if (data.phone) h += `<div style="font-size:9pt;">Mobile: ${esc(data.phone)}</div>`;
+        if (data.linkedin) {
+            const disp = data.linkedin.replace('https://www.', '').replace('https://', '');
+            h += `<div style="font-size:9pt;">LinkedIn: <a href="${esc(data.linkedin)}" style="color:#0000EE;">${esc(disp)}</a></div>`;
+        }
+
+        // Summary
+        if (data.summary && data.summary.trim()) {
+            h += sectionBox('PROFESSIONAL SUMMARY');
+            h += `<ul style="padding-left:16px;margin:1px 0;">`;
+            const parts = data.summary.split(/[.!]/).map(s => s.trim()).filter(s => s.length > 10);
+            parts.forEach(p => { h += `<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;">${esc(p)}.</li>`; });
+            h += `</ul>`;
+        }
+
+        // Skills — categorized
+        if (data.skills && data.skills.length > 0) {
+            h += sectionBox('KEY SKILLS');
+            h += `<ul style="padding-left:16px;margin:1px 0;">`;
+
+            const cats = {
+                'Languages': ['java', 'python', 'javascript', 'typescript', 'c++', 'c#', 'c', 'ruby', 'php', 'swift', 'kotlin', 'sql', 'html', 'css', 'go', 'rust', 'scala', 'r', 'perl', 'dart', 'html5', 'css3', 'sass', 'less'],
+                'Core Backend': ['spring boot', 'spring', 'rest api', 'rest apis', 'microservices', 'oauth2', 'oauth', 'redis', 'kafka', 'mysql', 'postgresql', 'mongodb', 'elasticsearch', 'node.js', 'node', 'express', 'nestjs', 'graphql', 'jwt', 'rabbitmq', 'django', 'flask', 'fastapi', 'laravel', 'rails', 'asp.net', 'hibernate', 'jpa'],
+                'Frontend': ['react', 'react.js', 'angular', 'vue', 'vue.js', 'next.js', 'nextjs', 'nuxt.js', 'svelte', 'redux', 'tailwind', 'tailwind css', 'bootstrap', 'material ui', 'chakra ui', 'jquery', 'webpack', 'vite'],
+                'DevOps & Tools': ['jenkins', 'docker', 'kubernetes', 'git', 'github', 'gitlab', 'postman', 'swagger', 'log4j2', 'aws', 'azure', 'gcp', 'linux', 'terraform', 'ansible', 'ci/cd', 'maven', 'gradle', 'nginx', 'vercel', 'heroku', 'netlify', 'firebase', 'cd (jenkins)', 'ci'],
+                'Testing': ['junit', 'mockito', 'jest', 'pytest', 'selenium', 'cypress', 'mocha', 'chai', 'testing library'],
+                'Practices': ['agile', 'scrum', 'debugging', 'exception handling', 'api documentation', 'devops', 'performance optimization', 'tdd', 'bdd', 'oop', 'design patterns', 'solid'],
+            };
+            const categorized = {};
+            const uncategorized = [];
+            for (const skill of data.skills) {
+                const lower = skill.toLowerCase().trim();
+                let found = false;
+                for (const [cat, kws] of Object.entries(cats)) {
+                    if (kws.includes(lower)) {
+                        if (!categorized[cat]) categorized[cat] = [];
+                        if (!categorized[cat].some(s => s.toLowerCase() === lower)) categorized[cat].push(skill);
+                        found = true; break;
+                    }
+                }
+                if (!found) uncategorized.push(skill);
+            }
+            for (const [cat, list] of Object.entries(categorized)) {
+                if (list.length > 0) h += `<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;"><b>${esc(cat)}:</b> ${list.map(s => esc(s)).join(', ')}</li>`;
+            }
+            if (uncategorized.length > 0) h += `<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;"><b>Other:</b> ${uncategorized.map(s => esc(s)).join(', ')}</li>`;
+            h += `</ul>`;
+        }
+
+        // Experience
+        if (data.experience && data.experience.length > 0) {
+            h += sectionBox('PROFESSIONAL EXPERIENCE');
+            h += `<ul style="padding-left:16px;margin:1px 0;">`;
+            for (const exp of data.experience) {
+                const hasRole = exp.role && exp.role.trim();
+                const hasProject = exp.project && exp.project.trim();
+                const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' \u2013 ');
+
+                if (hasRole) {
+                    h += `<li style="font-size:9pt;margin-bottom:0;line-height:1.3;">`;
+                    h += `<b>${esc(exp.role)}</b>`;
+                    if (exp.company) h += ` \u2014 <i>${esc(exp.company)}</i>`;
+                    if (dates) h += ` <span style="float:right;font-weight:bold;">${esc(dates)}</span>`;
+                    h += `</li>`;
+                }
+                if (hasProject) {
+                    let projLine = `<b>Project: ${esc(exp.project)}</b>`;
+                    if (exp.projectDescription) projLine += ` \u2014 ${esc(exp.projectDescription)}`;
+                    h += `<div style="font-size:9pt;margin-left:16px;line-height:1.3;">${projLine}</div>`;
+                }
+                if (exp.bullets && exp.bullets.length > 0) {
+                    h += `<ul style="padding-left:16px;margin:0;">`;
+                    for (const b of exp.bullets) {
+                        h += `<li style="font-size:8.5pt;margin-bottom:-2px;line-height:1.3;">${esc(b)}</li>`;
+                    }
+                    h += `</ul>`;
+                }
+            }
+            h += `</ul>`;
+        }
+
+        // Certifications
+        if (data.certifications && data.certifications.length > 0) {
+            h += sectionBox('CERTIFICATIONS');
+            h += `<ul style="padding-left:16px;margin:1px 0;">`;
+            for (const c of data.certifications) {
+                let line = esc(c.name || '');
+                if (c.issuer) line += ` \u2013 ${esc(c.issuer)}`;
+                if (c.year) line += ` (${esc(c.year)})`;
+                h += `<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;">${line}</li>`;
+            }
+            h += `</ul>`;
+        }
+
+        // Education
+        if (data.education && data.education.length > 0) {
+            h += sectionBox('EDUCATION');
+            h += `<ul style="padding-left:16px;margin:1px 0;">`;
+            for (const edu of data.education) {
+                const parts = [];
+                if (edu.degree) {
+                    let d = `<b>${esc(edu.degree)}</b>`;
+                    if (edu.field) d += ` in ${esc(edu.field)}`;
+                    parts.push(d);
+                }
+                if (edu.institution) parts.push(esc(edu.institution));
+                let line = parts.join(', ');
+                if (edu.grade) line += ` \u2014 <b>${esc(edu.grade)}</b>`;
+                if (edu.year) line += ` (${esc(edu.year)})`;
+                if (line.trim()) h += `<li style="font-size:9pt;margin-bottom:-1px;line-height:1.3;">${line}</li>`;
+            }
+            h += `</ul>`;
+        }
+
+        // ── Render compact HTML to canvas ──
+        // LaTeX margins: top=0.75in, bottom=0.75in, left=0.55in, right=0.85in
+        // A4 at 96dpi = 794 x 1123px
         const container = document.createElement('div');
-        container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:40px 50px;box-sizing:border-box;z-index:-1;';
-        container.innerHTML = previewFrame.innerHTML;
+        container.style.cssText = `position:fixed;left:-9999px;top:0;width:794px;height:auto;background:#fff;padding:54px 60px 54px 40px;box-sizing:border-box;z-index:-1;font-family:'Palatino Linotype','Book Antiqua',Palatino,'Times New Roman',serif;font-size:10pt;color:#000;line-height:1.25;`;
+        container.innerHTML = h;
         document.body.appendChild(container);
 
-        // Render to canvas
         const canvas = await html2canvas(container, {
             scale: 2,
             useCORS: true,
             backgroundColor: '#ffffff',
             logging: false,
         });
-
         document.body.removeChild(container);
 
-        // Create PDF — fit canvas to A4 pages
+        // ── Create PDF ──
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfW = 210;  // A4 width in mm
-        const pdfH = 297;  // A4 height in mm
-        const marginX = 0;
-        const marginY = 0;
-        const contentW = pdfW - marginX * 2;
+        const pdfW = 210, pdfH = 297;
 
         const imgW = canvas.width;
         const imgH = canvas.height;
-        const ratio = contentW / imgW;
+        const ratio = pdfW / imgW;
         const scaledH = imgH * ratio;
 
-        // If content fits on one page
-        if (scaledH <= pdfH - marginY * 2) {
+        if (scaledH <= pdfH) {
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
-            pdf.addImage(imgData, 'JPEG', marginX, marginY, contentW, scaledH);
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, scaledH);
         } else {
-            // Multi-page: slice the canvas into page-sized chunks
-            const pageContentH = (pdfH - marginY * 2) / ratio; // pixels per page
+            const pageContentH = pdfH / ratio;
             let yOffset = 0;
             let page = 0;
-
             while (yOffset < imgH) {
                 if (page > 0) pdf.addPage();
-
                 const sliceH = Math.min(pageContentH, imgH - yOffset);
-                const pageCanvas = document.createElement('canvas');
-                pageCanvas.width = imgW;
-                pageCanvas.height = sliceH;
-                const ctx = pageCanvas.getContext('2d');
-                ctx.fillStyle = '#ffffff';
+                const pc = document.createElement('canvas');
+                pc.width = imgW; pc.height = sliceH;
+                const ctx = pc.getContext('2d');
+                ctx.fillStyle = '#fff';
                 ctx.fillRect(0, 0, imgW, sliceH);
                 ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
-
-                const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
-                const pageScaledH = sliceH * ratio;
-                pdf.addImage(pageImgData, 'JPEG', marginX, marginY, contentW, pageScaledH);
-
+                pdf.addImage(pc.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfW, sliceH * ratio);
                 yOffset += sliceH;
                 page++;
             }
@@ -611,7 +715,7 @@ async function downloadPdf() {
     }
 }
 
-// ─────────────────────────────────────────────
+
 
 // Live Preview — Matches LaTeX template style
 // ─────────────────────────────────────────────

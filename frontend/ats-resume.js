@@ -500,7 +500,7 @@ async function rescoreResume() {
 }
 
 // ─────────────────────────────────────────────
-// Download PDF
+// Download PDF — Client-side generation with jsPDF
 // ─────────────────────────────────────────────
 async function downloadPdf() {
     const btn = document.getElementById('downloadBtn');
@@ -509,30 +509,159 @@ async function downloadPdf() {
 
     try {
         const data = collectFormData();
-        const res = await fetch(`${API_BASE}/ats-resume/generate-pdf`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.message || 'PDF generation failed');
+        const PAGE_W = 210, PAGE_H = 297;
+        const ML = 15, MR = 15, MT = 15, MB = 15;
+        const CW = PAGE_W - ML - MR;
+        let y = MT;
+
+        function checkPage(needed) {
+            if (y + needed > PAGE_H - MB) { doc.addPage(); y = MT; }
         }
 
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'ats_resume.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        function sectionHeading(title) {
+            checkPage(12);
+            y += 3;
+            doc.setFillColor(200, 200, 200);
+            doc.rect(ML, y - 1, CW, 6, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text(title, ML + 2, y + 3.5);
+            y += 8;
+        }
 
+        // ── Header ──
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.setTextColor(0, 0, 0);
+        doc.text(data.name || 'Resume', ML, y + 5);
+        y += 10;
+
+        // ── Contact ──
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        const contact = [data.email, data.phone, data.location].filter(Boolean).join('  |  ');
+        if (contact) { doc.text(contact, ML, y); y += 4; }
+        if (data.linkedin) {
+            doc.setTextColor(0, 0, 200);
+            doc.textWithLink(data.linkedin, ML, y, { url: data.linkedin });
+            doc.setTextColor(0, 0, 0);
+            y += 4;
+        }
+        y += 2;
+
+        // ── Summary ──
+        if (data.summary && data.summary.trim()) {
+            sectionHeading('PROFESSIONAL SUMMARY');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            const lines = doc.splitTextToSize(data.summary, CW - 10);
+            checkPage(lines.length * 4);
+            doc.text(lines, ML + 5, y);
+            y += lines.length * 4 + 2;
+        }
+
+        // ── Skills ──
+        if (data.skills && data.skills.length > 0) {
+            sectionHeading('KEY SKILLS');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            const lines = doc.splitTextToSize(data.skills.join('  •  '), CW - 10);
+            checkPage(lines.length * 4);
+            doc.text(lines, ML + 5, y);
+            y += lines.length * 4 + 2;
+        }
+
+        // ── Experience ──
+        if (data.experience && data.experience.length > 0) {
+            sectionHeading('PROFESSIONAL EXPERIENCE');
+            for (const exp of data.experience) {
+                checkPage(20);
+                if (exp.role) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    const roleText = exp.role + (exp.company ? '  —  ' + exp.company : '');
+                    doc.text(roleText, ML + 5, y);
+                    const dates = [exp.startDate, exp.endDate].filter(Boolean).join(' – ');
+                    if (dates) {
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(8);
+                        const dw = doc.getTextWidth(dates);
+                        doc.text(dates, ML + CW - dw, y);
+                    }
+                    y += 5;
+                }
+                if (exp.project) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    let pLine = 'Project: ' + exp.project;
+                    if (exp.projectDescription) pLine += ' — ' + exp.projectDescription;
+                    const pLines = doc.splitTextToSize(pLine, CW - 15);
+                    checkPage(pLines.length * 4);
+                    doc.text(pLines, ML + 10, y);
+                    y += pLines.length * 4 + 1;
+                }
+                if (exp.bullets && exp.bullets.length > 0) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    for (const b of exp.bullets) {
+                        const bLines = doc.splitTextToSize('•  ' + b, CW - 15);
+                        checkPage(bLines.length * 4 + 1);
+                        doc.text(bLines, ML + 10, y);
+                        y += bLines.length * 4 + 1;
+                    }
+                }
+                y += 2;
+            }
+        }
+
+        // ── Certifications ──
+        if (data.certifications && data.certifications.length > 0) {
+            sectionHeading('CERTIFICATIONS');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            for (const c of data.certifications) {
+                let line = c.name || '';
+                if (c.issuer) line += ' – ' + c.issuer;
+                if (c.year) line += ' (' + c.year + ')';
+                const cLines = doc.splitTextToSize('•  ' + line, CW - 10);
+                checkPage(cLines.length * 4 + 1);
+                doc.text(cLines, ML + 5, y);
+                y += cLines.length * 4 + 1;
+            }
+        }
+
+        // ── Education ──
+        if (data.education && data.education.length > 0) {
+            sectionHeading('EDUCATION');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            for (const edu of data.education) {
+                const parts = [];
+                if (edu.degree) {
+                    let d = edu.degree;
+                    if (edu.field) d += ' in ' + edu.field;
+                    parts.push(d);
+                }
+                if (edu.institution) parts.push(edu.institution);
+                let line = parts.join(', ');
+                if (edu.grade) line += ' — ' + edu.grade;
+                if (edu.year) line += ' (' + edu.year + ')';
+                const eLines = doc.splitTextToSize('•  ' + line, CW - 10);
+                checkPage(eLines.length * 4 + 1);
+                doc.text(eLines, ML + 5, y);
+                y += eLines.length * 4 + 1;
+            }
+        }
+
+        doc.save('ats_resume.pdf');
         showToast('PDF downloaded successfully!', 'success');
     } catch (err) {
-        showToast(err.message || 'Download failed', 'error');
+        console.error('PDF generation error:', err);
+        showToast(err.message || 'PDF generation failed', 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = '📥 Download ATS PDF';
